@@ -1,4 +1,56 @@
-import type { CVAnalysis, EnvironmentalData, HealingScoreData, ProductScanResult, FoodLogItem, SymptomCorrelation, RoutineTask, KnowledgeArticle, FamilyProfile, AuditLogEntry } from '../types';
+import type { CVAnalysis, EnvironmentalData, HealingScoreData, ProductScanResult, FoodLogItem, SymptomCorrelation, RoutineTask, KnowledgeArticle, FamilyProfile, AuditLogEntry, TreatmentEntry } from '../types';
+
+// Kronolojik Tedavi Geçmişi (en güncel en üstte): Prednizon → Siklosporin (2 Ay) → Cibinqo (1.5 Yıl) → Dupixent (5 Aydır Devam Ediyor)
+export const initialTreatmentHistory: TreatmentEntry[] = [
+  {
+    id: 'tx-4',
+    medicationName: 'Dupixent (Dupilumab)',
+    drugClass: 'Biyolojik Tedavi (IL-4 / IL-13 İnhibitörü)',
+    route: 'Subkütan Enjeksiyon (14 Günde Bir)',
+    startDate: 'Şubat 2026',
+    endDate: null,
+    durationLabel: '5 Aydır Devam Ediyor',
+    status: 'Devam Ediyor',
+    reasonForChange: 'Cibinqo ile kısmi yanıt sonrası hedefe yönelik biyolojik tedaviye geçildi.',
+    notes: 'Enjeksiyon bölgesinde hafif reaksiyon dışında yan etki bildirilmedi. İyileşme skorunda istikrarlı artış gözleniyor.'
+  },
+  {
+    id: 'tx-3',
+    medicationName: 'Cibinqo (Abrosinib / Abrocitinib)',
+    drugClass: 'JAK1 İnhibitörü (Oral Hedefe Yönelik Tedavi)',
+    route: 'Oral Tablet (Günde 1 Kez)',
+    startDate: 'Ağustos 2024',
+    endDate: 'Şubat 2026',
+    durationLabel: '1.5 Yıl (18 Ay)',
+    status: 'Sonlandırıldı',
+    reasonForChange: 'Uzun süreli kullanım sonrası doktor kontrolünde biyolojik tedaviye geçiş kararı alındı.',
+    notes: 'Siklosporine kıyasla daha iyi tolere edildi; düzenli kan tahlili (lipid profili, tam kan sayımı) takibi yapıldı.'
+  },
+  {
+    id: 'tx-2',
+    medicationName: 'Siklosporin (Cyclosporine)',
+    drugClass: 'Sistemik İmmünsüpresan (Kalsinörin İnhibitörü)',
+    route: 'Oral Kapsül',
+    startDate: 'Haziran 2024',
+    endDate: 'Ağustos 2024',
+    durationLabel: '2 Ay',
+    status: 'Sonlandırıldı',
+    reasonForChange: 'Böbrek fonksiyonu ve tansiyon takibi gerektirdiğinden kısa sürede oral JAK inhibitörüne geçildi.',
+    notes: 'Kısa vadede etkili alevlenme kontrolü sağladı; uzun vadeli kullanım için uygun görülmedi.'
+  },
+  {
+    id: 'tx-1',
+    medicationName: 'Prednizon (Oral Kortikosteroid)',
+    drugClass: 'Sistemik Kortikosteroid',
+    route: 'Oral Tablet (Kısa Süreli Kür)',
+    startDate: 'Öncesi (Tarih Netleştirilmedi)',
+    endDate: 'Haziran 2024',
+    durationLabel: 'Kısa Süreli Kürler Halinde',
+    status: 'Sonlandırıldı',
+    reasonForChange: 'Uzun süreli steroid kullanımının yan etki riski nedeniyle steroid koruyucu (steroid-sparing) sistemik tedaviye geçildi.',
+    notes: 'Akut alevlenme dönemlerinde kısa kürler halinde kullanıldı; sürdürülebilir bir idame tedavisi olmadığı için sistemik alternatiflere yönlenildi.'
+  }
+];
 
 export const initialProfiles: FamilyProfile[] = [
   {

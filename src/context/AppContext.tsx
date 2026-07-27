@@ -1,26 +1,55 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { 
-  CVAnalysis, 
-  EnvironmentalData, 
-  FamilyProfile, 
-  FoodLogItem, 
-  HealingScoreData, 
-  ProductScanResult, 
-  RoutineTask, 
+import type {
+  CVAnalysis,
+  EnvironmentalData,
+  FamilyProfile,
+  FoodLogItem,
+  HealingScoreData,
+  ProductScanResult,
+  RoutineTask,
   SymptomCorrelation,
-  AuditLogEntry
+  AuditLogEntry,
+  TreatmentEntry
 } from '../types';
-import { 
-  initialCVHistory, 
-  initialEnvironmental, 
-  initialFoodLogs, 
-  initialHealingScore, 
-  initialProfiles, 
-  initialRoutines, 
+import {
+  initialCVHistory,
+  initialEnvironmental,
+  initialFoodLogs,
+  initialHealingScore,
+  initialProfiles,
+  initialRoutines,
   initialScannedProducts,
   initialCorrelations,
-  initialAuditLogs
+  initialAuditLogs,
+  initialTreatmentHistory
 } from '../mock/mockData';
+
+// Yerel Depolama (localStorage) Kalıcılık Katmanı
+// Sayfa yenilendiğinde veya tarayıcı kapatılıp açıldığında kaydedilen veriler kaybolmasın diye eklendi.
+const STORAGE_PREFIX = 'dermiq:';
+
+function loadPersisted<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(STORAGE_PREFIX + key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function usePersistedState<T>(key: string, initial: T) {
+  const [state, setState] = useState<T>(() => loadPersisted(key, initial));
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(state));
+    } catch {
+      // localStorage kotası dolu ya da erişilemez durumda: veri kaybı yaşanmaması için sessizce yoksay
+    }
+  }, [key, state]);
+
+  return [state, setState] as const;
+}
 
 interface AppContextType {
   // Tema & Erişilebilirlik
@@ -39,7 +68,10 @@ interface AppContextType {
   // Veri Durumları
   cvHistory: CVAnalysis[];
   addCVAnalysis: (analysis: CVAnalysis) => void;
-  
+
+  treatmentHistory: TreatmentEntry[];
+  addTreatmentEntry: (entry: TreatmentEntry) => void;
+
   healingScore: HealingScoreData;
   updateHabitScore: (factorKey: keyof HealingScoreData['habitFactors'], change: number) => void;
   
@@ -83,22 +115,23 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-  const [highContrast, setHighContrast] = useState<boolean>(false);
-  const [fontSize, setFontSize] = useState<'normal' | 'large' | 'xlarge'>('normal');
-  
+  const [theme, setTheme] = usePersistedState<'dark' | 'light'>('theme', 'dark');
+  const [highContrast, setHighContrast] = usePersistedState<boolean>('highContrast', false);
+  const [fontSize, setFontSize] = usePersistedState<'normal' | 'large' | 'xlarge'>('fontSize', 'normal');
+
   const [profiles] = useState<FamilyProfile[]>(initialProfiles);
-  const [activeProfile, setActiveProfile] = useState<FamilyProfile>(initialProfiles[0]);
-  
-  const [cvHistory, setCvHistory] = useState<CVAnalysis[]>(initialCVHistory);
-  const [healingScore, setHealingScore] = useState<HealingScoreData>(initialHealingScore);
+  const [activeProfile, setActiveProfile] = usePersistedState<FamilyProfile>('activeProfile', initialProfiles[0]);
+
+  const [cvHistory, setCvHistory] = usePersistedState<CVAnalysis[]>('cvHistory', initialCVHistory);
+  const [treatmentHistory, setTreatmentHistory] = usePersistedState<TreatmentEntry[]>('treatmentHistory', initialTreatmentHistory);
+  const [healingScore, setHealingScore] = usePersistedState<HealingScoreData>('healingScore', initialHealingScore);
   const [environmental] = useState<EnvironmentalData>(initialEnvironmental);
-  const [scannedProducts, setScannedProducts] = useState<ProductScanResult[]>(initialScannedProducts);
-  const [foodLogs, setFoodLogs] = useState<FoodLogItem[]>(initialFoodLogs);
+  const [scannedProducts, setScannedProducts] = usePersistedState<ProductScanResult[]>('scannedProducts', initialScannedProducts);
+  const [foodLogs, setFoodLogs] = usePersistedState<FoodLogItem[]>('foodLogs', initialFoodLogs);
   const [correlations] = useState<SymptomCorrelation[]>(initialCorrelations);
-  const [routines, setRoutines] = useState<RoutineTask[]>(initialRoutines);
-  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(initialAuditLogs);
-  
+  const [routines, setRoutines] = usePersistedState<RoutineTask[]>('routines', initialRoutines);
+  const [auditLogs, setAuditLogs] = usePersistedState<AuditLogEntry[]>('auditLogs', initialAuditLogs);
+
   const [emergencyModalOpen, setEmergencyModalOpen] = useState<boolean>(false);
   const [voiceAssistantOpen, setVoiceAssistantOpen] = useState<boolean>(false);
   const [doctorPortalMode, setDoctorPortalMode] = useState<boolean>(false);
@@ -117,6 +150,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     });
     addAuditLog('Görsel Yapay Zeka Taraması', `${analysis.location} bölgesi için fotoğraf analizi tamamlandı (%${analysis.confidenceScore} doğruluk).`);
+  };
+
+  const addTreatmentEntry = (entry: TreatmentEntry) => {
+    setTreatmentHistory(prev => [entry, ...prev]);
+    addAuditLog('Tedavi Geçmişi Güncellemesi', `${entry.medicationName} tedavi kaydı eklendi (${entry.status}).`);
   };
 
   const updateHabitScore = (factorKey: keyof HealingScoreData['habitFactors'], change: number) => {
@@ -197,6 +235,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       profiles,
       cvHistory,
       addCVAnalysis,
+      treatmentHistory,
+      addTreatmentEntry,
       healingScore,
       updateHabitScore,
       environmental,

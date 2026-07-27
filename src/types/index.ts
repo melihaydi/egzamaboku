@@ -133,6 +133,19 @@ export interface FamilyProfile {
   primaryLocations: BodyLocation[];
 }
 
+export interface TreatmentEntry {
+  id: string;
+  medicationName: string; // Örn: 'Dupixent (Dupilumab)'
+  drugClass: string; // Örn: 'Biyolojik Tedavi (IL-4 / IL-13 İnhibitörü)'
+  route: string; // Örn: 'Subkütan Enjeksiyon (14 Günde Bir)'
+  startDate: string; // Örn: 'Şubat 2026'
+  endDate: string | null; // null = halen devam ediyor
+  durationLabel: string; // Örn: '5 Aydır Devam Ediyor', '1.5 Yıl (18 Ay)'
+  status: 'Devam Ediyor' | 'Sonlandırıldı';
+  reasonForChange?: string; // Bir sonraki tedaviye neden geçildiği
+  notes?: string;
+}
+
 export interface AuditLogEntry {
   id: string;
   timestamp: string;

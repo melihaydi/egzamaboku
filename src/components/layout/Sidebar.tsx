@@ -1,17 +1,18 @@
 import React from 'react';
-import { 
-  LayoutDashboard, 
-  Scan, 
-  CloudSun, 
-  Sparkles, 
-  Utensils, 
-  CalendarCheck, 
-  BookOpen, 
-  FileSpreadsheet, 
+import {
+  LayoutDashboard,
+  Scan,
+  CloudSun,
+  Sparkles,
+  Utensils,
+  CalendarCheck,
+  History,
+  BookOpen,
+  FileSpreadsheet,
   ShieldCheck
 } from 'lucide-react';
 
-export type ActiveTab = 'overview' | 'cv' | 'environmental' | 'scanner' | 'food' | 'routine' | 'knowledge' | 'doctor' | 'security';
+export type ActiveTab = 'overview' | 'cv' | 'treatment' | 'environmental' | 'scanner' | 'food' | 'routine' | 'knowledge' | 'doctor' | 'security';
 
 interface SidebarProps {
   activeTab: ActiveTab;
@@ -22,6 +23,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
   const navItems = [
     { id: 'overview' as ActiveTab, label: 'İyileşme Skoru & Genel Bakış', icon: LayoutDashboard, badge: 'Özel İndeks' },
     { id: 'cv' as ActiveTab, label: 'Görsel Yapay Zeka (CV) Analizi', icon: Scan, badge: 'Görsel Model' },
+    { id: 'treatment' as ActiveTab, label: 'Tedavi Geçmişi', icon: History, badge: 'Kronoloji' },
     { id: 'environmental' as ActiveTab, label: 'Alevlenme Tahmini & Hava', icon: CloudSun, badge: '72 Saatlik' },
     { id: 'scanner' as ActiveTab, label: 'Ürün İçerik Tarayıcı (OCR)', icon: Sparkles, badge: 'Kamera / OCR' },
     { id: 'food' as ActiveTab, label: 'Beslenme & Tetikleyici Takibi', icon: Utensils, badge: 'Histamin' },

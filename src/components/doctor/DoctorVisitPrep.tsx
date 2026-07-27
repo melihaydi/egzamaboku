@@ -1,26 +1,30 @@
 import React, { useRef } from 'react';
-import { 
-  FileSpreadsheet, 
-  Printer, 
-  Download, 
-  CheckSquare, 
-  Calendar, 
-  Stethoscope
+import {
+  FileSpreadsheet,
+  Printer,
+  Download,
+  CheckSquare,
+  Calendar,
+  Stethoscope,
+  History
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
 export const DoctorVisitPrep: React.FC = () => {
-  const { 
-    activeProfile, 
-    healingScore, 
-    cvHistory, 
-    doctorPortalMode, 
-    setDoctorPortalMode, 
-    doctorAccessCode, 
-    setDoctorAccessCode 
+  const {
+    activeProfile,
+    healingScore,
+    cvHistory,
+    treatmentHistory,
+    doctorPortalMode,
+    setDoctorPortalMode,
+    doctorAccessCode,
+    setDoctorAccessCode
   } = useApp();
+
+  const currentTreatment = treatmentHistory.find(t => t.status === 'Devam Ediyor') || treatmentHistory[0];
 
   const reportRef = useRef<HTMLDivElement | null>(null);
 
@@ -137,9 +141,9 @@ export const DoctorVisitPrep: React.FC = () => {
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-            <span className="text-[10px] uppercase font-bold text-slate-400 block">İlaç Kullanım Uyum Yüzdesi</span>
-            <span className="text-2xl font-black text-sky-400">%96.5</span>
-            <span className="text-[10px] text-slate-400 block">Dupixent + Takrolimus kayıtlı</span>
+            <span className="text-[10px] uppercase font-bold text-slate-400 block">Güncel Tedavi</span>
+            <span className="text-lg font-black text-sky-400 block leading-tight">{currentTreatment?.medicationName || 'Kayıt Yok'}</span>
+            <span className="text-[10px] text-slate-400 block">{currentTreatment?.durationLabel}</span>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
@@ -175,6 +179,32 @@ export const DoctorVisitPrep: React.FC = () => {
                   <p className="text-slate-400 text-[11px]">Eritem: %{scan.redness} • Alan: {scan.surfaceAreaCm2} cm² • SCORAD: {scan.scoradIndex}</p>
                   <span className="text-[10px] font-bold text-emerald-400 block">İyileşme Oranı: +%{scan.healingProgression}</span>
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Tedavi Geçmişi Kronolojisi */}
+        <div className="space-y-3">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+            <History className="w-4 h-4 text-sky-400" />
+            Tedavi Geçmişi Kronolojisi
+          </h4>
+
+          <div className="space-y-2">
+            {treatmentHistory.map(t => (
+              <div key={t.id} className="p-3 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-3 text-xs">
+                <div>
+                  <span className="font-bold text-white">{t.medicationName}</span>
+                  <p className="text-[10px] text-slate-400">{t.drugClass} • {t.startDate} — {t.endDate || 'Günümüz'}</p>
+                </div>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${
+                  t.status === 'Devam Ediyor'
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                    : 'bg-slate-800 text-slate-400 border-slate-700'
+                }`}>
+                  {t.durationLabel}
+                </span>
               </div>
             ))}
           </div>

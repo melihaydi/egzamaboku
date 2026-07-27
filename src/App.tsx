@@ -6,6 +6,7 @@ import type { ActiveTab } from './components/layout/Sidebar';
 import { EmergencyBanner } from './components/layout/EmergencyBanner';
 import { HealingScoreCard } from './components/score/HealingScoreCard';
 import { ComputerVisionEngine } from './components/cv/ComputerVisionEngine';
+import { TreatmentHistory } from './components/treatment/TreatmentHistory';
 import { WeatherIntelligence } from './components/environmental/WeatherIntelligence';
 import { IngredientScanner } from './components/scanner/IngredientScanner';
 import { FoodIntelligence } from './components/food/FoodIntelligence';
@@ -39,6 +40,7 @@ const MainLayout: React.FC = () => {
         <main className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full space-y-6">
           {activeTab === 'overview' && <HealingScoreCard />}
           {activeTab === 'cv' && <ComputerVisionEngine />}
+          {activeTab === 'treatment' && <TreatmentHistory />}
           {activeTab === 'environmental' && <WeatherIntelligence />}
           {activeTab === 'scanner' && <IngredientScanner />}
           {activeTab === 'food' && <FoodIntelligence />}

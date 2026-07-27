@@ -39,11 +39,16 @@
 - 10 dakikalık **Ilık Banyo Zamanlayıcısı** ve banyo sonrası 3 dakika nemlendirme kuralı uyarısı.
 - Tamamlanan rutin bölümlerinde kutlama konfetisi.
 
-### 7. 🩺 Doktor Görüşmesi Hazırlık & PDF Raporu
-- Dermatolog randevusu için fotoğraflı kronolojik gelişim, ilaç uyumu ve SCORAD indekslerini içeren **tek tıkla PDF rapor çıktısı**.
+### 7. 💊 Tedavi Geçmişi Kronolojisi
+- Geçmişte ve halen kullanılan sistemik/biyolojik tedavilerin (ör. kortikosteroid → immünsüpresan → JAK inhibitörü → biyolojik) kronolojik zaman çizelgesi.
+- Her kayıt için tedavi sınıfı, uygulama yolu, başlangıç/bitiş tarihi, süre, bir sonraki tedaviye geçiş nedeni ve yanıt/yan etki notları.
+- Yeni tedavi kayıtları eklenebilir; Doktor Özeti raporuna ve PDF çıktısına otomatik olarak yansır.
+
+### 8. 🩺 Doktor Görüşmesi Hazırlık & PDF Raporu
+- Dermatolog randevusu için fotoğraflı kronolojik gelişim, tam tedavi geçmişi ve SCORAD indekslerini içeren **tek tıkla PDF rapor çıktısı**.
 - Davet şifresi ile doktor canlı izleme portalı modu.
 
-### 8. 🎙️ Sesli Asistan & Akıllı Saat Widget'ı
+### 9. 🎙️ Sesli Asistan & Akıllı Saat Widget'ı
 - Türkçe Web Speech API ile eller serbest sesli komut alma (*"Nemlendirici sürdüm"*, *"Kaşıntım 4"*).
 - Apple Watch ve Wear OS uyumlu akıllı saat arayüz simülatörü.
 
@@ -52,6 +57,7 @@
 ## 🛠️ Teknolojiler
 
 - **Core**: React 19, TypeScript, Vite
+- **Veri Kalıcılığı**: Tarayıcı `localStorage` katmanı ile oturum verileri (fotoğraf geçmişi, tedavi kronolojisi, iyileşme skoru, rutinler) sayfa yenilense veya tarayıcı kapatılsa dahi korunur.
 - **Styling**: TailwindCSS v4, Custom Glassmorphism, Responsive Dark/Light Mode
 - **Grafikler & Görseller**: HTML5 Canvas (Heatmaps & Split Comparator), Lucide Icons, Canvas Confetti
 - **Raporlama**: jsPDF, html2canvas
