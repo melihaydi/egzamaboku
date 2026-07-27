@@ -65,7 +65,7 @@ export const EmergencyBanner: React.FC = () => {
               
               <div className="space-y-2">
                 {[
-                  { key: 'fever', label: 'Cilt kızarıklığı ile birlikte Yüksek Ateş (&gt; 38.5°C)' },
+                  { key: 'fever', label: 'Cilt kızarıklığı ile birlikte Yüksek Ateş (> 38.5°C)' },
                   { key: 'swelling', label: 'Yüz, dudak veya boğazda aniden gelişen şiddetli Şişlik (Anjiyoödem)' },
                   { key: 'spreadingFast', label: 'Hızla yayılan zımba deligi gibi su toplayan kabarcıklar (Eczema Herpeticum riski)' },
                   { key: 'eyeInvolvement', label: 'Göz çevresinde şiddetli ağrı, iltihaplı akıntı veya görme bulanıklığı' },
@@ -85,7 +85,7 @@ export const EmergencyBanner: React.FC = () => {
                       onChange={e => setSymptomForm({ ...symptomForm, [item.key]: e.target.checked })}
                       className="w-4 h-4 accent-rose-500 rounded"
                     />
-                    <span dangerouslySetInnerHTML={{ __html: item.label }} />
+                    <span>{item.label}</span>
                   </label>
                 ))}
               </div>

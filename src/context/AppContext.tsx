@@ -110,6 +110,9 @@ interface AppContextType {
   // Loglar
   auditLogs: AuditLogEntry[];
   addAuditLog: (action: string, details: string) => void;
+
+  // Veri Yönetimi
+  clearAllData: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -218,6 +221,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAuditLogs(prev => [newEntry, ...prev]);
   };
 
+  const clearAllData = () => {
+    const dataKeys = ['activeProfile', 'cvHistory', 'treatmentHistory', 'healingScore', 'scannedProducts', 'foodLogs', 'routines', 'auditLogs'];
+    dataKeys.forEach(key => {
+      try {
+        localStorage.removeItem(STORAGE_PREFIX + key);
+      } catch {
+        // localStorage'a erişilemiyorsa sessizce devam et
+      }
+    });
+
+    setActiveProfile(initialProfiles[0]);
+    setCvHistory(initialCVHistory);
+    setTreatmentHistory(initialTreatmentHistory);
+    setHealingScore(initialHealingScore);
+    setScannedProducts(initialScannedProducts);
+    setFoodLogs(initialFoodLogs);
+    setRoutines(initialRoutines);
+    setAuditLogs([{
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString('tr-TR'),
+      action: 'Yerel Veri Sıfırlama',
+      details: 'Kullanıcı talebiyle tüm yerel oturum verileri fabrika ayarlarına sıfırlandı.',
+      ipAddress: '127.0.0.1 (Şifreli Oturum)'
+    }]);
+  };
+
   useEffect(() => {
     document.documentElement.className = theme;
   }, [theme]);
@@ -261,7 +290,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       wearableWidgetOpen,
       setWearableWidgetOpen,
       auditLogs,
-      addAuditLog
+      addAuditLog,
+      clearAllData
     }}>
       {children}
     </AppContext.Provider>

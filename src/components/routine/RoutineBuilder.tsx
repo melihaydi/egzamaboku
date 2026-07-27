@@ -41,16 +41,21 @@ export const RoutineBuilder: React.FC = () => {
   };
 
   const handleTaskClick = (id: string) => {
+    const toggledTask = routines.find(r => r.id === id);
+    const willBeCompleted = toggledTask ? !toggledTask.completed : false;
+
     toggleRoutineTask(id);
-    const updatedFiltered = routines.filter(r => r.timeOfDay === selectedTimeOfDay);
-    const completedCount = updatedFiltered.filter(r => r.completed || r.id === id).length;
-    
-    if (completedCount === updatedFiltered.length) {
-      confetti({
-        particleCount: 80,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
+
+    if (willBeCompleted) {
+      const filtered = routines.filter(r => r.timeOfDay === selectedTimeOfDay);
+      const allDone = filtered.every(r => (r.id === id ? willBeCompleted : r.completed));
+      if (allDone) {
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      }
     }
   };
 

@@ -10,27 +10,55 @@ import {
 import { useApp } from '../../context/AppContext';
 
 export const PrivacySettings: React.FC = () => {
-  const { 
-    auditLogs, 
-    fontSize, 
-    setFontSize, 
-    highContrast, 
+  const {
+    activeProfile,
+    cvHistory,
+    treatmentHistory,
+    healingScore,
+    scannedProducts,
+    foodLogs,
+    routines,
+    auditLogs,
+    fontSize,
+    setFontSize,
+    highContrast,
     setHighContrast,
     healthSyncActive,
-    setHealthSyncActive
+    setHealthSyncActive,
+    clearAllData
   } = useApp();
 
   const [e2eEncrypted, setE2eEncrypted] = useState<boolean>(true);
   const [analyticsConsent, setAnalyticsConsent] = useState<boolean>(true);
 
   const handleExportJSON = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ auditLogs, date: new Date() }));
+    const fullExport = {
+      exportedAt: new Date().toISOString(),
+      profile: activeProfile,
+      cvHistory,
+      treatmentHistory,
+      healingScore,
+      scannedProducts,
+      foodLogs,
+      routines,
+      auditLogs
+    };
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fullExport, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute("href", dataStr);
     downloadAnchor.setAttribute("download", `DermIQ_Klinik_Yedek_${Date.now()}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
+  };
+
+  const handleClearLocalData = () => {
+    const confirmed = window.confirm(
+      'Tüm yerel verileriniz (fotoğraf geçmişi, tedavi kayıtları, rutinler, iyileşme skoru) kalıcı olarak silinecek ve fabrika ayarlarına dönülecektir. Devam etmek istiyor musunuz?'
+    );
+    if (confirmed) {
+      clearAllData();
+    }
   };
 
   return (
@@ -116,7 +144,7 @@ export const PrivacySettings: React.FC = () => {
               </button>
 
               <button
-                onClick={() => alert('Geçici yerel oturum verileri temizlendi.')}
+                onClick={handleClearLocalData}
                 className="py-2.5 px-4 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-bold text-xs border border-rose-500/40 flex items-center gap-1.5"
               >
                 <Trash2 className="w-4 h-4" />
