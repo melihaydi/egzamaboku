@@ -7,7 +7,7 @@ import {
   Eye, 
   Database
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 
 export const PrivacySettings: React.FC = () => {
   const {

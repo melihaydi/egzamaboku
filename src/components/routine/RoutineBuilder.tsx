@@ -13,7 +13,7 @@ import {
   Zap,
   Award
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 import confetti from 'canvas-confetti';
 
 export const RoutineBuilder: React.FC = () => {

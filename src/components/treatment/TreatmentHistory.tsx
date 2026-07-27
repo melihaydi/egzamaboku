@@ -9,7 +9,7 @@ import {
   CheckCircle2,
   HelpCircle
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 import type { TreatmentEntry } from '../../types';
 
 export const TreatmentHistory: React.FC = () => {

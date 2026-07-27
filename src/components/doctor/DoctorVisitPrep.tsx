@@ -8,7 +8,7 @@ import {
   Stethoscope,
   History
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -38,7 +38,7 @@ export const DoctorVisitPrep: React.FC = () => {
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
       pdf.save(`DermIQ_Doktor_Raporu_${activeProfile.name.replace(/\s+/g, '_')}.pdf`);
-    } catch (err) {
+    } catch {
       window.print();
     }
   };

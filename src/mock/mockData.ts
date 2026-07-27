@@ -1,4 +1,13 @@
-import type { CVAnalysis, EnvironmentalData, HealingScoreData, ProductScanResult, FoodLogItem, SymptomCorrelation, RoutineTask, KnowledgeArticle, FamilyProfile, AuditLogEntry, TreatmentEntry } from '../types';
+import type { CVAnalysis, EnvironmentalData, HealingScoreData, ProductScanResult, FoodLogItem, SymptomCorrelation, RoutineTask, KnowledgeArticle, FamilyProfile, AuditLogEntry, TreatmentEntry, ChatMessage } from '../types';
+
+export const initialChatMessages: ChatMessage[] = [
+  {
+    id: 'chat-welcome',
+    role: 'assistant',
+    text: 'Merhaba! Ben DermIQ Egzama Asistanıyım. Egzama, cilt bakımı, tetikleyiciler veya kullandığınız tedaviler (Dupixent, Cibinqo, Siklosporin, Prednizon vb.) hakkında sorularınızı yanıtlayabilirim. Unutmayın: bilgilendirme amaçlıyım, tanı koymam ve hekim muayenesinin yerine geçmem.',
+    timestamp: new Date().toLocaleString('tr-TR')
+  }
+];
 
 // Kronolojik Tedavi Geçmişi (en güncel en üstte): Prednizon → Siklosporin (2 Ay) → Cibinqo (1.5 Yıl) → Dupixent (5 Aydır Devam Ediyor)
 export const initialTreatmentHistory: TreatmentEntry[] = [
@@ -55,30 +64,12 @@ export const initialTreatmentHistory: TreatmentEntry[] = [
 export const initialProfiles: FamilyProfile[] = [
   {
     id: 'p-1',
-    name: 'Can Yılmaz',
+    name: 'Melike Doğan',
     relationship: 'Kendi Profilim',
-    avatarColor: 'from-sky-500 to-indigo-600',
-    age: 29,
-    eczemaType: 'Atopik Dermatit (Yetişkin)',
+    avatarColor: 'from-rose-400 to-fuchsia-500',
+    age: 25,
+    eczemaType: 'Atopik Dermatit (Orta-Şiddetli)',
     primaryLocations: ['Sol Kol', 'Yüz & Boyun', 'Eller & Bilekler']
-  },
-  {
-    id: 'p-2',
-    name: 'Ali Yılmaz',
-    relationship: 'Çocuğum',
-    avatarColor: 'from-amber-400 to-emerald-500',
-    age: 4,
-    eczemaType: 'Pediatrik Atopik Egzama',
-    primaryLocations: ['Yüz & Boyun', 'Sağ Kol']
-  },
-  {
-    id: 'p-3',
-    name: 'Ayşe Yılmaz',
-    relationship: 'Ebeveynim',
-    avatarColor: 'from-purple-500 to-pink-500',
-    age: 68,
-    eczemaType: 'Kontakt & Dishidrotik Egzama',
-    primaryLocations: ['Eller & Bilekler', 'Bacaklar']
   }
 ];
 

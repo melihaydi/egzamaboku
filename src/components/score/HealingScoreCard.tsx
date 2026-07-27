@@ -9,7 +9,7 @@ import {
   ShieldCheck,
   BarChart3
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 
 export const HealingScoreCard: React.FC = () => {
   const { healingScore, updateHabitScore, activeProfile } = useApp();

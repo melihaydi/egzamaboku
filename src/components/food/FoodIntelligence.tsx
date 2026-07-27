@@ -6,7 +6,7 @@ import {
   Sparkles, 
   HelpCircle
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 import type { FoodLogItem } from '../../types';
 
 export const FoodIntelligence: React.FC = () => {

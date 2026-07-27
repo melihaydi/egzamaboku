@@ -10,7 +10,7 @@ import {
   Info,
   MapPin
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 
 export const WeatherIntelligence: React.FC = () => {
   const { environmental } = useApp();

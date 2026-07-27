@@ -12,7 +12,7 @@ import {
   Camera,
   SplitSquareVertical
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 import type { BodyLocation, CVAnalysis } from '../../types';
 
 export const ComputerVisionEngine: React.FC = () => {
@@ -57,7 +57,7 @@ export const ComputerVisionEngine: React.FC = () => {
           videoRef.current.srcObject = stream;
         }
         setIsWebCamActive(true);
-      } catch (err) {
+      } catch {
         alert('Kamera erişimi sağlanamadı. Yüksek çözünürlüklü simüle cilt tarama verisi yükleniyor.');
         handleUploadSim();
       }

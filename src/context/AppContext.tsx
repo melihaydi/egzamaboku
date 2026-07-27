@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import type {
   CVAnalysis,
   EnvironmentalData,
@@ -9,8 +9,10 @@ import type {
   RoutineTask,
   SymptomCorrelation,
   AuditLogEntry,
-  TreatmentEntry
+  TreatmentEntry,
+  ChatMessage
 } from '../types';
+import { AppContext } from './context';
 import {
   initialCVHistory,
   initialEnvironmental,
@@ -21,7 +23,8 @@ import {
   initialScannedProducts,
   initialCorrelations,
   initialAuditLogs,
-  initialTreatmentHistory
+  initialTreatmentHistory,
+  initialChatMessages
 } from '../mock/mockData';
 
 // Yerel Depolama (localStorage) Kalıcılık Katmanı
@@ -51,72 +54,6 @@ function usePersistedState<T>(key: string, initial: T) {
   return [state, setState] as const;
 }
 
-interface AppContextType {
-  // Tema & Erişilebilirlik
-  theme: 'dark' | 'light';
-  setTheme: (t: 'dark' | 'light') => void;
-  highContrast: boolean;
-  setHighContrast: (v: boolean) => void;
-  fontSize: 'normal' | 'large' | 'xlarge';
-  setFontSize: (s: 'normal' | 'large' | 'xlarge') => void;
-  
-  // Profil Yönetimi
-  activeProfile: FamilyProfile;
-  setActiveProfile: (p: FamilyProfile) => void;
-  profiles: FamilyProfile[];
-  
-  // Veri Durumları
-  cvHistory: CVAnalysis[];
-  addCVAnalysis: (analysis: CVAnalysis) => void;
-
-  treatmentHistory: TreatmentEntry[];
-  addTreatmentEntry: (entry: TreatmentEntry) => void;
-
-  healingScore: HealingScoreData;
-  updateHabitScore: (factorKey: keyof HealingScoreData['habitFactors'], change: number) => void;
-  
-  environmental: EnvironmentalData;
-  scannedProducts: ProductScanResult[];
-  addScannedProduct: (prod: ProductScanResult) => void;
-  
-  foodLogs: FoodLogItem[];
-  addFoodLog: (item: FoodLogItem) => void;
-  correlations: SymptomCorrelation[];
-  
-  routines: RoutineTask[];
-  toggleRoutineTask: (id: string) => void;
-  addRoutineTask: (task: RoutineTask) => void;
-  
-  // Acil Durum Modal
-  emergencyModalOpen: boolean;
-  setEmergencyModalOpen: (v: boolean) => void;
-  
-  // Sesli Asistan
-  voiceAssistantOpen: boolean;
-  setVoiceAssistantOpen: (v: boolean) => void;
-  
-  // Doktor Portalı Mode
-  doctorPortalMode: boolean;
-  setDoctorPortalMode: (v: boolean) => void;
-  doctorAccessCode: string;
-  setDoctorAccessCode: (c: string) => void;
-  
-  // Sağlık Eşleşmesi & Akıllı Saat
-  healthSyncActive: boolean;
-  setHealthSyncActive: (v: boolean) => void;
-  wearableWidgetOpen: boolean;
-  setWearableWidgetOpen: (v: boolean) => void;
-  
-  // Loglar
-  auditLogs: AuditLogEntry[];
-  addAuditLog: (action: string, details: string) => void;
-
-  // Veri Yönetimi
-  clearAllData: () => void;
-}
-
-const AppContext = createContext<AppContextType | undefined>(undefined);
-
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = usePersistedState<'dark' | 'light'>('theme', 'dark');
   const [highContrast, setHighContrast] = usePersistedState<boolean>('highContrast', false);
@@ -134,6 +71,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [correlations] = useState<SymptomCorrelation[]>(initialCorrelations);
   const [routines, setRoutines] = usePersistedState<RoutineTask[]>('routines', initialRoutines);
   const [auditLogs, setAuditLogs] = usePersistedState<AuditLogEntry[]>('auditLogs', initialAuditLogs);
+  const [chatMessages, setChatMessages] = usePersistedState<ChatMessage[]>('chatMessages', initialChatMessages);
 
   const [emergencyModalOpen, setEmergencyModalOpen] = useState<boolean>(false);
   const [voiceAssistantOpen, setVoiceAssistantOpen] = useState<boolean>(false);
@@ -153,6 +91,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     });
     addAuditLog('Görsel Yapay Zeka Taraması', `${analysis.location} bölgesi için fotoğraf analizi tamamlandı (%${analysis.confidenceScore} doğruluk).`);
+  };
+
+  const updateActiveProfile = (updates: Partial<FamilyProfile>) => {
+    setActiveProfile(prev => ({ ...prev, ...updates }));
   };
 
   const addTreatmentEntry = (entry: TreatmentEntry) => {
@@ -221,8 +163,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAuditLogs(prev => [newEntry, ...prev]);
   };
 
+  const addChatMessage = (message: ChatMessage) => {
+    setChatMessages(prev => [...prev, message]);
+  };
+
+  const clearChatMessages = () => {
+    setChatMessages(initialChatMessages);
+  };
+
   const clearAllData = () => {
-    const dataKeys = ['activeProfile', 'cvHistory', 'treatmentHistory', 'healingScore', 'scannedProducts', 'foodLogs', 'routines', 'auditLogs'];
+    const dataKeys = ['activeProfile', 'cvHistory', 'treatmentHistory', 'healingScore', 'scannedProducts', 'foodLogs', 'routines', 'auditLogs', 'chatMessages'];
     dataKeys.forEach(key => {
       try {
         localStorage.removeItem(STORAGE_PREFIX + key);
@@ -238,6 +188,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setScannedProducts(initialScannedProducts);
     setFoodLogs(initialFoodLogs);
     setRoutines(initialRoutines);
+    setChatMessages(initialChatMessages);
     setAuditLogs([{
       id: `log-${Date.now()}`,
       timestamp: new Date().toLocaleString('tr-TR'),
@@ -261,6 +212,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setFontSize,
       activeProfile,
       setActiveProfile,
+      updateActiveProfile,
       profiles,
       cvHistory,
       addCVAnalysis,
@@ -291,15 +243,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setWearableWidgetOpen,
       auditLogs,
       addAuditLog,
+      chatMessages,
+      addChatMessage,
+      clearChatMessages,
       clearAllData
     }}>
       {children}
     </AppContext.Provider>
   );
-};
-
-export const useApp = () => {
-  const context = useContext(AppContext);
-  if (!context) throw new Error('useApp must be used within an AppProvider');
-  return context;
 };

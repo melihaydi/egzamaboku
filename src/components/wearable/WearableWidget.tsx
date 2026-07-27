@@ -1,6 +1,6 @@
 import React from 'react';
 import { Watch, Droplets, Heart, Flame, Check, X } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 
 export const WearableWidget: React.FC = () => {
   const { wearableWidgetOpen, setWearableWidgetOpen, healingScore, updateHabitScore } = useApp();

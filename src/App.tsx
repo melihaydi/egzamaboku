@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { AppProvider, useApp } from './context/AppContext';
+import { AppProvider } from './context/AppContext';
+import { useApp } from './context/useApp';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 import type { ActiveTab } from './components/layout/Sidebar';
@@ -12,6 +13,7 @@ import { IngredientScanner } from './components/scanner/IngredientScanner';
 import { FoodIntelligence } from './components/food/FoodIntelligence';
 import { RoutineBuilder } from './components/routine/RoutineBuilder';
 import { DermatologyKB } from './components/knowledge/DermatologyKB';
+import { AIChatAssistant } from './components/chat/AIChatAssistant';
 import { DoctorVisitPrep } from './components/doctor/DoctorVisitPrep';
 import { PrivacySettings } from './components/security/PrivacySettings';
 import { VoiceAssistantModal } from './components/voice/VoiceAssistantModal';
@@ -19,6 +21,7 @@ import { WearableWidget } from './components/wearable/WearableWidget';
 
 const MainLayout: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { highContrast, fontSize } = useApp();
 
   const getFontSizeClass = () => {
@@ -32,15 +35,21 @@ const MainLayout: React.FC = () => {
   return (
     <div className={`min-h-screen bg-slate-950 text-slate-100 font-sans ${highContrast ? 'contrast-125 brightness-110' : ''} ${getFontSizeClass()}`}>
       <EmergencyBanner />
-      <Header />
+      <Header onOpenMobileNav={() => setMobileNavOpen(true)} />
 
       <div className="flex flex-col md:flex-row min-h-[calc(100vh-65px)]">
-        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+        <Sidebar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          isMobileOpen={mobileNavOpen}
+          onCloseMobile={() => setMobileNavOpen(false)}
+        />
 
-        <main className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full space-y-6">
+        <main className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full space-y-6 [padding-bottom:calc(env(safe-area-inset-bottom)+1rem)]">
           {activeTab === 'overview' && <HealingScoreCard />}
           {activeTab === 'cv' && <ComputerVisionEngine />}
           {activeTab === 'treatment' && <TreatmentHistory />}
+          {activeTab === 'chat' && <AIChatAssistant />}
           {activeTab === 'environmental' && <WeatherIntelligence />}
           {activeTab === 'scanner' && <IngredientScanner />}
           {activeTab === 'food' && <FoodIntelligence />}

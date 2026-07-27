@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AlertOctagon, PhoneCall, ShieldAlert, X, HeartPulse } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 
 export const EmergencyBanner: React.FC = () => {
   const { emergencyModalOpen, setEmergencyModalOpen } = useApp();

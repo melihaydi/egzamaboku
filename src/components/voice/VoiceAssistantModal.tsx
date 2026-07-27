@@ -1,37 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Mic, MicOff, X, Sparkles, MessageSquare } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../context/useApp';
 
 export const VoiceAssistantModal: React.FC = () => {
   const { voiceAssistantOpen, setVoiceAssistantOpen, updateHabitScore, addAuditLog } = useApp();
   const [isListening, setIsListening] = useState<boolean>(false);
+  const [isSupported, setIsSupported] = useState<boolean>(true);
   const [transcript, setTranscript] = useState<string>('');
   const [aiResponse, setAiResponse] = useState<string>('Bugün egzama bakımınıza nasıl yardımcı olabilirim? "Nemlendirici sürdüm" veya "Kaşıntı seviyem 5" diyebilirsiniz.');
+  const recognitionRef = useRef<any>(null);
 
-  useEffect(() => {
-    if (!voiceAssistantOpen) return;
-
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.lang = 'tr-TR';
-      recognition.continuous = false;
-      recognition.interimResults = true;
-
-      recognition.onstart = () => setIsListening(true);
-      recognition.onresult = (event: any) => {
-        const text = event.results[0][0].transcript;
-        setTranscript(text);
-        processVoiceCommand(text);
-      };
-      recognition.onend = () => setIsListening(false);
-
-      if (isListening) recognition.start();
-      return () => recognition.stop();
+  const speakResponse = useCallback((text: string) => {
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'tr-TR';
+      utterance.rate = 1.0;
+      window.speechSynthesis.speak(utterance);
     }
-  }, [voiceAssistantOpen, isListening]);
+  }, []);
 
-  const processVoiceCommand = (cmd: string) => {
+  const processVoiceCommand = useCallback((cmd: string) => {
     const text = cmd.toLowerCase();
     if (text.includes('nemlendirici') || text.includes('krem')) {
       updateHabitScore('moisturizerConsistency', 5);
@@ -46,14 +34,47 @@ export const VoiceAssistantModal: React.FC = () => {
       setAiResponse(`Komut alındı: "${cmd}". Bakım rutini güncellendi.`);
       speakResponse(`Komut işlendi.`);
     }
-  };
+  }, [updateHabitScore, addAuditLog, speakResponse]);
 
-  const speakResponse = (text: string) => {
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'tr-TR';
-      utterance.rate = 1.0;
-      window.speechSynthesis.speak(utterance);
+  // Modal her açıldığında tek bir tanıma (recognition) örneği kurulur;
+  // mikrofon butonu bu örneği doğrudan başlatır/durdurur.
+  useEffect(() => {
+    if (!voiceAssistantOpen) return;
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setIsSupported(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'tr-TR';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onresult = (event: any) => {
+      const text = event.results[0][0].transcript;
+      setTranscript(text);
+      processVoiceCommand(text);
+    };
+    recognition.onend = () => setIsListening(false);
+
+    recognitionRef.current = recognition;
+
+    return () => {
+      recognition.stop();
+      recognitionRef.current = null;
+    };
+  }, [voiceAssistantOpen, processVoiceCommand]);
+
+  const toggleListening = () => {
+    const recognition = recognitionRef.current;
+    if (!recognition) return;
+    if (isListening) {
+      recognition.stop();
+    } else {
+      recognition.start();
     }
   };
 
@@ -83,17 +104,22 @@ export const VoiceAssistantModal: React.FC = () => {
 
         <div className="flex flex-col items-center justify-center py-6 bg-slate-950 rounded-2xl border border-slate-800 space-y-4">
           <button
-            onClick={() => setIsListening(!isListening)}
-            className={`w-20 h-20 rounded-full flex items-center justify-center transition-all shadow-xl ${
+            onClick={toggleListening}
+            disabled={!isSupported}
+            aria-pressed={isListening}
+            aria-label={isListening ? 'Dinlemeyi durdur' : 'Sesli komut vermek için mikrofona dokun'}
+            className={`w-20 h-20 rounded-full flex items-center justify-center transition-all shadow-xl disabled:opacity-40 disabled:cursor-not-allowed motion-reduce:transition-none ${
               isListening
-                ? 'bg-rose-500 animate-pulse text-white shadow-rose-500/50 scale-105'
+                ? 'bg-rose-500 motion-safe:animate-pulse text-white shadow-rose-500/50 scale-105'
                 : 'bg-gradient-to-tr from-sky-500 to-indigo-600 text-white hover:scale-105'
             }`}
           >
             {isListening ? <Mic className="w-8 h-8" /> : <MicOff className="w-8 h-8" />}
           </button>
           <span className="text-xs font-semibold text-sky-400">
-            {isListening ? 'Dinleniyor... Konuşabilirsiniz' : 'Konuşmak İçin Mikrofona Dokunun'}
+            {!isSupported
+              ? 'Tarayıcınız sesli komutu desteklemiyor. Örnek komutlardan birini deneyin.'
+              : isListening ? 'Dinleniyor... Konuşabilirsiniz' : 'Konuşmak İçin Mikrofona Dokunun'}
           </span>
           {transcript && (
             <p className="text-xs text-slate-300 italic px-4 text-center">

@@ -128,6 +128,7 @@ export interface FamilyProfile {
   name: string;
   relationship: 'Kendi Profilim' | 'Çocuğum' | 'Ebeveynim' | 'Eşim';
   avatarColor: string;
+  avatarUrl?: string; // Kullanıcı tarafından yüklenen profil fotoğrafı (base64 data URL)
   age: number;
   eczemaType: string;
   primaryLocations: BodyLocation[];
@@ -144,6 +145,14 @@ export interface TreatmentEntry {
   status: 'Devam Ediyor' | 'Sonlandırıldı';
   reasonForChange?: string; // Bir sonraki tedaviye neden geçildiği
   notes?: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  text: string;
+  timestamp: string;
+  urgent?: boolean;
 }
 
 export interface AuditLogEntry {
