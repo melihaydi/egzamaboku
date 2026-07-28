@@ -28,14 +28,26 @@ export const knowledgeBase: KnowledgeEntry[] = [
   {
     id: 'kb-what-is-eczema',
     topic: 'Egzama (Atopik Dermatit) Nedir?',
-    keywords: ['egzama nedir', 'atopik dermatit nedir', 'egzama ne demek', 'egzama hastaligi'],
+    keywords: ['egzama nedir', 'atopik dermatit nedir', 'egzama ne demek', 'egzama hastaligi', 'egzama'],
     answer: 'Egzama (atopik dermatit), cilt bariyerinin zayıflaması ve bağışıklık sisteminin aşırı tepki vermesi sonucu ortaya çıkan kronik, tekrarlayan bir cilt iltihabıdır. Kızarıklık, kuruluk, kaşıntı, soyulma ve zaman zaman sıvı sızdıran lezyonlarla seyreder. Genetik yatkınlık (özellikle filaggrin geninde varyasyonlar), bozulmuş cilt bariyer fonksiyonu ve tip-2 bağışıklık yanıtının aşırı aktivasyonu ana mekanizmalardır. Bulaşıcı değildir.'
+  },
+  {
+    id: 'kb-eczema-cure',
+    topic: 'Egzama İyileşir mi / Geçer mi?',
+    keywords: ['egzama gecer mi', 'egzama iyilesir mi', 'egzama kalici mi', 'egzama tedavi edilir mi', 'egzama tamamen gecer mi', 'kesin cozum'],
+    answer: 'Egzamanın kesin/kalıcı bir tedavisi yoktur; ancak doğru bakım ve tedaviyle büyük ölçüde kontrol altına alınabilir. Birçok çocukta yaşla birlikte belirtiler belirgin şekilde hafifler veya geriler. Yetişkinlerde amaç genellikle "tamamen ortadan kaldırmak" değil, düzenli nemlendirme, tetikleyicilerden kaçınma ve gerektiğinde ilaç tedavisiyle alevlenmesiz, kontrollü bir dönem sürdürmektir.'
   },
   {
     id: 'kb-causes',
     topic: 'Egzamanın Nedenleri',
     keywords: ['egzama nedeni', 'egzama sebebi', 'neden olur', 'genetik', 'filaggrin', 'bariyer bozuklugu'],
     answer: 'Egzama tek bir nedene bağlı değildir; genetik yatkınlık (filaggrin gen mutasyonları cilt bariyerini zayıflatır), bozulmuş cilt bariyeri (nem kaybının artması), aşırı aktif tip-2 bağışıklık yanıtı (IL-4, IL-13, IL-31 sitokinleri) ve çevresel tetikleyicilerin bir araya gelmesiyle ortaya çıkar. Genellikle astım ve alerjik rinit ile birlikte görülen "atopik triad"ın bir parçasıdır.'
+  },
+  {
+    id: 'kb-flare-management',
+    topic: 'Alevlenme Anında Ne Yapılmalı',
+    keywords: ['alevlenme sirasinda', 'alevlenme aninda', 'alevlendiginde ne yapmali', 'yeni alevlenme', 'aniden kotulesti'],
+    answer: 'Alevlenme sırasında: kaşınan bölgeyi kazımak yerine soğuk kompresle yatıştırın, seramid içerikli bariyer kremi normalden daha sık (günde 3-4 kez) uygulayın, hekiminiz reçete ettiyse topikal kortizon/kalsinörin inhibitörünü kullanın, tahriş edici temaslardan (sıcak su, sert sabun, yün) kaçının ve şiddetli/dirençli alevlenmelerde ıslak sargı tedavisini değerlendirin. Sarı akıntı, yayılan ağrılı kabarcık veya ateş eşlik ederse vakit kaybetmeden hekime başvurun.'
   },
   {
     id: 'kb-triggers',
@@ -46,8 +58,14 @@ export const knowledgeBase: KnowledgeEntry[] = [
   {
     id: 'kb-moisturizing',
     topic: 'Nemlendirme Rutini',
-    keywords: ['nemlendirici', 'nemlendirme', 'soak and seal', 'krem ne siklikta', 'nasil nemlendirmeliyim'],
+    keywords: ['nemlendirici', 'nemlendirme', 'soak and seal', 'krem ne siklikta', 'nasil nemlendirmeliyim', 'cildim kuru', 'kuru cilt', 'ne surmeliyim', 'hangi krem'],
     answer: 'Altın standart yöntem "Islat ve Mühürle" (Soak and Seal): ılık suyla 10-15 dakika banyo/duş yapılır, cilt havluyla hafifçe (ovmadan) kurulanır ve banyodan sonraki ilk 3 dakika içinde bol miktarda seramid içerikli nemlendirici uygulanır. Günde en az 2 kez, kuruluk hissedildiğinde daha sık nemlendirme önerilir. Parfümsüz, boyasız, seramid/gliserin bazlı ürünler tercih edilmelidir.'
+  },
+  {
+    id: 'kb-redness',
+    topic: 'Kızarıklık (Eritem)',
+    keywords: ['kizariklik', 'cildim kizardi', 'kizarik', 'eritem', 'kizarma'],
+    answer: 'Kızarıklık (eritem), egzamada iltihaplanmış kan damarlarının genişlemesiyle oluşur ve genellikle kaşıntı/ısı artışıyla birlikte görülür. Ani ve yaygın kızarıklık bir alevlenmeye işaret edebilir: nemlendiriciyi artırmak, tahriş edici temaslardan kaçınmak ve gerekirse reçeteli topikal tedaviyi kullanmak faydalı olur. Kızarıklığın seyrini objektif olarak takip etmek için Cilt Fotoğraf Analizi sekmesini kullanabilirsiniz; sarı/yeşilimsi akıntı veya ateş eşlik ediyorsa enfeksiyon açısından hekime başvurun.'
   },
   {
     id: 'kb-bathing',
@@ -154,7 +172,7 @@ export const knowledgeBase: KnowledgeEntry[] = [
   {
     id: 'kb-children',
     topic: 'Çocuklarda Egzama',
-    keywords: ['cocuklarda egzama', 'bebek egzama', 'pediatrik atopik dermatit'],
+    keywords: ['cocuklarda egzama', 'bebek egzama', 'pediatrik atopik dermatit', 'cocugumda', 'cocugumun', 'cocugum', 'bebegimde', 'bebegimin'],
     answer: 'Bebeklerde egzama genellikle yüz, kafa derisi ve gövdenin dış yüzeylerinde başlar; çocukluk döneminde ise diz/dirsek içi gibi kıvrım bölgelerine kayar. Çoğu çocukta yaşla birlikte belirtiler hafifler. Düzenli nemlendirme, ılık kısa banyolar, pamuklu giysiler ve tetikleyicilerden kaçınma tedavinin temelini oluşturur; şiddetli vakalarda çocuk dermatoloğu/pediatrik alerji uzmanı takibi önerilir.'
   },
   {
@@ -193,7 +211,7 @@ export const knowledgeBase: KnowledgeEntry[] = [
     topic: 'Ne Zaman Doktora Başvurmalı',
     urgent: true,
     keywords: ['doktora ne zaman', 'acil durum', 'ne zaman hastaneye', 'tehlikeli belirti'],
-    answer: 'Yüksek ateş ile birlikte cilt kızarıklığı, yüz/dudak/boğazda aniden gelişen şiddetli şişlik, hızla yayılan su toplayan kabarcıklar, göz çevresinde şiddetli ağrı veya görme bulanıklığı, ya da sarı/bal rengi iltihaplı akıntı görülmesi durumunda vakit kaybetmeden tıbbi yardım alınmalıdır. Uygulamadaki "Acil Durum Rehberi" bu belirtileri detaylı olarak değerlendirmenize yardımcı olur.'
+    answer: 'Yüksek ateş ile birlikte cilt kızarıklığı, yüz/dudak/boğazda aniden gelişen şiddetli şişlik, hızla yayılan su toplayan kabarcıklar, göz çevresinde şiddetli ağrı veya görme bulanıklığı, ya da sarı/bal rengi iltihaplı akıntı görülmesi durumunda vakit kaybetmeden tıbbi yardım alınmalıdır; bu durumlarda beklemeden bir hekime veya acil servise başvurun.'
   },
   {
     id: 'kb-hand-eczema',
@@ -216,7 +234,7 @@ export const knowledgeBase: KnowledgeEntry[] = [
   {
     id: 'kb-itch-management',
     topic: 'Kaşıntı Yönetimi',
-    keywords: ['kasinti yonetimi', 'kasintiyi durdurmak', 'kasinma kazima dongusu', 'kasinti nasil gecer'],
+    keywords: ['kasinti yonetimi', 'kasintiyi durdurmak', 'kasinma kazima dongusu', 'kasinti nasil gecer', 'kasinti', 'kasiniyor', 'kasiniyorum', 'kasintim var', 'cok kasiniyor'],
     answer: 'Kaşıntı-kazıma döngüsünü kırmak egzama yönetiminin temelidir: cildi soğutmak (soğuk kompres), tırnakları kısa tutmak, gece pamuklu eldiven giymek, yoğun nemlendirme, dikkat dağıtma teknikleri ve gerektiğinde hekim önerisiyle antihistaminik/topikal tedavi kullanmak kaşıntıyı azaltabilir. Kazımak cilt bariyerine ek hasar vererek döngüyü şiddetlendirir.'
   },
   {
@@ -253,7 +271,7 @@ export const knowledgeBase: KnowledgeEntry[] = [
     id: 'kb-scorad',
     topic: 'SCORAD ve EASI Skorları',
     keywords: ['scorad', 'easi', 'siddet skoru', 'klinik skor'],
-    answer: 'SCORAD (SCORing Atopic Dermatitis) ve EASI (Eczema Area and Severity Index), egzamanın klinik şiddetini standart olarak ölçmek için kullanılan puanlama sistemleridir; etkilenen vücut alanı, lezyon şiddeti (kızarıklık, ödem, kabuklanma vb.) ve kaşıntı/uyku etkisini birlikte değerlendirirler. Bu uygulamadaki Görsel Yapay Zeka Analizi modülü her taramada tahmini bir SCORAD değeri hesaplar; bu değerler doktor görüşmelerinde objektif bir takip aracı olarak kullanılabilir.'
+    answer: 'SCORAD (SCORing Atopic Dermatitis) ve EASI (Eczema Area and Severity Index), egzamanın klinik şiddetini standart olarak ölçmek için hekimlerin kullandığı puanlama sistemleridir; etkilenen vücut alanı, lezyon şiddeti (kızarıklık, ödem, kabuklanma vb.) ve kaşıntı/uyku etkisini birlikte değerlendirirler. Bu uygulama tam SCORAD/EASI hesaplamaz; Cilt Fotoğraf Analizi sekmesi fotoğraftan ölçülebilen görsel bileşenleri (kızarıklık, soyulma, şişlik, kabuklanma, etkilenen alan), Alevlenme Raporu sekmesi ise senin puanladığın kaşıntı/uyku gibi öznel belirtileri ayrı ayrı gösterir.'
   }
 ];
 
@@ -263,8 +281,35 @@ export interface AssistantReply {
   urgent?: boolean;
 }
 
-const GREETING_KEYWORDS = ['merhaba', 'selam', 'iyi gunler', 'gunaydin', 'iyi aksamlar'];
+const GREETING_KEYWORDS = ['merhaba', 'selam', 'iyi gunler', 'gunaydin', 'iyi aksamlar', 'nasilsin'];
 const THANKS_KEYWORDS = ['tesekkur', 'sagol', 'sagolun', 'elinize saglik'];
+
+// Çok kısa/yaygın Türkçe işlev kelimeleri (soru eki, bağlaç vb.) hemen her cümlede geçebileceğinden
+// kısmi eşleşme puanlamasında hiçbir zaman tek başına anlamlı bir sinyal sayılmaz.
+const STOP_WORDS = new Set(['mi', 'mu', 'mu', 'ne', 'ile', 'de', 'da', 've', 'veya', 'icin', 'gibi', 'var', 'yok', 'ki', 'bu', 'su', 'bir', 'cok', 'nasil']);
+
+// Türkçe eklerin (kaşıntı/kaşıntım/kaşıntıyı gibi) kök üzerinden yakalanmasına izin verir:
+// soru kelimesi, anahtar kelime kökü ile başlıyorsa eşleşme sayılır. Tersi (kısa bir soru
+// kelimesinin uzun bir anahtar kelimenin öneki olması, örn. "ne" -> "nemlendirici") KASITLI
+// olarak kontrol edilmez; aksi halde "ne" gibi kısa/yaygın kelimeler alakasız konularla eşleşir.
+function wordMatches(questionWords: string[], keywordWord: string): boolean {
+  if (keywordWord.length < 4) return questionWords.includes(keywordWord);
+  return questionWords.some(w => w.startsWith(keywordWord));
+}
+
+function scoreKeyword(question: string, questionWords: string[], keyword: string): number {
+  if (question.includes(keyword)) {
+    return keyword.split(' ').length * 3; // tam ifade eşleşmesi en güçlü sinyaldir
+  }
+  const keywordWords = keyword.split(' ').filter(w => !STOP_WORDS.has(w));
+  if (keywordWords.length === 0) return 0;
+  const matchedCount = keywordWords.filter(kw => wordMatches(questionWords, kw)).length;
+  if (matchedCount === 0) return 0;
+  if (matchedCount === keywordWords.length) return keywordWords.length * 2; // anlamlı kelimelerin tümü farklı sırayla mevcut
+  return matchedCount; // kısmi eşleşme
+}
+
+const MIN_MATCH_SCORE = 2;
 
 export function getAssistantReply(rawQuestion: string): AssistantReply {
   const question = normalize(rawQuestion);
@@ -273,7 +318,31 @@ export function getAssistantReply(rawQuestion: string): AssistantReply {
     return { text: 'Egzama, cilt bakımı veya kullandığınız tedaviler hakkında bir soru yazabilirsiniz.' };
   }
 
-  if (GREETING_KEYWORDS.some(k => question.includes(k))) {
+  const questionWords = question.split(/\s+/).filter(Boolean);
+
+  let bestEntry: KnowledgeEntry | null = null;
+  let bestScore = 0;
+
+  for (const entry of knowledgeBase) {
+    let score = 0;
+    for (const keyword of entry.keywords) {
+      score += scoreKeyword(question, questionWords, keyword);
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestEntry = entry;
+    }
+  }
+
+  // Bilgi tabanında gerçek bir konu eşleşmesi bulunduysa, mesajın başında bir
+  // selamlama olsa bile (Örn: "Merhaba, kaşıntım çok fazla ne yapmalıyım?")
+  // asıl soru yanıtlanır; selamlama asla asıl soruyu görmezden gelmez.
+  if (bestEntry && bestScore >= MIN_MATCH_SCORE) {
+    return { text: bestEntry.answer, matchedTopic: bestEntry.topic, urgent: bestEntry.urgent };
+  }
+
+  // Konuyla ilgili bir eşleşme bulunamadıysa ve mesaj kısa/yalnızca selamlama niteliğindeyse
+  if (questionWords.length <= 4 && GREETING_KEYWORDS.some(k => question.includes(k))) {
     return {
       text: 'Merhaba! Egzama, cilt bariyeri, tedaviler (Dupixent, Cibinqo, Siklosporin, Prednizon vb.) veya günlük bakım hakkında istediğiniz soruyu sorabilirsiniz.'
     };
@@ -283,27 +352,7 @@ export function getAssistantReply(rawQuestion: string): AssistantReply {
     return { text: 'Rica ederim! Başka bir sorunuz olursa buradayım. Ciddi veya beklenmedik belirtilerde her zaman hekiminize danışmayı unutmayın.' };
   }
 
-  let bestEntry: KnowledgeEntry | null = null;
-  let bestScore = 0;
-
-  for (const entry of knowledgeBase) {
-    let score = 0;
-    for (const keyword of entry.keywords) {
-      if (question.includes(keyword)) {
-        score += keyword.split(' ').length; // çok kelimeli eşleşmeler daha güçlü sayılır
-      }
-    }
-    if (score > bestScore) {
-      bestScore = score;
-      bestEntry = entry;
-    }
-  }
-
-  if (bestEntry && bestScore > 0) {
-    return { text: bestEntry.answer, matchedTopic: bestEntry.topic, urgent: bestEntry.urgent };
-  }
-
   return {
-    text: 'Bu konuda hazır bir yanıtım yok. Sorunuzu farklı kelimelerle tekrar deneyebilir veya "Klinik Bilgi Bankası" sekmesindeki geniş kapsamlı makalelere göz atabilirsiniz. Ciddi veya hızla kötüleşen belirtiler için lütfen bir dermatoloğa başvurun.'
+    text: 'Bu konuda hazır bir yanıtım yok. Sorunuzu farklı veya daha basit kelimelerle tekrar dener misin? (Örn: "nemlendirici", "Dupixent", "kaşıntı", "ıslak sargı" gibi tek bir anahtar kelime bile yeterli olabilir.) Ciddi veya hızla kötüleşen belirtiler için lütfen bir dermatoloğa başvurun.'
   };
 }

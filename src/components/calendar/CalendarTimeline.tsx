@@ -20,14 +20,14 @@ import {
 import { useApp } from '../../context/useApp';
 import type { CalendarEvent, CalendarEventType } from '../../types';
 
-const EVENT_META: Record<CalendarEventType, { icon: typeof Camera; color: string; label: string }> = {
-  photo: { icon: Camera, color: 'bg-neutral-700 text-neutral-100', label: 'Fotoğraf' },
-  medication: { icon: Pill, color: 'bg-neutral-700/60 text-neutral-200', label: 'İlaç' },
-  injection: { icon: Syringe, color: 'bg-neutral-600/60 text-neutral-100', label: 'Enjeksiyon' },
-  doctorVisit: { icon: Stethoscope, color: 'bg-emerald-900/50 text-emerald-200', label: 'Doktor Ziyareti' },
-  missedMoisturizer: { icon: Droplets, color: 'bg-amber-900/50 text-amber-200', label: 'Atlanan Bakım' },
-  flare: { icon: Flame, color: 'bg-rose-900/50 text-rose-200', label: 'Alevlenme' },
-  note: { icon: StickyNote, color: 'bg-neutral-800 text-neutral-300', label: 'Not' }
+const EVENT_META: Record<CalendarEventType, { icon: typeof Camera; color: string; chip: string; dot: string; label: string }> = {
+  photo: { icon: Camera, color: 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30', chip: 'bg-cyan-500/25 text-cyan-100', dot: 'bg-cyan-400', label: 'Fotoğraf' },
+  medication: { icon: Pill, color: 'bg-sky-500/15 text-sky-300 border border-sky-500/30', chip: 'bg-sky-500/25 text-sky-100', dot: 'bg-sky-400', label: 'İlaç' },
+  injection: { icon: Syringe, color: 'bg-violet-500/15 text-violet-300 border border-violet-500/30', chip: 'bg-violet-500/25 text-violet-100', dot: 'bg-violet-400', label: 'Enjeksiyon' },
+  doctorVisit: { icon: Stethoscope, color: 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30', chip: 'bg-emerald-500/25 text-emerald-100', dot: 'bg-emerald-400', label: 'Doktor Ziyareti' },
+  missedMoisturizer: { icon: Droplets, color: 'bg-amber-500/15 text-amber-300 border border-amber-500/30', chip: 'bg-amber-500/25 text-amber-100', dot: 'bg-amber-400', label: 'Atlanan Bakım' },
+  flare: { icon: Flame, color: 'bg-rose-500/15 text-rose-300 border border-rose-500/30', chip: 'bg-rose-500/25 text-rose-100', dot: 'bg-rose-400', label: 'Alevlenme' },
+  note: { icon: StickyNote, color: 'bg-neutral-700/40 text-neutral-300 border border-neutral-700', chip: 'bg-neutral-700/60 text-neutral-200', dot: 'bg-neutral-400', label: 'Not' }
 };
 
 function pad(n: number) { return n.toString().padStart(2, '0'); }
@@ -155,7 +155,7 @@ export const CalendarTimeline: React.FC = () => {
                       <span
                         key={ev.id}
                         className={`block text-[8px] leading-tight px-1 py-0.5 rounded truncate w-full text-left ${
-                          isSelected ? 'bg-neutral-950/10 text-neutral-950' : 'bg-neutral-800 text-neutral-300'
+                          isSelected ? 'bg-neutral-950/10 text-neutral-950' : EVENT_META[ev.type].chip
                         }`}
                       >
                         • {ev.title}
