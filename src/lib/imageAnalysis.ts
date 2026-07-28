@@ -1,7 +1,7 @@
-// Gerçek Piksel Tabanlı Görsel Analiz Motoru
-// Bu bir klinik teşhis modeli değildir: eğitilmiş bir derin öğrenme modeli kullanmaz.
-// Ancak yüklenen fotoğrafın GERÇEK piksel verisini (renk, doku, kenar yoğunluğu)
-// analiz ederek rastgele/sahte sayılar yerine görüntüden türetilmiş ölçümler üretir.
+// Piksel Tabanlı Görsel Analiz Motoru
+// Eğitilmiş bir derin öğrenme modeli DEĞİLDİR; klinik teşhis koymaz.
+// Yüklenen fotoğrafın GERÇEK piksel verisini (renk kanalları, doku/kenar yoğunluğu, parlaklık dağılımı)
+// deterministik biçimde ölçer: aynı fotoğraf her zaman aynı sonucu üretir (rastgele sayı üretilmez).
 
 export interface RegionPoint {
   x: number; // % (0-100)
@@ -13,15 +13,15 @@ export interface RegionPoint {
 
 export interface PixelAnalysisResult {
   redness: number;
-  dryness: number;
   scaling: number;
-  cracking: number;
-  oozing: number;
   swelling: number;
+  crusting: number;
+  oozing: number;
   pigmentation: number;
   surfaceAreaCm2: number;
   confidenceScore: number;
   affectedRegions: RegionPoint[];
+  reasoning: string[];
 }
 
 function clamp(v: number, min: number, max: number) {
@@ -34,8 +34,8 @@ export function analyzeImagePixels(canvas: HTMLCanvasElement): PixelAnalysisResu
   const height = canvas.height;
   if (!ctx || width === 0 || height === 0) {
     return {
-      redness: 0, dryness: 0, scaling: 0, cracking: 0, oozing: 0, swelling: 0, pigmentation: 0,
-      surfaceAreaCm2: 0, confidenceScore: 0, affectedRegions: []
+      redness: 0, scaling: 0, swelling: 0, crusting: 0, oozing: 0, pigmentation: 0,
+      surfaceAreaCm2: 0, confidenceScore: 0, affectedRegions: [], reasoning: ['Görüntü okunamadı.']
     };
   }
 
@@ -48,17 +48,16 @@ export function analyzeImagePixels(canvas: HTMLCanvasElement): PixelAnalysisResu
   const cellRedness: number[][] = [];
   const cellBrown: number[][] = [];
   const cellTextureVariance: number[][] = [];
-  const cellEdgeDensity: number[][] = [];
+  const cellDarkRoughness: number[][] = [];
   const cellHighlight: number[][] = [];
 
-  let globalR = 0, globalG = 0, globalB = 0, globalBrightness = 0, globalPixels = 0;
-  let overexposed = 0, underexposed = 0;
+  let overexposed = 0, underexposed = 0, globalPixels = 0;
 
   for (let gy = 0; gy < gridSize; gy++) {
     cellRedness[gy] = [];
     cellBrown[gy] = [];
     cellTextureVariance[gy] = [];
-    cellEdgeDensity[gy] = [];
+    cellDarkRoughness[gy] = [];
     cellHighlight[gy] = [];
 
     for (let gx = 0; gx < gridSize; gx++) {
@@ -69,8 +68,8 @@ export function analyzeImagePixels(canvas: HTMLCanvasElement): PixelAnalysisResu
 
       let rSum = 0, gSum = 0, bSum = 0, count = 0;
       let lumSum = 0, lumSqSum = 0;
-      let edgeCount = 0;
       let highlightCount = 0;
+      let darkEdgeCount = 0;
       let prevLum = -1;
 
       for (let y = y0; y < y1; y++) {
@@ -78,19 +77,17 @@ export function analyzeImagePixels(canvas: HTMLCanvasElement): PixelAnalysisResu
           const i = (y * width + x) * 4;
           const r = data[i], g = data[i + 1], b = data[i + 2];
           rSum += r; gSum += g; bSum += b; count++;
-          globalR += r; globalG += g; globalB += b; globalPixels++;
+          globalPixels++;
 
           const lum = 0.299 * r + 0.587 * g + 0.114 * b;
           lumSum += lum;
           lumSqSum += lum * lum;
-          globalBrightness += lum;
           if (lum > 245) overexposed++;
           if (lum < 12) underexposed++;
 
-          if (prevLum >= 0 && Math.abs(lum - prevLum) > 28) edgeCount++;
+          if (prevLum >= 0 && Math.abs(lum - prevLum) > 28 && lum < 110) darkEdgeCount++;
           prevLum = lum;
 
-          // Parlak, düşük doygunluklu (beyazımsı/sarımsı) noktalar -> sızıntı/parlaklık ipucu
           const maxC = Math.max(r, g, b);
           const minC = Math.min(r, g, b);
           const saturation = maxC === 0 ? 0 : (maxC - minC) / maxC;
@@ -110,7 +107,7 @@ export function analyzeImagePixels(canvas: HTMLCanvasElement): PixelAnalysisResu
       cellRedness[gy][gx] = rednessSignal;
       cellBrown[gy][gx] = brownSignal;
       cellTextureVariance[gy][gx] = Math.sqrt(Math.max(0, variance));
-      cellEdgeDensity[gy][gx] = edgeCount / count;
+      cellDarkRoughness[gy][gx] = darkEdgeCount / count;
       cellHighlight[gy][gx] = highlightCount / count;
     }
   }
@@ -118,42 +115,36 @@ export function analyzeImagePixels(canvas: HTMLCanvasElement): PixelAnalysisResu
   const flatRedness = cellRedness.flat();
   const flatBrown = cellBrown.flat();
   const flatTexture = cellTextureVariance.flat();
-  const flatEdge = cellEdgeDensity.flat();
+  const flatDarkRoughness = cellDarkRoughness.flat();
   const flatHighlight = cellHighlight.flat();
 
   const avg = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / arr.length;
   const maxOf = (arr: number[]) => Math.max(...arr);
 
-  // Kızarıklık: R kanalının G/B ortalamasına göre baskınlığı
-  const redness = clamp((avg(flatRedness) / 55) * 100, 0, 100);
+  const avgRedness = avg(flatRedness);
+  const redness = clamp((avgRedness / 55) * 100, 0, 100);
 
-  // Kuruluk / Soyulma: yerel doku varyansı (pürüzlü, mikro-kontrastlı yüzey kuru/pullu ciltte daha yüksektir)
-  const textureScore = clamp((avg(flatTexture) / 38) * 100, 0, 100);
-  const dryness = textureScore;
-  const scaling = clamp(textureScore * 0.85 + maxOf(flatTexture) / 2, 0, 100);
+  const avgTexture = avg(flatTexture);
+  const scaling = clamp((avgTexture / 38) * 100 * 0.85 + maxOf(flatTexture) / 2, 0, 100);
 
-  // Çatlama: keskin yerel parlaklık geçişlerinin (kenar) yoğunluğu
-  const cracking = clamp(avg(flatEdge) * 900, 0, 100);
-
-  // Sızıntı/Akıntı: düşük doygunluklu parlak (ıslak görünümlü) bölge oranı
-  const oozing = clamp(avg(flatHighlight) * 260, 0, 100);
-
-  // Şişlik: yüksek kızarıklığa sahip hücrelerin ne kadar geniş/bitişik bir alan kapladığı
   const highRednessCells = flatRedness.filter(v => v > 30).length;
   const swelling = clamp((highRednessCells / flatRedness.length) * 140, 0, 100);
 
-  // Pigmentasyon: kahverengi/post-enflamatuar ton sinyali
-  const pigmentation = clamp((avg(flatBrown) / 40) * 100, 0, 100);
+  const avgDarkRoughness = avg(flatDarkRoughness);
+  const crusting = clamp(avgDarkRoughness * 950, 0, 100);
 
-  // Etkilenen alan tahmini: kızarıklık eşiğini aşan hücrelerin oranı, standart bir çerçeve alanına ölçeklenir
+  const avgHighlight = avg(flatHighlight);
+  const oozing = clamp(avgHighlight * 260, 0, 100);
+
+  const avgBrown = avg(flatBrown);
+  const pigmentation = clamp((avgBrown / 40) * 100, 0, 100);
+
   const affectedRatio = flatRedness.filter(v => v > 22).length / flatRedness.length;
   const surfaceAreaCm2 = Math.round(affectedRatio * 320 * 10) / 10;
 
-  // Güven skoru: pozlama kalitesine dayalı gerçek bir sinyal (çok karanlık/çok parlak görüntüler daha az güvenilir)
   const exposureIssues = (overexposed + underexposed) / globalPixels;
   const confidenceScore = Math.round(clamp(96 - exposureIssues * 180, 55, 98));
 
-  // Isı haritası noktaları: en yüksek kızarıklık sinyaline sahip 3 hücre
   const cellsWithIndex: Array<{ gx: number; gy: number; val: number }> = [];
   for (let gy = 0; gy < gridSize; gy++) {
     for (let gx = 0; gx < gridSize; gx++) {
@@ -171,17 +162,28 @@ export function analyzeImagePixels(canvas: HTMLCanvasElement): PixelAnalysisResu
     label: c.val > 60 ? 'Belirgin Eritem Bölgesi' : 'Hafif Kızarıklık Bölgesi'
   }));
 
+  // Şeffaflık: her ölçümün hangi somut piksel sinyaline dayandığını açıkla
+  const reasoning: string[] = [
+    `Kızarıklık %${Math.round(redness)}: kırmızı renk kanalı, yeşil/mavi kanal ortalamasının ${Math.round(avgRedness)} birim üzerinde ölçüldü (${topCells.length} bölgede yoğunlaşmış).`,
+    `Soyulma/kuruluk görünümü %${Math.round(scaling)}: yerel parlaklık varyansı (doku pürüzlülüğü) ${avgTexture.toFixed(1)} birim, düz/nemli ciltten daha yüksek.`,
+    `Şişlik göstergesi %${Math.round(swelling)}: kızarıklık eşiğini aşan hücrelerin alana oranı %${Math.round((highRednessCells / flatRedness.length) * 100)}.`,
+    `Kabuklanma %${Math.round(crusting)}: koyu tonlu bölgelerde keskin yerel kontrast geçişleri (kenar) tespit edildi.`,
+    `Sızıntı/akıntı %${Math.round(oozing)}: düşük doygunluklu parlak (ıslak görünümlü) piksellerin oranı %${(avgHighlight * 100).toFixed(1)}.`,
+    `Etkilenen alan ${surfaceAreaCm2} cm²: kareye bölünen ${gridSize * gridSize} hücreden kızarıklık eşiğini aşanların oranına göre tahmin edildi.`,
+    `Güven skoru %${confidenceScore}: aşırı karanlık/parlak piksel oranı %${(exposureIssues * 100).toFixed(1)} (düşük oran = güvenilir pozlama).`
+  ];
+
   return {
     redness: Math.round(redness),
-    dryness: Math.round(dryness),
     scaling: Math.round(scaling),
-    cracking: Math.round(cracking),
-    oozing: Math.round(oozing),
     swelling: Math.round(swelling),
+    crusting: Math.round(crusting),
+    oozing: Math.round(oozing),
     pigmentation: Math.round(pigmentation),
     surfaceAreaCm2,
     confidenceScore,
-    affectedRegions
+    affectedRegions,
+    reasoning
   };
 }
 
@@ -190,11 +192,4 @@ export function estimateInfectionRisk(result: PixelAnalysisResult): 'Düşük' |
   if (infectionSignal > 55) return 'Yüksek';
   if (infectionSignal > 30) return 'Orta';
   return 'Düşük';
-}
-
-export function estimateScoradIndex(result: PixelAnalysisResult): number {
-  const extentScore = clamp(result.surfaceAreaCm2 / 6, 0, 100) * 0.1;
-  const intensitySum = result.redness + result.dryness + result.scaling + result.cracking + result.oozing + result.swelling;
-  const intensityScore = (intensitySum / 6) * 0.7;
-  return Math.round((extentScore + intensityScore) * 10) / 10;
 }

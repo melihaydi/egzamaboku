@@ -2,14 +2,15 @@ import React, { useState } from 'react';
 import {
   CloudSun,
   Sun,
-  ShieldAlert,
   Sparkles,
   TreePine,
   Activity,
   AlertTriangle,
   Info,
   MapPin,
-  RefreshCw
+  RefreshCw,
+  Gauge,
+  Leaf
 } from 'lucide-react';
 import { useApp } from '../../context/useApp';
 
@@ -24,7 +25,7 @@ export const WeatherIntelligence: React.FC = () => {
   const { environmental, environmentalLoading, refreshEnvironmental } = useApp();
   const [selectedDay, setSelectedDay] = useState<number>(0);
 
-  const activeForecast = environmental.forecast72h[selectedDay];
+  const activeForecast = environmental.forecast[selectedDay];
 
   const getPollenBadge = (lvl: string) => {
     switch (lvl) {
@@ -37,7 +38,7 @@ export const WeatherIntelligence: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Üst Şerit & 72 Saatlik Tahmin */}
+      {/* Üst Şerit & Günlük Görünüm */}
       <div className="bg-neutral-900/60 p-6 md:p-8 rounded-3xl border border-neutral-800 space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -47,11 +48,11 @@ export const WeatherIntelligence: React.FC = () => {
               </span>
               <div>
                 <h2 className="text-xl font-semibold text-white tracking-tight">
-                  72 Saatlik Alevlenme Tahmini
+                  Hava & Çevre Verileri
                 </h2>
                 <p className="text-xs text-neutral-500 flex items-center gap-1 mt-0.5">
                   <MapPin className="w-3.5 h-3.5" />
-                  {environmental.city} • {environmental.dataSource === 'canlı-api' ? 'Canlı Hava/AQI/Polen Verisi' : 'Yedek Veri (bağlantı bekleniyor)'}
+                  {environmental.city} • {environmental.dataSource === 'canlı-api' ? 'Canlı Ölçüm' : 'Yedek Veri (bağlantı bekleniyor)'}
                 </p>
               </div>
             </div>
@@ -59,18 +60,15 @@ export const WeatherIntelligence: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <div className="flex rounded-2xl bg-neutral-950 p-1 border border-neutral-800">
-              {environmental.forecast72h.map((fc, idx) => (
+              {environmental.forecast.map((fc, idx) => (
                 <button
                   key={fc.day}
                   onClick={() => setSelectedDay(idx)}
-                  className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex flex-col items-center gap-0.5 ${
+                  className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
                     selectedDay === idx ? 'bg-white text-neutral-950 shadow' : 'text-neutral-400 hover:text-neutral-200'
                   }`}
                 >
-                  <span>{fc.day}</span>
-                  <span className={`text-[10px] px-1.5 rounded ${fc.flareRisk > 40 ? 'bg-rose-500/70 text-white' : 'bg-emerald-500/70 text-white'}`}>
-                    Risk: %{fc.flareRisk}
-                  </span>
+                  {fc.day}
                 </button>
               ))}
             </div>
@@ -85,26 +83,9 @@ export const WeatherIntelligence: React.FC = () => {
           </div>
         </div>
 
-        <div className={`p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
-          activeForecast.flareRisk > 40 ? 'bg-rose-500/5 border-rose-500/30 text-rose-200' : 'bg-emerald-500/5 border-emerald-500/25 text-emerald-200'
-        }`}>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <ShieldAlert className="w-5 h-5 text-neutral-400" />
-              <span className="font-semibold text-sm text-white">
-                {activeForecast.flareRisk > 40 ? 'Yüksek Alevlenme Riski' : 'Uygun Cilt Mikroklima'}
-              </span>
-            </div>
-            <p className="text-xs leading-relaxed text-neutral-300">
-              Bu gün için tahmini alevlenme riski: <strong>%{activeForecast.flareRisk}</strong>. Ana etken: {activeForecast.primaryDriver}.
-            </p>
-          </div>
-
-          <div className="text-right shrink-0">
-            <span className="text-[10px] font-semibold uppercase text-neutral-500 block">Ana Risk Etkeni</span>
-            <span className="text-sm font-semibold text-neutral-200">{activeForecast.primaryDriver}</span>
-          </div>
-        </div>
+        <p className="text-[11px] text-neutral-500 leading-relaxed">
+          Bu bölüm yalnızca ölçülen/tahmin edilen meteorolojik ve hava kalitesi verilerini gösterir. Bir alevlenme olasılığı hesaplanmaz veya tahmin edilmez — bu tür tahminler yeterli klinik kanıt olmadan yanıltıcı olabilir.
+        </p>
       </div>
 
       {/* Metrikler Izgarası */}
@@ -114,39 +95,39 @@ export const WeatherIntelligence: React.FC = () => {
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold text-white flex items-center gap-2">
               <Sun className="w-4 h-4 text-neutral-500" />
-              Hava Faktörleri
+              Hava Durumu
             </h3>
-            <span className="text-[10px] px-2 py-0.5 rounded bg-neutral-800 text-neutral-400 font-semibold">Anlık</span>
+            <span className="text-[10px] px-2 py-0.5 rounded bg-neutral-800 text-neutral-400 font-semibold">{activeForecast.day}</span>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="p-3 rounded-2xl bg-neutral-950 border border-neutral-800">
               <span className="text-[10px] text-neutral-500 block">Sıcaklık</span>
-              <span className="text-xl font-semibold text-white">{Math.round(environmental.temperature)}°C</span>
+              <span className="text-xl font-semibold text-white">{Math.round(activeForecast.temp)}°C</span>
             </div>
             <div className="p-3 rounded-2xl bg-neutral-950 border border-neutral-800">
               <span className="text-[10px] text-neutral-500 block">Bağıl Nem</span>
-              <span className="text-xl font-semibold text-white">%{Math.round(environmental.humidity)}</span>
+              <span className="text-xl font-semibold text-white">%{Math.round(activeForecast.humidity)}</span>
             </div>
             <div className="p-3 rounded-2xl bg-neutral-950 border border-neutral-800">
               <span className="text-[10px] text-neutral-500 block">UV İndeksi</span>
-              <span className="text-xl font-semibold text-white">{environmental.uvIndex.toFixed(1)} / 12</span>
+              <span className="text-xl font-semibold text-white">{activeForecast.uvIndex.toFixed(1)} / 12</span>
             </div>
             <div className="p-3 rounded-2xl bg-neutral-950 border border-neutral-800">
-              <span className="text-[10px] text-neutral-500 block">Rüzgar</span>
-              <span className="text-xl font-semibold text-white">{Math.round(environmental.windSpeed)} km/s</span>
+              <span className="text-[10px] text-neutral-500 block flex items-center gap-1"><Gauge className="w-3 h-3" /> Basınç</span>
+              <span className="text-xl font-semibold text-white">{Math.round(activeForecast.pressure)} hPa</span>
             </div>
           </div>
 
           <div className="p-3 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-neutral-300 space-y-1">
             <p className="font-semibold text-neutral-200 flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5 text-neutral-500" />
-              Kişisel Tavsiye:
+              Genel Bilgi:
             </p>
             <p className="text-[11px] leading-relaxed text-neutral-400">
-              {environmental.humidity < 40
-                ? `Nem oranı düşük (%${Math.round(environmental.humidity)}). Nemlendiricini normalden daha sık uygula.`
-                : `Nem oranı dengeli (%${Math.round(environmental.humidity)}). Banyodan sonraki ilk 3 dakika içinde nemlendirici uygulamaya devam et.`}
+              {activeForecast.humidity < 40
+                ? `Nem oranı düşük (%${Math.round(activeForecast.humidity)}). Düşük nem cildin su kaybını artırabilir.`
+                : `Nem oranı %${Math.round(activeForecast.humidity)}.`}
             </p>
           </div>
         </div>
@@ -159,7 +140,7 @@ export const WeatherIntelligence: React.FC = () => {
               Polen Durumu
             </h3>
             <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-semibold border ${getPollenBadge(environmental.pollen.overallRisk)}`}>
-              Risk: {environmental.pollen.overallRisk}
+              {environmental.pollen.overallRisk}
             </span>
           </div>
 
@@ -176,15 +157,19 @@ export const WeatherIntelligence: React.FC = () => {
                 </span>
               </div>
             ))}
+            <div className="p-3 rounded-2xl bg-neutral-950 border border-neutral-800 flex items-center justify-between opacity-60">
+              <span className="text-xs font-medium text-neutral-400 flex items-center gap-1.5"><Leaf className="w-3.5 h-3.5" /> Küf Sporları</span>
+              <span className="text-[10px] text-neutral-500">Bu kaynakta mevcut değil</span>
+            </div>
           </div>
 
           <div className="p-3 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-neutral-300 space-y-1">
             <p className="font-semibold flex items-center gap-1 text-neutral-200">
               <AlertTriangle className="w-3.5 h-3.5 text-neutral-500" />
-              Polen Notu:
+              Not:
             </p>
             <p className="text-[11px] leading-relaxed text-neutral-400">
-              Dışarıdan eve geldiğinde cildini ve saçlarını ılık suyla durulamak polen maruziyetini azaltır.
+              Dışarıdan eve geldiğinde cildini ve saçlarını ılık suyla durulamak polen maruziyetini azaltabilir.
             </p>
           </div>
         </div>
@@ -223,10 +208,10 @@ export const WeatherIntelligence: React.FC = () => {
           <div className="p-3 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-neutral-300 space-y-1">
             <p className="font-semibold text-neutral-200 flex items-center gap-1">
               <Info className="w-3.5 h-3.5 text-neutral-500" />
-              Cilt Sağlığı İpucu:
+              Cilt Sağlığı Bilgisi:
             </p>
             <p className="text-[11px] leading-relaxed text-neutral-400">
-              PM2.5 parçacıkları zayıflamış cilt bariyerinden nüfuz ederek oksidatif stresi artırabilir; kirlilik yüksekken dışarıda geçirilen süreyi sınırlamak faydalı olabilir.
+              PM2.5 parçacıkları zayıflamış cilt bariyerinden nüfuz ederek oksidatif stresi artırabilir.
             </p>
           </div>
         </div>

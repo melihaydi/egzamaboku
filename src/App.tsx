@@ -7,11 +7,12 @@ import type { ActiveTab } from './components/layout/Sidebar';
 import { VoiceAssistantModal } from './components/voice/VoiceAssistantModal';
 import { WearableWidget } from './components/wearable/WearableWidget';
 
-const FlareScoreCard = lazy(() => import('./components/flare/FlareScoreCard').then(m => ({ default: m.FlareScoreCard })));
+const FlareReport = lazy(() => import('./components/flare/FlareReport').then(m => ({ default: m.FlareReport })));
 const ComputerVisionEngine = lazy(() => import('./components/cv/ComputerVisionEngine').then(m => ({ default: m.ComputerVisionEngine })));
 const TreatmentHistory = lazy(() => import('./components/treatment/TreatmentHistory').then(m => ({ default: m.TreatmentHistory })));
 const WeatherIntelligence = lazy(() => import('./components/environmental/WeatherIntelligence').then(m => ({ default: m.WeatherIntelligence })));
 const IngredientScanner = lazy(() => import('./components/scanner/IngredientScanner').then(m => ({ default: m.IngredientScanner })));
+const TriggerJournal = lazy(() => import('./components/triggers/TriggerJournal').then(m => ({ default: m.TriggerJournal })));
 const FoodIntelligence = lazy(() => import('./components/food/FoodIntelligence').then(m => ({ default: m.FoodIntelligence })));
 const RoutineBuilder = lazy(() => import('./components/routine/RoutineBuilder').then(m => ({ default: m.RoutineBuilder })));
 const HealthJournal = lazy(() => import('./components/journal/HealthJournal').then(m => ({ default: m.HealthJournal })));
@@ -52,13 +53,14 @@ const MainLayout: React.FC = () => {
 
         <main className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full space-y-6 [padding-bottom:calc(env(safe-area-inset-bottom)+1rem)]">
           <Suspense fallback={<TabFallback />}>
-            {activeTab === 'overview' && <FlareScoreCard />}
+            {activeTab === 'overview' && <FlareReport />}
             {activeTab === 'cv' && <ComputerVisionEngine />}
             {activeTab === 'calendar' && <CalendarTimeline />}
             {activeTab === 'treatment' && <TreatmentHistory />}
             {activeTab === 'chat' && <AIChatAssistant />}
             {activeTab === 'environmental' && <WeatherIntelligence />}
             {activeTab === 'scanner' && <IngredientScanner />}
+            {activeTab === 'triggers' && <TriggerJournal />}
             {activeTab === 'food' && <FoodIntelligence />}
             {activeTab === 'routine' && <RoutineBuilder />}
             {activeTab === 'journal' && <HealthJournal />}

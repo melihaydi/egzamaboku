@@ -11,7 +11,11 @@ import {
   StickyNote,
   Plus,
   Trash2,
-  Flame
+  Flame,
+  Pencil,
+  Copy,
+  X,
+  Check
 } from 'lucide-react';
 import { useApp } from '../../context/useApp';
 import type { CalendarEvent, CalendarEventType } from '../../types';
@@ -30,13 +34,17 @@ function pad(n: number) { return n.toString().padStart(2, '0'); }
 function toISODate(y: number, m: number, d: number) { return `${y}-${pad(m + 1)}-${pad(d)}`; }
 
 export const CalendarTimeline: React.FC = () => {
-  const { calendarEvents, addCalendarEvent, removeCalendarEvent } = useApp();
+  const { calendarEvents, addCalendarEvent, updateCalendarEvent, removeCalendarEvent, duplicateCalendarEvent } = useApp();
   const today = new Date();
   const [viewDate, setViewDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDate, setSelectedDate] = useState<string>(toISODate(today.getFullYear(), today.getMonth(), today.getDate()));
   const [showAddForm, setShowAddForm] = useState(false);
   const [newType, setNewType] = useState<CalendarEventType>('note');
   const [newTitle, setNewTitle] = useState('');
+  const [newDescription, setNewDescription] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
+  const [duplicateDate, setDuplicateDate] = useState('');
 
   const eventsByDate = useMemo(() => {
     const map: Record<string, CalendarEvent[]> = {};
@@ -62,11 +70,37 @@ export const CalendarTimeline: React.FC = () => {
 
   const selectedEvents = (eventsByDate[selectedDate] || []).slice().sort((a, b) => a.title.localeCompare(b.title));
 
-  const handleAddEvent = () => {
-    if (!newTitle.trim()) return;
-    addCalendarEvent({ dateISO: selectedDate, type: newType, title: newTitle.trim() });
+  const resetForm = () => {
     setNewTitle('');
+    setNewDescription('');
+    setNewType('note');
+    setEditingId(null);
     setShowAddForm(false);
+  };
+
+  const handleSaveEvent = () => {
+    if (!newTitle.trim()) return;
+    if (editingId) {
+      updateCalendarEvent(editingId, { title: newTitle.trim(), type: newType, description: newDescription.trim() || undefined });
+    } else {
+      addCalendarEvent({ dateISO: selectedDate, type: newType, title: newTitle.trim(), description: newDescription.trim() || undefined });
+    }
+    resetForm();
+  };
+
+  const startEdit = (ev: CalendarEvent) => {
+    setEditingId(ev.id);
+    setNewTitle(ev.title);
+    setNewDescription(ev.description || '');
+    setNewType(ev.type);
+    setShowAddForm(true);
+  };
+
+  const handleDuplicate = () => {
+    if (!duplicatingId || !duplicateDate) return;
+    duplicateCalendarEvent(duplicatingId, duplicateDate);
+    setDuplicatingId(null);
+    setDuplicateDate('');
   };
 
   return (
@@ -111,18 +145,26 @@ export const CalendarTimeline: React.FC = () => {
                 <button
                   key={idx}
                   onClick={() => setSelectedDate(cell.dateISO)}
-                  className={`relative aspect-square rounded-xl border text-xs font-medium flex flex-col items-center justify-center gap-0.5 transition-all ${
-                    isSelected ? 'bg-white text-neutral-950 border-white' : isToday ? 'border-neutral-500 text-neutral-100' : 'border-neutral-800 text-neutral-300 hover:bg-neutral-800/60'
+                  className={`relative min-h-[64px] rounded-xl border p-1 flex flex-col items-start gap-0.5 transition-all overflow-hidden ${
+                    isSelected ? 'bg-white border-white' : isToday ? 'border-neutral-500 bg-neutral-900' : 'border-neutral-800 bg-neutral-950 hover:bg-neutral-800/60'
                   }`}
                 >
-                  <span>{cell.day}</span>
-                  {dayEvents.length > 0 && (
-                    <span className="flex gap-0.5">
-                      {dayEvents.slice(0, 3).map((_ev, i) => (
-                        <span key={i} className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-neutral-950' : 'bg-neutral-400'}`} />
-                      ))}
-                    </span>
-                  )}
+                  <span className={`text-xs font-medium px-1 ${isSelected ? 'text-neutral-950' : 'text-neutral-300'}`}>{cell.day}</span>
+                  <div className="w-full space-y-0.5">
+                    {dayEvents.slice(0, 2).map(ev => (
+                      <span
+                        key={ev.id}
+                        className={`block text-[8px] leading-tight px-1 py-0.5 rounded truncate w-full text-left ${
+                          isSelected ? 'bg-neutral-950/10 text-neutral-950' : 'bg-neutral-800 text-neutral-300'
+                        }`}
+                      >
+                        • {ev.title}
+                      </span>
+                    ))}
+                    {dayEvents.length > 2 && (
+                      <span className={`block text-[8px] px-1 ${isSelected ? 'text-neutral-950/70' : 'text-neutral-500'}`}>+{dayEvents.length - 2} daha</span>
+                    )}
+                  </div>
                 </button>
               );
             })}
@@ -137,7 +179,7 @@ export const CalendarTimeline: React.FC = () => {
               <h3 className="text-sm font-semibold text-white">{new Date(selectedDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</h3>
             </div>
             <button
-              onClick={() => setShowAddForm(v => !v)}
+              onClick={() => { resetForm(); setShowAddForm(v => !v); }}
               className="flex items-center gap-1 text-xs font-semibold text-neutral-200 hover:text-white"
             >
               <Plus className="w-3.5 h-3.5" /> Etkinlik Ekle
@@ -146,11 +188,22 @@ export const CalendarTimeline: React.FC = () => {
 
           {showAddForm && (
             <div className="p-3 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-semibold text-neutral-400">{editingId ? 'Etkinliği Düzenle' : 'Yeni Etkinlik'}</span>
+                <button onClick={resetForm} className="p-1 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800"><X className="w-3.5 h-3.5" /></button>
+              </div>
               <input
                 type="text"
                 placeholder="Örn: Doktor kontrolü, alevlenme notu..."
                 value={newTitle}
                 onChange={e => setNewTitle(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-white placeholder-neutral-500 focus:outline-none"
+              />
+              <input
+                type="text"
+                placeholder="Kısa açıklama (isteğe bağlı)"
+                value={newDescription}
+                onChange={e => setNewDescription(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-white placeholder-neutral-500 focus:outline-none"
               />
               <div className="flex items-center gap-2">
@@ -164,12 +217,28 @@ export const CalendarTimeline: React.FC = () => {
                   ))}
                 </select>
                 <button
-                  onClick={handleAddEvent}
+                  onClick={handleSaveEvent}
                   disabled={!newTitle.trim()}
-                  className="ml-auto px-3.5 py-1.5 rounded-xl bg-white text-neutral-950 font-semibold text-xs disabled:opacity-40"
+                  className="ml-auto px-3.5 py-1.5 rounded-xl bg-white text-neutral-950 font-semibold text-xs disabled:opacity-40 flex items-center gap-1.5"
                 >
-                  Ekle
+                  <Check className="w-3.5 h-3.5" /> {editingId ? 'Kaydet' : 'Ekle'}
                 </button>
+              </div>
+            </div>
+          )}
+
+          {duplicatingId && (
+            <div className="p-3 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-2">
+              <span className="text-[10px] font-semibold text-neutral-400">Etkinliği kopyala — yeni tarih seç</span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={duplicateDate}
+                  onChange={e => setDuplicateDate(e.target.value)}
+                  className="px-3 py-1.5 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-white focus:outline-none"
+                />
+                <button onClick={handleDuplicate} disabled={!duplicateDate} className="px-3 py-1.5 rounded-xl bg-white text-neutral-950 font-semibold text-xs disabled:opacity-40">Kopyala</button>
+                <button onClick={() => setDuplicatingId(null)} className="p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800"><X className="w-3.5 h-3.5" /></button>
               </div>
             </div>
           )}
@@ -191,9 +260,17 @@ export const CalendarTimeline: React.FC = () => {
                     {ev.description && <p className="text-[11px] text-neutral-400 mt-0.5">{ev.description}</p>}
                     <span className="text-[10px] text-neutral-500 uppercase font-semibold">{meta.label}</span>
                   </div>
-                  <button onClick={() => removeCalendarEvent(ev.id)} className="p-1.5 rounded-lg text-neutral-600 hover:text-rose-400 hover:bg-rose-500/10 shrink-0">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-0.5 shrink-0">
+                    <button onClick={() => startEdit(ev)} className="p-1.5 rounded-lg text-neutral-600 hover:text-white hover:bg-neutral-800">
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => { setDuplicatingId(ev.id); setDuplicateDate(ev.dateISO); }} className="p-1.5 rounded-lg text-neutral-600 hover:text-white hover:bg-neutral-800">
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => removeCalendarEvent(ev.id)} className="p-1.5 rounded-lg text-neutral-600 hover:text-rose-400 hover:bg-rose-500/10">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               );
             })}

@@ -10,11 +10,12 @@ import {
   NotebookText,
   CalendarDays,
   ShieldCheck,
+  ShieldAlert,
   MessageCircle,
   X
 } from 'lucide-react';
 
-export type ActiveTab = 'overview' | 'cv' | 'treatment' | 'environmental' | 'scanner' | 'food' | 'routine' | 'journal' | 'calendar' | 'chat' | 'security';
+export type ActiveTab = 'overview' | 'cv' | 'treatment' | 'environmental' | 'scanner' | 'triggers' | 'food' | 'routine' | 'journal' | 'calendar' | 'chat' | 'security';
 
 interface SidebarProps {
   activeTab: ActiveTab;
@@ -25,13 +26,14 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen, onCloseMobile }) => {
   const navItems = [
-    { id: 'overview' as ActiveTab, label: 'Alevlenme Şiddeti', icon: LayoutDashboard },
+    { id: 'overview' as ActiveTab, label: 'Alevlenme Raporu', icon: LayoutDashboard },
     { id: 'cv' as ActiveTab, label: 'Cilt Fotoğraf Analizi', icon: Scan },
     { id: 'calendar' as ActiveTab, label: 'Takvim & Zaman Çizelgesi', icon: CalendarDays },
     { id: 'treatment' as ActiveTab, label: 'Tedavi Geçmişi', icon: History },
     { id: 'chat' as ActiveTab, label: 'Sohbet Asistanı', icon: MessageCircle },
-    { id: 'environmental' as ActiveTab, label: 'Alevlenme Tahmini & Hava', icon: CloudSun },
+    { id: 'environmental' as ActiveTab, label: 'Hava & Çevre Verileri', icon: CloudSun },
     { id: 'scanner' as ActiveTab, label: 'Ürün İçerik Tarayıcı', icon: Sparkles },
+    { id: 'triggers' as ActiveTab, label: 'Tetikleyici Günlüğü', icon: ShieldAlert },
     { id: 'food' as ActiveTab, label: 'Beslenme Asistanı', icon: Utensils },
     { id: 'routine' as ActiveTab, label: 'Günlük Bakım Listesi', icon: CalendarCheck },
     { id: 'journal' as ActiveTab, label: 'Sağlık Günlüğü', icon: NotebookText },

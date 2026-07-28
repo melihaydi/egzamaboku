@@ -5,42 +5,38 @@ export interface CVAnalysis {
   photoUrl: string;
   location: BodyLocation;
   timestamp: string;
+  // Aşağıdaki tüm alanlar YALNIZCA fotoğrafın piksel verisinden ölçülür.
+  // Kaşıntı, ağrı, uyku gibi öznel belirtiler burada YER ALMAZ; bunlar SymptomEntry ile kullanıcı tarafından girilir.
   redness: number; // 0 - 100 Eritem (Kızarıklık)
-  dryness: number; // 0 - 100 Kserozis (Kuruluk)
   scaling: number; // 0 - 100 Soyulma / Kepeklenme
-  cracking: number; // 0 - 100 Çatlama (Fissür)
-  oozing: number; // 0 - 100 Sızıntı / Akıntı
   swelling: number; // 0 - 100 Ödem (Şişlik)
+  crusting: number; // 0 - 100 Kabuklanma
+  oozing: number; // 0 - 100 Sızıntı / Akıntı
   pigmentation: number; // 0 - 100 Pigmentasyon Değişimi
   surfaceAreaCm2: number; // Etkilenen alan (cm²)
-  scoradIndex: number; // SCORAD Klinik Şiddet Skoru (0-103)
-  healingProgression: number; // Baseline'a göre iyileşme yüzdesi %
-  confidenceScore: number; // Güven skoru %
-  infectionRisk: 'Düşük' | 'Orta' | 'Yüksek';
+  confidenceScore: number; // Görüntü kalitesine dayalı güven skoru %
+  infectionRisk: 'Düşük' | 'Orta' | 'Yüksek'; // Yalnızca görüntüden: sızıntı + kızarıklık + şişlik sinyaline dayalı
   affectedRegions: Array<{ x: number; y: number; radius: number; severity: number; label: string }>;
+  reasoning: string[]; // Her ölçümün hangi somut piksel sinyaline dayandığını açıklayan cümleler
   notes: string;
-  analysisMethod: 'canlı-piksel-analizi' | 'simüle';
+  analysisMethod: 'canlı-piksel-analizi' | 'örnek-veri';
 }
 
 export type FlareSeverityLevel = 'Hafif' | 'Orta' | 'Şiddetli' | 'Çok Şiddetli';
 
-export interface FlareScoreData {
-  currentScore: number; // 0 - 100, yüksek = daha kötü alevlenme
-  severityLevel: FlareSeverityLevel;
-  previousScore: number;
-  weeklyTrend: number[];
-  monthlyTrend: number[];
-  factors: {
-    itching: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
-    dryness: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
-    redness: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
-    sleepQuality: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
-    moisturizerUsage: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
-    medicationAdherence: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
-    weather: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
-    stress: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
-    diet: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
-  };
+// Kullanıcının KENDİSİNİN girdiği öznel belirti şiddetleri (0-10). Yapay zeka bu değerleri asla tahmin etmez.
+export interface SymptomEntry {
+  id: string;
+  dateISO: string;
+  timestamp: string;
+  itching: number; // Kaşıntı 0-10
+  pain: number; // Ağrı 0-10
+  burning: number; // Yanma / Batma 0-10
+  dryness: number; // Kuruluk (hissedilen) 0-10
+  cracking: number; // Çatlama (hissedilen) 0-10
+  bleeding: number; // Kanama 0-10
+  sleepImpact: number; // Uykuya etkisi 0-10
+  note?: string;
 }
 
 export interface EnvironmentalData {
@@ -51,6 +47,7 @@ export interface EnvironmentalData {
   humidity: number; // % Nem
   uvIndex: number; // 0 - 12
   windSpeed: number; // km/s
+  pressure: number; // hPa
   precipitationProbability: number; // %
   aqi: {
     overall: number; // European AQI 0-100+
@@ -64,15 +61,15 @@ export interface EnvironmentalData {
     weed: number;
     overallRisk: 'Düşük' | 'Orta' | 'Yüksek' | 'Çok Yüksek';
   };
-  forecast72h: Array<{
+  moldDataAvailable: false; // Açık kaynak ücretsiz API'lerde küf sporu verisi bulunmuyor; dürüstlük için açıkça belirtilir
+  forecast: Array<{
     day: string;
     dateISO: string;
     temp: number;
     humidity: number;
     uvIndex: number;
     aqi: number;
-    flareRisk: number; // %
-    primaryDriver: string;
+    pressure: number;
   }>;
   dataSource: 'canlı-api' | 'yedek-veri';
   fetchedAt: string;
@@ -113,30 +110,44 @@ export interface ProductScanResult {
   scanMethod: 'ocr' | 'metin-girişi';
 }
 
-export interface FoodLogItem {
+export type FoodRating = 'Güvenli' | 'Bazen Sorunlu' | 'Her Zaman Tetikliyor';
+
+// Kullanıcının kendi besin kaydı: derecelendirme tamamen kullanıcı tarafından yapılır.
+export interface FoodItem {
   id: string;
   name: string;
-  category: 'Yüksek Histaminli' | 'Yaygın Alerjen' | 'İşlenmiş Gıda' | 'Katkı / Boya' | 'Güvenli / Anti-Enflamatuar';
-  timestamp: string;
-  histamineLevel: 'Düşük' | 'Orta' | 'Yüksek';
-  possibleFlareLink?: string;
+  rating: FoodRating;
+  timesLogged: number;
+  lastLoggedISO: string;
+  notes?: string;
 }
 
-export interface FoodCatalogItem {
+export interface Meal {
   id: string;
   name: string;
-  group: 'Tetikleyici Olabilir' | 'Cilt Dostu';
-  flareRisk?: number; // 0-100, yalnızca tetikleyici grubu için
-  benefit?: string; // yalnızca cilt dostu grubu için
-  rationale: string;
-  recommendation: string;
+  dateISO: string;
+  foodNames: string[];
+  reactionSeverity?: number; // 0-10, kullanıcı isterse girer
+  reactionNote?: string;
 }
 
-export interface SymptomCorrelation {
-  foodName: string;
-  lagHours: number;
-  symptomIncrease: number; // +1 ile +10
-  confidence: number; // %
+export interface Recipe {
+  id: string;
+  name: string;
+  ingredients: string[];
+  notes?: string;
+}
+
+// Kullanıcının kendi tetikleyici günlüğü: AI hiçbir tetikleyiciyi otomatik önermez/tahmin etmez.
+export type TriggerCategory = 'Gıda' | 'Çevresel' | 'Ürün' | 'Diğer';
+
+export interface TriggerEntry {
+  id: string;
+  name: string;
+  category: TriggerCategory;
+  dateISO: string;
+  severity: number; // 0-10, kullanıcının kendi değerlendirmesi
+  reasonNote: string; // Kullanıcının bunun bir tetikleyici olduğunu düşünme nedeni
 }
 
 export interface RoutineTask {
@@ -176,6 +187,7 @@ export interface TreatmentEntry {
   medicationName: string; // Örn: 'Dupixent (Dupilumab)'
   drugClass: string; // Örn: 'Biyolojik Tedavi (IL-4 / IL-13 İnhibitörü)'
   route: string; // Örn: 'Subkütan Enjeksiyon (14 Günde Bir)'
+  bodyArea?: BodyLocation;
   startDate: string; // Örn: 'Şubat 2026'
   endDate: string | null; // null = halen devam ediyor
   durationLabel: string; // Örn: '5 Aydır Devam Ediyor', '1.5 Yıl (18 Ay)'

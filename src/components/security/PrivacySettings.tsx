@@ -13,10 +13,11 @@ export const PrivacySettings: React.FC = () => {
   const {
     activeProfile,
     cvHistory,
+    symptomEntries,
     treatmentHistory,
-    flareScore,
     scannedProducts,
-    foodLogs,
+    triggerEntries,
+    foodItems,
     routines,
     auditLogs,
     fontSize,
@@ -36,10 +37,11 @@ export const PrivacySettings: React.FC = () => {
       exportedAt: new Date().toISOString(),
       profile: activeProfile,
       cvHistory,
+      symptomEntries,
       treatmentHistory,
-      flareScore,
       scannedProducts,
-      foodLogs,
+      triggerEntries,
+      foodItems,
       routines,
       auditLogs
     };
@@ -54,7 +56,7 @@ export const PrivacySettings: React.FC = () => {
 
   const handleClearLocalData = () => {
     const confirmed = window.confirm(
-      'Tüm yerel verileriniz (fotoğraf geçmişi, tedavi kayıtları, rutinler, iyileşme skoru) kalıcı olarak silinecek ve fabrika ayarlarına dönülecektir. Devam etmek istiyor musunuz?'
+      'Tüm yerel verileriniz (fotoğraf geçmişi, belirti kayıtları, tedavi kayıtları, rutinler) kalıcı olarak silinecek ve fabrika ayarlarına dönülecektir. Devam etmek istiyor musunuz?'
     );
     if (confirmed) {
       clearAllData();

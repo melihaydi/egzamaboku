@@ -3,11 +3,11 @@ import { Mic, MicOff, X, Sparkles, MessageSquare } from 'lucide-react';
 import { useApp } from '../../context/useApp';
 
 export const VoiceAssistantModal: React.FC = () => {
-  const { voiceAssistantOpen, setVoiceAssistantOpen, updateFlareFactor, addAuditLog } = useApp();
+  const { voiceAssistantOpen, setVoiceAssistantOpen, routines, toggleRoutineTask, addAuditLog } = useApp();
   const [isListening, setIsListening] = useState<boolean>(false);
   const [isSupported, setIsSupported] = useState<boolean>(true);
   const [transcript, setTranscript] = useState<string>('');
-  const [aiResponse, setAiResponse] = useState<string>('Bugün egzama bakımınıza nasıl yardımcı olabilirim? "Nemlendirici sürdüm" veya "Kaşıntı seviyem 5" diyebilirsiniz.');
+  const [aiResponse, setAiResponse] = useState<string>('Bugün sana nasıl yardımcı olabilirim? "Nemlendirici sürdüm" diyebilir, ya da belirtilerini Alevlenme Raporu sekmesinden kendin puanlayabilirsin.');
   const recognitionRef = useRef<any>(null);
 
   const speakResponse = useCallback((text: string) => {
@@ -22,19 +22,26 @@ export const VoiceAssistantModal: React.FC = () => {
   const processVoiceCommand = useCallback((cmd: string) => {
     const text = cmd.toLowerCase();
     if (text.includes('nemlendirici') || text.includes('krem')) {
-      updateFlareFactor('moisturizerUsage', -8);
-      setAiResponse('Nemlendirici uygulaması kaydedildi! Alevlenme şiddeti skorunuz düştü.');
-      speakResponse('Nemlendirici uygulaması kaydedildi.');
-      addAuditLog('Sesli Asistan', 'Komut işlendi: Nemlendirici uygulaması kaydedildi.');
-    } else if (text.includes('kaşıntı') || text.includes('alevlenme')) {
-      setAiResponse('Belirti güncellemesi kaydedildi. Alevlenme tahmin modeli güncellendi.');
-      speakResponse('Belirti kaydı alındı.');
-      addAuditLog('Sesli Asistan', `Komut işlendi: Belirti kaydı "${cmd}".`);
+      const pending = routines.find(r => r.category === 'Nemlendirici' && !r.completed);
+      if (pending) {
+        toggleRoutineTask(pending.id);
+        setAiResponse(`"${pending.title}" bakım listenizde tamamlandı olarak işaretlendi.`);
+        speakResponse('Nemlendirici uygulaması kaydedildi.');
+      } else {
+        setAiResponse('Nemlendirici uygulaması not olarak kaydedildi.');
+        speakResponse('Not kaydedildi.');
+      }
+      addAuditLog('Sesli Asistan', `Komut işlendi: "${cmd}".`);
+    } else if (text.includes('kaşıntı') || text.includes('belirti') || text.includes('ağrı')) {
+      setAiResponse('Belirti şiddetini tam ve doğru kaydetmek için Alevlenme Raporu sekmesindeki sliderları kullanmanı öneririm — sesli komuttan otomatik bir skor uydurmuyorum.');
+      speakResponse('Belirtilerini Alevlenme Raporu sekmesinden puanlayabilirsin.');
+      addAuditLog('Sesli Asistan', `Belirti bahsi not edildi: "${cmd}".`);
     } else {
-      setAiResponse(`Komut alındı: "${cmd}". Bakım rutini güncellendi.`);
-      speakResponse(`Komut işlendi.`);
+      setAiResponse(`Not olarak kaydedildi: "${cmd}".`);
+      speakResponse('Not kaydedildi.');
+      addAuditLog('Sesli Asistan', `Komut not edildi: "${cmd}".`);
     }
-  }, [updateFlareFactor, addAuditLog, speakResponse]);
+  }, [routines, toggleRoutineTask, addAuditLog, speakResponse]);
 
   // Modal her açıldığında tek bir tanıma (recognition) örneği kurulur;
   // mikrofon butonu bu örneği doğrudan başlatır/durdurur.
@@ -96,7 +103,7 @@ export const VoiceAssistantModal: React.FC = () => {
           </div>
           <div>
             <h2 className="text-lg font-bold text-white">
-              Yapay Zeka Sesli Asistan (Eller Serbest Kontrol)
+              Sesli Asistan (Eller Serbest Kontrol)
             </h2>
             <p className="text-xs text-neutral-400">Türkçe Ses Tanıma & Konuşma Motoru</p>
           </div>
@@ -141,7 +148,7 @@ export const VoiceAssistantModal: React.FC = () => {
         <div className="space-y-1.5 text-xs text-neutral-400">
           <span className="text-[10px] uppercase font-bold text-neutral-500 block">Örnek Komutlar:</span>
           <div className="flex flex-wrap gap-2">
-            {['"Nemlendirici sürdüm"', '"Kaşıntı seviyem 4"', '"Dupixent aşısı yaptım"', '"İyileşme durumumu göster"'].map((cmd, i) => (
+            {['"Nemlendirici sürdüm"', '"Dupixent aşısı yaptım"', '"Bugün kaşıntım var"'].map((cmd, i) => (
               <button
                 key={i}
                 onClick={() => {

@@ -4,23 +4,24 @@ import {
   Upload,
   Layers,
   Eye,
-  Sparkles,
   CheckCircle2,
   Clock,
   Play,
   Pause,
   Camera,
-  SplitSquareVertical
+  SplitSquareVertical,
+  ListChecks,
+  TrendingDown,
+  TrendingUp,
+  Minus
 } from 'lucide-react';
 import { useApp } from '../../context/useApp';
 import type { BodyLocation, CVAnalysis } from '../../types';
-import { analyzeImagePixels, estimateInfectionRisk, estimateScoradIndex } from '../../lib/imageAnalysis';
+import { analyzeImagePixels, estimateInfectionRisk } from '../../lib/imageAnalysis';
 
-function buildAnalysisFromCanvas(canvas: HTMLCanvasElement, location: BodyLocation, photoUrl: string, priorScorad: number | null): CVAnalysis {
+function buildAnalysisFromCanvas(canvas: HTMLCanvasElement, location: BodyLocation, photoUrl: string): CVAnalysis {
   const result = analyzeImagePixels(canvas);
-  const scoradIndex = estimateScoradIndex(result);
   const infectionRisk = estimateInfectionRisk(result);
-  const healingProgression = priorScorad ? Math.max(0, Math.round((1 - scoradIndex / priorScorad) * 100)) : 0;
 
   return {
     id: `cv-${Date.now()}`,
@@ -28,42 +29,46 @@ function buildAnalysisFromCanvas(canvas: HTMLCanvasElement, location: BodyLocati
     location,
     timestamp: new Date().toLocaleString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
     redness: result.redness,
-    dryness: result.dryness,
     scaling: result.scaling,
-    cracking: result.cracking,
-    oozing: result.oozing,
     swelling: result.swelling,
+    crusting: result.crusting,
+    oozing: result.oozing,
     pigmentation: result.pigmentation,
     surfaceAreaCm2: result.surfaceAreaCm2,
-    scoradIndex,
-    healingProgression,
     confidenceScore: result.confidenceScore,
     infectionRisk,
     affectedRegions: result.affectedRegions,
-    notes: `Fotoğrafın piksel verisi analiz edildi: ${result.affectedRegions.length} bölgede kızarıklık/kuruluk sinyali tespit edildi.`,
+    reasoning: result.reasoning,
+    notes: `Fotoğrafın piksel verisi analiz edildi: ${result.affectedRegions.length} bölgede kızarıklık sinyali tespit edildi.`,
     analysisMethod: 'canlı-piksel-analizi'
   };
 }
+
+const METRIC_DEFS: Array<{ key: keyof Pick<CVAnalysis, 'redness' | 'scaling' | 'swelling' | 'crusting' | 'oozing' | 'pigmentation'>; label: string; color: string }> = [
+  { key: 'redness', label: 'Kızarıklık (Eritem)', color: 'bg-rose-500' },
+  { key: 'scaling', label: 'Soyulma / Kuru Görünüm', color: 'bg-amber-500' },
+  { key: 'swelling', label: 'Şişlik (Ödem)', color: 'bg-neutral-400' },
+  { key: 'crusting', label: 'Kabuklanma', color: 'bg-orange-500' },
+  { key: 'oozing', label: 'Sızıntı / Akıntı', color: 'bg-cyan-500' },
+  { key: 'pigmentation', label: 'Lekelenme (Pigmentasyon)', color: 'bg-yellow-600' }
+];
 
 export const ComputerVisionEngine: React.FC = () => {
   const { cvHistory, addCVAnalysis } = useApp();
   const [selectedLocation, setSelectedLocation] = useState<BodyLocation>('Sol Kol');
   const [activeAnalysis, setActiveAnalysis] = useState<CVAnalysis>(cvHistory[0]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showReasoning, setShowReasoning] = useState(false);
 
-  // Katman Aç/Kapat
   const [showRednessOverlay, setShowRednessOverlay] = useState<boolean>(true);
   const [showBoundaries, setShowBoundaries] = useState<boolean>(true);
 
-  // Zaman Tüneli Oynatma
   const [timeLapseIndex, setTimeLapseIndex] = useState<number>(0);
   const [isPlayingTimeLapse, setIsPlayingTimeLapse] = useState<boolean>(false);
 
-  // Karşılaştırma Modu
   const [isSplitMode, setIsSplitMode] = useState<boolean>(false);
   const [splitPos, setSplitPos] = useState<number>(50);
 
-  // Canlı Kamera
   const [isWebCamActive, setIsWebCamActive] = useState<boolean>(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -71,6 +76,7 @@ export const ComputerVisionEngine: React.FC = () => {
 
   const locationHistory = cvHistory.filter(item => item.location === selectedLocation);
   const baselineAnalysis = locationHistory[locationHistory.length - 1] || activeAnalysis;
+  const previousAnalysis = locationHistory.find(item => item.id !== activeAnalysis.id && new Date(item.timestamp.replace(',', '')) < new Date(activeAnalysis.timestamp.replace(',', '')));
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -104,8 +110,7 @@ export const ComputerVisionEngine: React.FC = () => {
       if (ctx) {
         ctx.drawImage(vid, 0, 0);
         const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.9);
-        const priorScorad = locationHistory[0]?.scoradIndex ?? null;
-        const newScan = buildAnalysisFromCanvas(tempCanvas, selectedLocation, dataUrl, priorScorad);
+        const newScan = buildAnalysisFromCanvas(tempCanvas, selectedLocation, dataUrl);
 
         addCVAnalysis(newScan);
         setActiveAnalysis(newScan);
@@ -130,8 +135,7 @@ export const ComputerVisionEngine: React.FC = () => {
         if (ctx) {
           ctx.drawImage(img, 0, 0);
           const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.9);
-          const priorScorad = locationHistory[0]?.scoradIndex ?? null;
-          const newScan = buildAnalysisFromCanvas(tempCanvas, selectedLocation, dataUrl, priorScorad);
+          const newScan = buildAnalysisFromCanvas(tempCanvas, selectedLocation, dataUrl);
           addCVAnalysis(newScan);
           setActiveAnalysis(newScan);
         }
@@ -143,7 +147,6 @@ export const ComputerVisionEngine: React.FC = () => {
     e.target.value = '';
   };
 
-  // Canvas Isı Haritası Çizimi
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -210,6 +213,11 @@ export const ComputerVisionEngine: React.FC = () => {
     return () => clearInterval(interval);
   }, [isPlayingTimeLapse, locationHistory]);
 
+  const deltaFor = (key: typeof METRIC_DEFS[number]['key']) => {
+    if (!previousAnalysis) return null;
+    return activeAnalysis[key] - previousAnalysis[key];
+  };
+
   return (
     <div className="space-y-6">
       <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileUpload} className="hidden" />
@@ -226,7 +234,7 @@ export const ComputerVisionEngine: React.FC = () => {
             </h2>
           </div>
           <p className="text-xs text-neutral-400 mt-1">
-            Yüklenen fotoğrafın gerçek piksel verisinden kızarıklık, kuruluk, soyulma, çatlama, sızıntı ve şişlik ölçülür.
+            Yalnızca fotoğrafta görülebilen özellikler ölçülür: kızarıklık, soyulma, şişlik, kabuklanma, sızıntı, etkilenen alan. Kaşıntı/ağrı gibi belirtiler Alevlenme Raporu sekmesinde kendin bildirirsin.
           </p>
         </div>
 
@@ -439,58 +447,63 @@ export const ComputerVisionEngine: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            {[
-              { label: 'Kızarıklık (Eritem)', val: activeAnalysis.redness, color: 'bg-rose-500' },
-              { label: 'Cilt Kuruluğu (Kserozis)', val: activeAnalysis.dryness, color: 'bg-amber-500' },
-              { label: 'Soyulma & Kepeklenme', val: activeAnalysis.scaling, color: 'bg-yellow-500' },
-              { label: 'Deri Çatlaması (Fissür)', val: activeAnalysis.cracking, color: 'bg-orange-500' },
-              { label: 'Sızıntı / Akıntı', val: activeAnalysis.oozing, color: 'bg-cyan-500' },
-              { label: 'Şişlik (Ödem)', val: activeAnalysis.swelling, color: 'bg-neutral-500' },
-              { label: 'Lekelenme (Pigmentasyon)', val: activeAnalysis.pigmentation, color: 'bg-neutral-400' }
-            ].map(m => (
-              <div key={m.label} className="space-y-1">
-                <div className="flex justify-between text-xs font-semibold">
-                  <span className="text-neutral-300">{m.label}</span>
-                  <span className="text-neutral-400">%{m.val}</span>
+            {METRIC_DEFS.map(m => {
+              const delta = deltaFor(m.key);
+              return (
+                <div key={m.key} className="space-y-1">
+                  <div className="flex justify-between text-xs font-semibold">
+                    <span className="text-neutral-300">{m.label}</span>
+                    <span className="flex items-center gap-1.5 text-neutral-400">
+                      %{activeAnalysis[m.key]}
+                      {delta !== null && (
+                        <span className={`flex items-center gap-0.5 text-[10px] ${delta < 0 ? 'text-emerald-400' : delta > 0 ? 'text-rose-400' : 'text-neutral-500'}`}>
+                          {delta < 0 ? <TrendingDown className="w-3 h-3" /> : delta > 0 ? <TrendingUp className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
+                          {Math.abs(delta)}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                  <div className="h-2 w-full bg-neutral-800 rounded-full overflow-hidden">
+                    <div className={`h-full ${m.color} transition-all duration-500`} style={{ width: `${activeAnalysis[m.key]}%` }} />
+                  </div>
                 </div>
-                <div className="h-2 w-full bg-neutral-800 rounded-full overflow-hidden">
-                  <div className={`h-full ${m.color} transition-all duration-500`} style={{ width: `${m.val}%` }} />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          {/* SCORAD & Alan Metrikleri */}
+          {/* Alan & Enfeksiyon */}
           <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 grid grid-cols-2 gap-4">
-            <div>
-              <span className="text-[10px] font-semibold uppercase text-neutral-500 block">SCORAD Skoru</span>
-              <span className="text-xl font-semibold text-white">{activeAnalysis.scoradIndex}</span>
-            </div>
             <div>
               <span className="text-[10px] font-semibold uppercase text-neutral-500 block">Etkilenen Alan</span>
               <span className="text-xl font-semibold text-emerald-400">{activeAnalysis.surfaceAreaCm2} cm²</span>
             </div>
             <div>
-              <span className="text-[10px] font-semibold uppercase text-neutral-500 block">Enfeksiyon Riski</span>
+              <span className="text-[10px] font-semibold uppercase text-neutral-500 block">Enfeksiyon Riski (Görsel)</span>
               <span className={`text-sm font-semibold ${activeAnalysis.infectionRisk === 'Yüksek' ? 'text-rose-400' : activeAnalysis.infectionRisk === 'Orta' ? 'text-amber-400' : 'text-emerald-400'}`}>
                 {activeAnalysis.infectionRisk}
               </span>
             </div>
-            <div>
-              <span className="text-[10px] font-semibold uppercase text-neutral-500 block">Başlangıca Göre İyileşme</span>
-              <span className="text-sm font-semibold text-neutral-200">%{activeAnalysis.healingProgression}</span>
-            </div>
           </div>
 
-          {/* Not */}
-          <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-1.5">
-            <span className="text-xs font-semibold text-neutral-300 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5" />
-              Analiz Notu:
-            </span>
-            <p className="text-xs text-neutral-400 leading-relaxed italic">
-              "{activeAnalysis.notes}"
-            </p>
+          {/* Şeffaflık: Neden Bu Sonuç? */}
+          <div className="rounded-2xl bg-neutral-950 border border-neutral-800 overflow-hidden">
+            <button
+              onClick={() => setShowReasoning(v => !v)}
+              className="w-full p-4 flex items-center justify-between text-xs font-semibold text-neutral-200"
+            >
+              <span className="flex items-center gap-1.5">
+                <ListChecks className="w-3.5 h-3.5 text-neutral-500" />
+                Neden Bu Sonuç? (Ölçüm Gerekçeleri)
+              </span>
+              <span className="text-neutral-500">{showReasoning ? '−' : '+'}</span>
+            </button>
+            {showReasoning && (
+              <div className="px-4 pb-4 space-y-1.5">
+                {activeAnalysis.reasoning.map((r, i) => (
+                  <p key={i} className="text-[11px] text-neutral-400 leading-relaxed pl-3 border-l border-neutral-800">{r}</p>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

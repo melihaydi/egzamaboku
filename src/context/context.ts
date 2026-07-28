@@ -3,11 +3,13 @@ import type {
   CVAnalysis,
   EnvironmentalData,
   FamilyProfile,
-  FoodLogItem,
-  FlareScoreData,
+  FoodItem,
+  Meal,
+  Recipe,
+  SymptomEntry,
+  TriggerEntry,
   ProductScanResult,
   RoutineTask,
-  SymptomCorrelation,
   AuditLogEntry,
   TreatmentEntry,
   ChatMessage,
@@ -30,19 +32,22 @@ export interface AppContextType {
   updateActiveProfile: (updates: Partial<FamilyProfile>) => void;
   profiles: FamilyProfile[];
 
-  // Görsel Analiz
+  // Görsel Analiz (yalnızca fotoğraftan ölçülen veriler)
   cvHistory: CVAnalysis[];
   addCVAnalysis: (analysis: CVAnalysis) => void;
+
+  // Kullanıcının kendi bildirdiği belirti şiddetleri (0-10 sliderlar)
+  symptomEntries: SymptomEntry[];
+  addSymptomEntry: (entry: Omit<SymptomEntry, 'id' | 'timestamp'>) => void;
+  removeSymptomEntry: (id: string) => void;
 
   // Tedavi Geçmişi
   treatmentHistory: TreatmentEntry[];
   addTreatmentEntry: (entry: TreatmentEntry) => void;
+  updateTreatmentEntry: (id: string, updates: Partial<TreatmentEntry>) => void;
+  removeTreatmentEntry: (id: string) => void;
 
-  // Alevlenme Şiddeti Skoru
-  flareScore: FlareScoreData;
-  updateFlareFactor: (factorKey: keyof FlareScoreData['factors'], change: number) => void;
-
-  // Çevresel Veri (canlı hava/AQI/polen)
+  // Çevresel Veri (canlı hava/AQI/polen — tahmin yok, yalnızca ölçüm)
   environmental: EnvironmentalData;
   environmentalLoading: boolean;
   refreshEnvironmental: () => void;
@@ -51,10 +56,22 @@ export interface AppContextType {
   scannedProducts: ProductScanResult[];
   addScannedProduct: (prod: ProductScanResult) => void;
 
-  // Beslenme
-  foodLogs: FoodLogItem[];
-  addFoodLog: (item: FoodLogItem) => void;
-  correlations: SymptomCorrelation[];
+  // Kullanıcının kendi tetikleyici günlüğü
+  triggerEntries: TriggerEntry[];
+  addTriggerEntry: (entry: Omit<TriggerEntry, 'id'>) => void;
+  removeTriggerEntry: (id: string) => void;
+
+  // Beslenme: kullanıcının kendi besin/öğün/tarif kayıtları
+  foodItems: FoodItem[];
+  addFoodItem: (item: Omit<FoodItem, 'id' | 'timesLogged' | 'lastLoggedISO'>) => void;
+  updateFoodItem: (id: string, updates: Partial<FoodItem>) => void;
+  removeFoodItem: (id: string) => void;
+  meals: Meal[];
+  addMeal: (meal: Omit<Meal, 'id'>) => void;
+  removeMeal: (id: string) => void;
+  recipes: Recipe[];
+  addRecipe: (recipe: Omit<Recipe, 'id'>) => void;
+  removeRecipe: (id: string) => void;
 
   // Bakım Rutini
   routines: RoutineTask[];
@@ -67,7 +84,9 @@ export interface AppContextType {
   // Takvim & Zaman Çizelgesi
   calendarEvents: CalendarEvent[];
   addCalendarEvent: (event: Omit<CalendarEvent, 'id'>) => void;
+  updateCalendarEvent: (id: string, updates: Partial<CalendarEvent>) => void;
   removeCalendarEvent: (id: string) => void;
+  duplicateCalendarEvent: (id: string, newDateISO: string) => void;
 
   // Sağlık Günlüğü (Klinik Bilgi Merkezi)
   journalEntries: JournalEntry[];
@@ -89,7 +108,7 @@ export interface AppContextType {
   auditLogs: AuditLogEntry[];
   addAuditLog: (action: string, details: string) => void;
 
-  // AI Sohbet Asistanı
+  // Sohbet Asistanı
   chatMessages: ChatMessage[];
   addChatMessage: (message: ChatMessage) => void;
   clearChatMessages: () => void;
