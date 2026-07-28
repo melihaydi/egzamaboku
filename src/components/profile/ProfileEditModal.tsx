@@ -79,17 +79,17 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ onClose }) =
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-sky-500/40 rounded-3xl max-w-md w-full p-6 text-slate-100 shadow-2xl space-y-5 relative">
+      <div className="bg-neutral-900 border border-neutral-700 rounded-3xl max-w-md w-full p-6 text-neutral-100 shadow-2xl space-y-5 relative">
         <button
           onClick={onClose}
           aria-label="Kapat"
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-200 rounded-xl hover:bg-slate-800"
+          className="absolute top-4 right-4 p-2 text-neutral-400 hover:text-neutral-200 rounded-xl hover:bg-neutral-800"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="flex items-center gap-2">
-          <span className="p-2 rounded-xl bg-sky-500/20 text-sky-400 border border-sky-500/30">
+          <span className="p-2 rounded-xl bg-neutral-800 text-neutral-300 border border-neutral-700">
             <User className="w-5 h-5" />
           </span>
           <h2 className="text-lg font-bold text-white">Profili Düzenle</h2>
@@ -97,7 +97,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ onClose }) =
 
         {/* Fotoğraf */}
         <div className="flex flex-col items-center gap-3">
-          <div className={`w-24 h-24 rounded-full overflow-hidden border-4 border-slate-800 flex items-center justify-center font-black text-2xl text-white bg-gradient-to-tr ${activeProfile.avatarColor}`}>
+          <div className={`w-24 h-24 rounded-full overflow-hidden border-4 border-neutral-800 flex items-center justify-center font-black text-2xl text-white bg-gradient-to-tr ${activeProfile.avatarColor}`}>
             {avatarUrl ? (
               <img src={avatarUrl} alt="Profil fotoğrafı" className="w-full h-full object-cover" />
             ) : (
@@ -117,9 +117,9 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ onClose }) =
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5"
+              className="px-3.5 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border border-neutral-700 text-xs font-semibold flex items-center gap-1.5"
             >
-              <Camera className="w-4 h-4 text-sky-400" />
+              <Camera className="w-4 h-4 text-neutral-300" />
               Fotoğraf Yükle
             </button>
             {avatarUrl && (
@@ -139,34 +139,34 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ onClose }) =
         {/* Form Alanları */}
         <div className="space-y-3">
           <div>
-            <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Ad Soyad</label>
+            <label className="text-[10px] font-bold uppercase text-neutral-400 block mb-1">Ad Soyad</label>
             <input
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none"
+              className="w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-sm text-white focus:outline-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Yaş</label>
+              <label className="text-[10px] font-bold uppercase text-neutral-400 block mb-1">Yaş</label>
               <input
                 type="number"
                 min={0}
                 max={120}
                 value={age}
                 onChange={e => setAge(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none"
+                className="w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-sm text-white focus:outline-none"
               />
             </div>
             <div>
-              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Tanı / Egzama Tipi</label>
+              <label className="text-[10px] font-bold uppercase text-neutral-400 block mb-1">Tanı / Egzama Tipi</label>
               <input
                 type="text"
                 value={eczemaType}
                 onChange={e => setEczemaType(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none"
+                className="w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-sm text-white focus:outline-none"
               />
             </div>
           </div>
@@ -174,7 +174,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ onClose }) =
 
         <button
           onClick={handleSave}
-          className="w-full py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md"
+          className="w-full py-2.5 rounded-xl bg-white hover:bg-neutral-200 text-neutral-950 font-bold text-sm flex items-center justify-center gap-2 shadow-md"
         >
           <Save className="w-4 h-4" />
           Kaydet

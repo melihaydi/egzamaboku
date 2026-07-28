@@ -1,10 +1,26 @@
-import type { CVAnalysis, EnvironmentalData, HealingScoreData, ProductScanResult, FoodLogItem, SymptomCorrelation, RoutineTask, KnowledgeArticle, FamilyProfile, AuditLogEntry, TreatmentEntry, ChatMessage } from '../types';
+import type {
+  CVAnalysis,
+  EnvironmentalData,
+  FlareScoreData,
+  ProductScanResult,
+  FoodLogItem,
+  FoodCatalogItem,
+  SymptomCorrelation,
+  RoutineTask,
+  FamilyProfile,
+  AuditLogEntry,
+  TreatmentEntry,
+  ChatMessage,
+  CalendarEvent,
+  JournalEntry
+} from '../types';
+import { DEFAULT_LOCATION } from '../lib/weatherService';
 
 export const initialChatMessages: ChatMessage[] = [
   {
     id: 'chat-welcome',
     role: 'assistant',
-    text: 'Merhaba! Ben DermIQ Egzama Asistanıyım. Egzama, cilt bakımı, tetikleyiciler veya kullandığınız tedaviler (Dupixent, Cibinqo, Siklosporin, Prednizon vb.) hakkında sorularınızı yanıtlayabilirim. Unutmayın: bilgilendirme amaçlıyım, tanı koymam ve hekim muayenesinin yerine geçmem.',
+    text: 'Merhaba! Egzama, cilt bakımı, tetikleyiciler veya kullandığın tedaviler (Dupixent, Cibinqo, Siklosporin, Prednizon vb.) hakkında ne sormak istersin?',
     timestamp: new Date().toLocaleString('tr-TR')
   }
 ];
@@ -66,7 +82,7 @@ export const initialProfiles: FamilyProfile[] = [
     id: 'p-1',
     name: 'Melike Doğan',
     relationship: 'Kendi Profilim',
-    avatarColor: 'from-rose-400 to-fuchsia-500',
+    avatarColor: 'from-neutral-700 to-neutral-900',
     age: 25,
     eczemaType: 'Atopik Dermatit (Orta-Şiddetli)',
     primaryLocations: ['Sol Kol', 'Yüz & Boyun', 'Eller & Bilekler']
@@ -83,17 +99,20 @@ export const initialCVHistory: CVAnalysis[] = [
     dryness: 35,
     scaling: 20,
     cracking: 10,
+    oozing: 2,
     swelling: 5,
     pigmentation: 18,
     surfaceAreaCm2: 14.2,
-    scoradIndex: 22.4, // Hafif-Orta SCORAD
-    healingProgression: 52, // Baseline'a göre %52 iyileşme
-    confidenceScore: 97,
-    heatMapData: [
-      { x: 35, y: 40, intensity: 0.7, label: 'Eritem (Kızarıklık) Azalma Bölgesi' },
-      { x: 50, y: 60, intensity: 0.4, label: 'Kserozis (Kuruluk) Bölgesi' }
+    scoradIndex: 22.4,
+    healingProgression: 52,
+    confidenceScore: 91,
+    infectionRisk: 'Düşük',
+    affectedRegions: [
+      { x: 38, y: 42, radius: 14, severity: 0.4, label: 'Hafif Kızarıklık Bölgesi' },
+      { x: 55, y: 60, radius: 10, severity: 0.3, label: 'Kuruluk Bölgesi' }
     ],
-    notes: 'Dupixent + Seramid bariyer krem kullanımının 7. gününde lezyon alanında belirgin gerileme ve kaşıntı azalması.'
+    notes: 'Dupixent + seramid bariyer krem kullanımının 7. gününde lezyon alanında belirgin gerileme ve kaşıntı azalması.',
+    analysisMethod: 'simüle'
   },
   {
     id: 'cv-2',
@@ -104,17 +123,20 @@ export const initialCVHistory: CVAnalysis[] = [
     dryness: 82,
     scaling: 68,
     cracking: 42,
+    oozing: 18,
     swelling: 35,
     pigmentation: 38,
     surfaceAreaCm2: 32.0,
-    scoradIndex: 58.6, // Şiddetli Alevlenme
-    healingProgression: 0, // Başlangıç baseline
-    confidenceScore: 95,
-    heatMapData: [
-      { x: 38, y: 42, intensity: 0.95, label: 'Akut Enflamatuar Alevlenme Odak Noktası' },
-      { x: 52, y: 58, intensity: 0.85, label: 'Derin Çatlama ve Soyulma Bölgesi' }
+    scoradIndex: 58.6,
+    healingProgression: 0,
+    confidenceScore: 88,
+    infectionRisk: 'Orta',
+    affectedRegions: [
+      { x: 40, y: 44, radius: 20, severity: 0.9, label: 'Belirgin Eritem Bölgesi' },
+      { x: 58, y: 55, radius: 16, severity: 0.75, label: 'Derin Çatlama ve Soyulma Bölgesi' }
     ],
-    notes: 'Yüksek polen ve kuru rüzgar maruziyeti sonrası gelişen akut alevlenme.'
+    notes: 'Yüksek polen ve kuru rüzgar maruziyeti sonrası gelişen akut alevlenme.',
+    analysisMethod: 'simüle'
   },
   {
     id: 'cv-3',
@@ -125,64 +147,69 @@ export const initialCVHistory: CVAnalysis[] = [
     dryness: 25,
     scaling: 12,
     cracking: 0,
+    oozing: 0,
     swelling: 0,
     pigmentation: 12,
     surfaceAreaCm2: 6.8,
     scoradIndex: 14.1,
     healingProgression: 70,
-    confidenceScore: 98,
-    heatMapData: [
-      { x: 45, y: 35, intensity: 0.3, label: 'Hafif Kuruluk Alanı' }
+    confidenceScore: 95,
+    infectionRisk: 'Düşük',
+    affectedRegions: [
+      { x: 46, y: 36, radius: 10, severity: 0.25, label: 'Hafif Kuruluk Alanı' }
     ],
-    notes: 'Boyun bölgesinde cilt bariyeri bütünüyle korundu, kızarıklık geriledi.'
+    notes: 'Boyun bölgesinde cilt bariyeri bütünüyle korundu, kızarıklık geriledi.',
+    analysisMethod: 'simüle'
   }
 ];
 
-export const initialHealingScore: HealingScoreData = {
-  currentScore: 86,
-  previousScore: 80,
-  weeklyTrend: [68, 72, 75, 78, 82, 84, 86],
-  monthlyTrend: [55, 62, 68, 74, 78, 82, 86],
-  recoveryVelocity: 5.2, // +5.2 puan / hafta
-  healingStreakDays: 16,
-  riskScore: 14, // %14 Düşük risk
-  habitFactors: {
-    flareSeverity: { weight: 20, score: 88, impact: 'positive', text: 'Aktif enflamasyonda %48 azalma kaydedildi' },
-    photoTrend: { weight: 15, score: 92, impact: 'positive', text: 'Görsel yapay zeka analizinde lezyon alanında %52 küçülme' },
-    medicationAdherence: { weight: 15, score: 100, impact: 'positive', text: 'Reçeteli Dupixent ve Takrolimus kullanımına %100 uyum' },
-    moisturizerConsistency: { weight: 15, score: 94, impact: 'positive', text: 'Günde ortalama 3.6 kez seramidli bariyer krem uygulandı' },
-    sleepQuality: { weight: 10, score: 82, impact: 'positive', text: 'Ortalama 7.8 saat deliksiz uyku (gece kaşıntısı yok)' },
-    stressLevel: { weight: 10, score: 72, impact: 'neutral', text: 'Hafta ortası orta düzey iş stresi kaydedildi' },
-    waterIntake: { weight: 8, score: 90, impact: 'positive', text: 'Günlük 2.5 Litre su içme hedefi tamamlandı' },
-    loggedTriggers: { weight: 7, score: 68, impact: 'negative', text: 'Ortamda yüksek ağaç poleni yoğunluğu saptandı' }
+export const initialFlareScore: FlareScoreData = {
+  currentScore: 22,
+  severityLevel: 'Hafif',
+  previousScore: 28,
+  weeklyTrend: [45, 40, 36, 32, 28, 25, 22],
+  monthlyTrend: [58, 52, 46, 40, 34, 28, 22],
+  factors: {
+    itching: { weight: 18, score: 24, impact: 'positive', text: 'Son 3 gündür kaşıntı seviyesi 10 üzerinden ortalama 2.1' },
+    dryness: { weight: 14, score: 30, impact: 'positive', text: 'Düzenli nemlendirme ile kuruluk hissi azaldı' },
+    redness: { weight: 14, score: 22, impact: 'positive', text: 'Görsel analizde kızarıklıkta %52 azalma tespit edildi' },
+    sleepQuality: { weight: 10, score: 18, impact: 'positive', text: 'Ortalama 7.8 saat deliksiz uyku (gece kaşıntısı yok)' },
+    moisturizerUsage: { weight: 12, score: 15, impact: 'positive', text: 'Günde ortalama 3.6 kez seramidli bariyer krem uygulandı' },
+    medicationAdherence: { weight: 12, score: 8, impact: 'positive', text: 'Dupixent ve reçeteli topikal tedaviye %100 uyum' },
+    weather: { weight: 8, score: 48, impact: 'negative', text: 'Bahçelievler bölgesinde düşük nem ve yüksek ağaç poleni' },
+    stress: { weight: 6, score: 40, impact: 'neutral', text: 'Hafta ortası orta düzey iş stresi kaydedildi' },
+    diet: { weight: 6, score: 20, impact: 'positive', text: 'Yüksek histaminli gıda tüketimi bu hafta düşük seyretti' }
   }
 };
 
 export const initialEnvironmental: EnvironmentalData = {
-  city: 'İstanbul / Kadıköy',
-  temperature: 24,
-  humidity: 52, // Dengeli nem
-  uvIndex: 5,
-  windSpeed: 12,
+  city: DEFAULT_LOCATION.name,
+  latitude: DEFAULT_LOCATION.latitude,
+  longitude: DEFAULT_LOCATION.longitude,
+  temperature: 26,
+  humidity: 42,
+  uvIndex: 6,
+  windSpeed: 14,
+  precipitationProbability: 5,
   aqi: {
-    overall: 38,
-    category: 'İyi',
-    pm25: 7.2,
-    pm10: 14.5,
-    ozone: 24,
-    no2: 10
+    overall: 45,
+    category: 'Orta',
+    pm25: 18,
+    pm10: 32
   },
   pollen: {
-    tree: 'Yüksek',
-    grass: 'Orta',
-    weed: 'Düşük',
+    tree: 2,
+    grass: 6,
+    weed: 1,
     overallRisk: 'Orta'
   },
   forecast72h: [
-    { day: 'Bugün', temp: 24, humidity: 52, flareRisk: 18, primaryDriver: 'Yüksek Ağaç Poleni' },
-    { day: 'Yarın', temp: 27, humidity: 38, flareRisk: 44, primaryDriver: 'Düşük Nem & Kuru Rüzgar' },
-    { day: '3. Gün', temp: 22, humidity: 65, flareRisk: 12, primaryDriver: 'Nem Oranı Dengeli' }
-  ]
+    { day: 'Bugün', dateISO: new Date().toISOString().slice(0, 10), temp: 26, humidity: 42, uvIndex: 6, aqi: 45, flareRisk: 32, primaryDriver: 'Düşük Nem' },
+    { day: 'Yarın', dateISO: new Date(Date.now() + 86400000).toISOString().slice(0, 10), temp: 28, humidity: 36, uvIndex: 7, aqi: 50, flareRisk: 44, primaryDriver: 'Düşük Nem & Kuru Hava' },
+    { day: '3. Gün', dateISO: new Date(Date.now() + 172800000).toISOString().slice(0, 10), temp: 24, humidity: 55, uvIndex: 5, aqi: 38, flareRisk: 20, primaryDriver: 'Dengeli Koşullar' }
+  ],
+  dataSource: 'yedek-veri',
+  fetchedAt: new Date().toLocaleString('tr-TR')
 };
 
 export const initialScannedProducts: ProductScanResult[] = [
@@ -191,14 +218,15 @@ export const initialScannedProducts: ProductScanResult[] = [
     productName: 'Atoderm Intensive Baume',
     brand: 'Bioderma Dermatologie',
     scannedAt: '27 Temmuz 2026, 11:20',
-    compatibilityScore: 98,
-    ratingCategory: 'Mükemmel Uyumlu',
+    compatibilityScore: 96,
+    ratingCategory: 'Güvenli',
     flaggedCount: 0,
+    scanMethod: 'metin-girişi',
     rawTextScanned: 'İçindekiler: Aqua, Glycerin, Mineral Oil, Helianthus Annuus Seed Oil, Canola Oil, Sucrose Stearate, Tocopherol, Ceramide NP, Phytosphingosine.',
     ingredients: [
-      { name: 'Ceramide NP & Phytosphingosine', category: 'Güvenli (Bariyer Onarıcı)', riskLevel: 'Düşük', explanation: 'Cildin hücreler arası lipid yapısını güçlendirir ve nem kaybını önler.' },
-      { name: 'Glycerin', category: 'Güvenli (Bariyer Onarıcı)', riskLevel: 'Düşük', explanation: 'Epidermis katmanına su çeken güçlü nem bağlayıcı bileşen.' },
-      { name: 'Canola & Sunflower Seed Oil', category: 'Güvenli (Bariyer Onarıcı)', riskLevel: 'Düşük', explanation: 'Doğal Esterler ile yatıştırıcı koruma sağlar.' }
+      { name: 'Ceramide NP & Phytosphingosine', category: 'Seramid', riskLevel: 'Düşük', explanation: 'Cildin hücreler arası lipid yapısını güçlendirir ve nem kaybını önler.' },
+      { name: 'Glycerin', category: 'Gliserin', riskLevel: 'Düşük', explanation: 'Epidermis katmanına su çeken güçlü nem bağlayıcı bileşen.' },
+      { name: 'Canola & Sunflower Seed Oil', category: 'Bariyer Onarıcı', riskLevel: 'Düşük', explanation: 'Doğal esterler ile yatıştırıcı koruma sağlar.' }
     ]
   },
   {
@@ -206,15 +234,16 @@ export const initialScannedProducts: ProductScanResult[] = [
     productName: 'Narenciye Ferahlatıcı Vücut Şampuanı',
     brand: 'GlowFlora Skincare',
     scannedAt: '25 Temmuz 2026, 16:45',
-    compatibilityScore: 28,
-    ratingCategory: 'Yüksek Tahriş Riski',
+    compatibilityScore: 26,
+    ratingCategory: 'Önerilmez',
     flaggedCount: 4,
+    scanMethod: 'metin-girişi',
     rawTextScanned: 'İçindekiler: Aqua, Sodium Lauryl Sulfate (SLS), Parfum (Fragrance), Limonene, Linalool, Methylisothiazolinone (MIT), CI 19140.',
     ingredients: [
-      { name: 'Sodium Lauryl Sulfate (SLS)', category: 'Tahriş Edici (İrritan)', riskLevel: 'Yüksek', explanation: 'Sert sürfaktan; cildin doğal koruyucu yağ tabakasını soyarak egzamayı tetikler.' },
-      { name: 'Parfum (Fragrance / Sentetik Esans)', category: 'Sentetik Parfüm', riskLevel: 'Yüksek', explanation: 'Egzamalı ciltlerde kontakt dermatitin 1 numaralı nedenidir.' },
-      { name: 'Limonene & Linalool', category: 'Alerjen Riskli', riskLevel: 'Yüksek', explanation: 'Oksitlendiğinde ciddi alerjik reaksiyon oluşturan narenciye bileşenleri.' },
-      { name: 'Methylisothiazolinone (MIT)', category: 'Koruyucu (Korozif)', riskLevel: 'Yüksek', explanation: 'Şiddetli hassasiyet oluşturan sentetik koruyucu kimyasal.' }
+      { name: 'Sodium Lauryl Sulfate (SLS)', category: 'SLS / Sülfat', riskLevel: 'Yüksek', explanation: 'Sert sürfaktan; cildin doğal koruyucu yağ tabakasını soyarak bariyeri zayıflatır.' },
+      { name: 'Parfum (Fragrance)', category: 'Parfüm / Fragrance', riskLevel: 'Yüksek', explanation: 'Egzamalı ciltlerde kontakt dermatitin en sık nedenlerinden biridir.' },
+      { name: 'Limonene & Linalool', category: 'Uçucu Yağ', riskLevel: 'Yüksek', explanation: 'Oksitlendiğinde alerjik reaksiyon riski taşıyan narenciye bileşenleri.' },
+      { name: 'Methylisothiazolinone (MIT)', category: 'MIT / MCI', riskLevel: 'Yüksek', explanation: 'Şiddetli kontakt hassasiyeti oluşturabilen sentetik koruyucu.' }
     ]
   }
 ];
@@ -231,83 +260,53 @@ export const initialCorrelations: SymptomCorrelation[] = [
   { foodName: 'Sentetik Renklendiricili Atıştırmalıklar', lagHours: 24, symptomIncrease: 2.9, confidence: 81 }
 ];
 
-export const initialRoutines: RoutineTask[] = [
-  { id: 'r-1', title: 'Seramidli Bariyer Krem Uygulaması (Tüm Vücut)', timeOfDay: 'Sabah', completed: true, category: 'Nemlendirici' },
-  { id: 'r-2', title: 'Sabah Biyolojik / Antihistaminik Tedavisi', timeOfDay: 'Sabah', completed: true, category: 'İlaç / Krem' },
-  { id: 'r-3', title: 'Öğle Cilt Nem Kontrolü & El Nemlendirme', timeOfDay: 'Öğle', completed: false, category: 'Nemlendirici' },
-  { id: 'r-4', title: '500 ml Alkali Filtrelenmiş Su İçilmesi', timeOfDay: 'Öğle', completed: true, category: 'Su Tüketimi' },
-  { id: 'r-5', title: 'Ilık Banyo (Maksimum 10–12 Dakika)', timeOfDay: 'Akşam', completed: false, category: 'Banyo', durationMinutes: 10 },
-  { id: 'r-6', title: 'Alevlenme Bölgelerine Takrolimus Merhem', timeOfDay: 'Akşam', completed: false, category: 'İlaç / Krem' },
-  { id: 'r-7', title: '5 Dakika Diyafram Nefesi (Stres Azaltma)', timeOfDay: 'Gece', completed: false, category: 'Stres Yönetimi' },
-  { id: 'r-8', title: 'Gece Yoğun Bakım Merhemi & Pamuklu Eldiven', timeOfDay: 'Gece', completed: false, category: 'Uyku Hazırlığı' }
+export const initialFoodCatalog: FoodCatalogItem[] = [
+  { id: 'fc-1', name: 'Fast Food', group: 'Tetikleyici Olabilir', flareRisk: 78, rationale: 'Yüksek doymuş yağ ve rafine karbonhidrat içeriği sistemik enflamasyonu artırabilir.', recommendation: 'Tüketimi sınırlayın; belirtilerinizle ilişkisini Beslenme Günlüğü ile takip edin.' },
+  { id: 'fc-2', name: 'Şekerli Gıdalar', group: 'Tetikleyici Olabilir', flareRisk: 70, rationale: 'Yüksek glisemik indeks, ileri glikasyon son ürünleri (AGE) yoluyla kolajen ve cilt bariyerini olumsuz etkileyebilir.', recommendation: 'Rafine şeker yerine düşük glisemik alternatifleri tercih edin.' },
+  { id: 'fc-3', name: 'Çikolata', group: 'Tetikleyici Olabilir', flareRisk: 55, rationale: 'Bazı bireylerde kakao içeriğindeki bileşikler histamin salınımını tetikleyebilir.', recommendation: 'Bireysel toleransınızı gözlemleyin; herkeste aynı etkiyi yapmaz.' },
+  { id: 'fc-4', name: 'Gazlı İçecekler (Soda)', group: 'Tetikleyici Olabilir', flareRisk: 60, rationale: 'Yüksek şeker ve fosforik asit içeriği enflamatuar yükü artırabilir.', recommendation: 'Su veya bitki çayları ile değiştirin.' },
+  { id: 'fc-5', name: 'Yoğun İşlenmiş Gıdalar', group: 'Tetikleyici Olabilir', flareRisk: 72, rationale: 'Katkı maddeleri, koruyucular ve yapay boyalar hassas bireylerde tetikleyici olabilir.', recommendation: 'Etiketleri kontrol edin; taze/az işlenmiş alternatifleri tercih edin.' },
+  { id: 'fc-6', name: 'Baharatlı Yiyecekler', group: 'Tetikleyici Olabilir', flareRisk: 48, rationale: 'Kapsaisin gibi bileşikler bazı kişilerde terlemeyi ve yüzeysel kızarıklığı artırabilir.', recommendation: 'Şiddetli alevlenme dönemlerinde tüketimi azaltmayı deneyin.' },
+  { id: 'fc-7', name: 'Alkol', group: 'Tetikleyici Olabilir', flareRisk: 65, rationale: 'Vazodilatasyon (damar genişlemesi) yoluyla kızarıklığı ve kaşıntıyı artırabilir, uyku kalitesini bozabilir.', recommendation: 'Tüketimi sınırlayın, özellikle alevlenme dönemlerinde kaçının.' },
+  { id: 'fc-8', name: 'Enerji İçecekleri', group: 'Tetikleyici Olabilir', flareRisk: 58, rationale: 'Yüksek kafein ve şeker kombinasyonu stres hormonlarını ve enflamasyonu artırabilir.', recommendation: 'Doğal enerji kaynaklarını (yeterli uyku, dengeli beslenme) tercih edin.' },
+  { id: 'fc-9', name: 'Somon', group: 'Cilt Dostu', benefit: 'Omega-3 yağ asitleri (EPA/DHA) enflamasyonu azaltmaya ve cilt bariyerini desteklemeye yardımcı olabilir.', rationale: 'Klinik çalışmalarda omega-3 alımının cilt bariyer fonksiyonunu desteklediği gösterilmiştir.', recommendation: 'Haftada 2-3 porsiyon yağlı balık tüketimi önerilir.' },
+  { id: 'fc-10', name: 'Omega-3 Kaynağı Gıdalar (Ceviz, Keten Tohumu)', group: 'Cilt Dostu', benefit: 'Anti-enflamatuar yağ asitleri sağlar.', rationale: 'Omega-3/omega-6 dengesi, vücuttaki genel enflamatuar yükü etkileyebilir.', recommendation: 'Günlük beslenmeye bir avuç ceviz veya 1 yemek kaşığı keten tohumu eklenebilir.' },
+  { id: 'fc-11', name: 'Yoğurt', group: 'Cilt Dostu', benefit: 'Probiyotikler bağırsak-cilt eksenini destekleyerek bağışıklık dengesine katkı sağlayabilir.', rationale: 'Bazı araştırmalar bağırsak mikrobiyotası ile atopik dermatit şiddeti arasında ilişki olduğunu öne sürmektedir.', recommendation: 'Şekersiz, doğal yoğurt tercih edilmelidir.' },
+  { id: 'fc-12', name: 'Kefir', group: 'Cilt Dostu', benefit: 'Zengin probiyotik çeşitliliği bağırsak sağlığını destekler.', rationale: 'Fermente süt ürünleri mikrobiyota çeşitliliğini artırabilir.', recommendation: 'Günlük rutine küçük bir porsiyon eklenebilir.' },
+  { id: 'fc-13', name: 'Ceviz', group: 'Cilt Dostu', benefit: 'Omega-3, E vitamini ve çinko içeriğiyle cilt bariyerini destekler.', rationale: 'E vitamini antioksidan etkisiyle oksidatif stresi azaltabilir.', recommendation: 'Günde bir avuç (yaklaşık 30g) tüketim yeterlidir.' },
+  { id: 'fc-14', name: 'Avokado', group: 'Cilt Dostu', benefit: 'Sağlıklı tekli doymamış yağlar ve E vitamini cilt nemini destekler.', rationale: 'İçerdiği karotenoidler ve yağ asitleri cilt bariyer lipidlerine katkıda bulunabilir.', recommendation: 'Salata veya ana öğünlere eklenebilir.' },
+  { id: 'fc-15', name: 'Yumurta', group: 'Cilt Dostu', benefit: 'Yüksek kaliteli protein ve biotin cilt onarımını destekler.', rationale: 'Protein, yeni cilt hücrelerinin (keratinosit) yapımı için temel yapı taşıdır.', recommendation: 'Bilinen bir yumurta alerjisi yoksa dengeli beslenmenin bir parçası olabilir.' },
+  { id: 'fc-16', name: 'Yeşil Yapraklı Sebzeler', group: 'Cilt Dostu', benefit: 'Antioksidanlar (A, C, E vitamini) oksidatif stresi azaltmaya yardımcı olabilir.', rationale: 'Antioksidan açısından zengin beslenme genel enflamasyon yükünü azaltabilir.', recommendation: 'Her öğünde bir porsiyon sebze tüketimi hedeflenebilir.' }
 ];
 
-export const initialKnowledgeArticles: KnowledgeArticle[] = [
-  {
-    id: 'kb-1',
-    title: 'Dupilumab (Dupixent): Çift Etkili IL-4/IL-13 İnhibitörü Biyolojik Tedavi',
-    category: 'İlaçlar & Biyolojikler',
-    summary: 'Dupixent tedavisinin etki mekanizması, klinik EASI-75 başarı oranları ve doz takvimi.',
-    evidenceLevel: 'FDA Onaylı Biyolojik',
-    content: `Dupilumab (Dupixent), atopik dermatitte sistemik enflamasyon ve kaşıntıyı tetikleyen interlökin-4 (IL-4) ve interlökin-13 (IL-13) sitokin sinyallerini hedef alarak bloke eden insan monoklonal antikorudur.
+export const initialRoutines: RoutineTask[] = [
+  { id: 'r-1', title: 'Seramidli Bariyer Krem Uygulaması (Tüm Vücut)', timeOfDay: 'Sabah', completed: true, category: 'Nemlendirici', order: 0 },
+  { id: 'r-2', title: 'Sabah Biyolojik / Antihistaminik Tedavisi', timeOfDay: 'Sabah', completed: true, category: 'İlaç / Krem', order: 1 },
+  { id: 'r-3', title: 'Öğle Cilt Nem Kontrolü & El Nemlendirme', timeOfDay: 'Öğle', completed: false, category: 'Nemlendirici', order: 0 },
+  { id: 'r-4', title: '500 ml Su İçilmesi', timeOfDay: 'Öğle', completed: true, category: 'Su Tüketimi', order: 1 },
+  { id: 'r-5', title: 'Ilık Banyo (Maksimum 10–12 Dakika)', timeOfDay: 'Akşam', completed: false, category: 'Banyo', durationMinutes: 10, order: 0 },
+  { id: 'r-6', title: 'Alevlenme Bölgelerine Takrolimus Merhem', timeOfDay: 'Akşam', completed: false, category: 'İlaç / Krem', order: 1 },
+  { id: 'r-7', title: '5 Dakika Diyafram Nefesi (Stres Azaltma)', timeOfDay: 'Gece', completed: false, category: 'Stres Yönetimi', order: 0 },
+  { id: 'r-8', title: 'Gece Yoğun Bakım Merhemi & Pamuklu Eldiven', timeOfDay: 'Gece', completed: false, category: 'Uyku Hazırlığı', order: 1 }
+];
 
-Klinik çalışmalarda (SOLO 1 & 2), hastaların %70'inden fazlasının 16. haftada EASI-75 (Egzama Alanı ve Şiddet İndeksinde %75 iyileşme) başarısına ulaştığı gösterilmiştir. Geleneksel bağışıklık baskılayıcıların aksine organ toksisitesi riski düşüktür.
+export const initialCalendarEvents: CalendarEvent[] = [
+  { id: 'cal-1', dateISO: '2026-07-27', type: 'photo', title: 'Sol Kol fotoğraf taraması', description: 'SCORAD 22.4, %52 iyileşme' },
+  { id: 'cal-2', dateISO: '2026-07-20', type: 'injection', title: 'Dupixent Enjeksiyonu', description: '14 günlük idame dozu' },
+  { id: 'cal-3', dateISO: '2026-07-18', type: 'flare', title: 'Orta Şiddetli Alevlenme', description: 'Yüksek polen sonrası sol kolda alevlenme' },
+  { id: 'cal-4', dateISO: '2026-07-06', type: 'injection', title: 'Dupixent Enjeksiyonu', description: '14 günlük idame dozu' },
+  { id: 'cal-5', dateISO: '2026-06-30', type: 'note', title: 'Genel Not', description: 'Yeni nemlendirici denenmeye başlandı (Atoderm Intensive Baume)' }
+];
 
-**Kritik Bilgiler**:
-- 14 günde bir deri altı (subkütan) enjeksiyon şeklinde uygulanır.
-- En sık görülen hafif yan etki konjonktivit (göz kuruluğu/kızarıklığı) ve enjeksiyon yeri reaksiyonudur.
-- Alevlenme dönemlerinde topikal kortizon veya takrolimus merhemler ile kombine edilebilir.`,
-    keyTakeaways: [
-      'Kök tip-2 enflamasyon sitokinlerini (IL-4 & IL-13) hedefler',
-      '14 günde bir deri altı enjeksiyon olarak uygulanır',
-      'Organ yükü düşük, yüksek güvenlik profiline sahiptir'
-    ],
-    tags: ['Biyolojik Tedavi', 'Dupixent', 'Atopik Dermatit', 'Kök Tedavi']
-  },
-  {
-    id: 'kb-2',
-    title: 'Proaktif vs Reaktif Tedavi: Kortizon ve Kalsinörin İnhibitörleri',
-    category: 'Topikal Tedaviler',
-    summary: 'Haftada 2 gün idame uygulamasının tekrarlayan alevlenmeleri önlemedeki klinik kanıtları.',
-    evidenceLevel: 'Klinik Standart Tedavi',
-    content: `Proaktif tedavi, lezyonlar klinik olarak iyileşmiş görünse bile haftada 2 gün önceden tutulum gösteren bölgelere kalsinörin inhibitörleri (Takrolimus %0.1 / Pimekrolimus) veya orta etkili kortizonlu kremler uygulanması esasına dayanır.
-
-Araştırmalar, proaktif idame tedavisinin yıllık alevlenme sıklığını %70 oranında azalttığını ve toplam kortizon kullanım miktarını düşürdüğünü kanıtlamıştır.
-
-**Parmak Boğumu Birimi (FTU) Kuralı**:
-Bir FTU (yetişkin işaret parmağının ucundan ilk boğuma kadar sıkılan krem miktarı, yaklaşık 0.5 gram), iki yetişkin avuç içi büyüklüğündeki alanı tedavi etmeye yeterlidir.`,
-    keyTakeaways: [
-      'Haftada 2 gün proaktif uygulama görünmeyen alt enflamasyonu baskılar',
-      'Parmak Boğumu Birimi (FTU) kuralı ile doğru dozajlama sağlanır',
-      'Kalsinörin inhibitörleri (Takrolimus) ciltte incelme (atrofi) riski oluşturmaz'
-    ],
-    tags: ['Topikal Kortizon', 'Takrolimus', 'Proaktif Tedavi', 'FTU Dozajı']
-  },
-  {
-    id: 'kb-3',
-    title: 'Islak Sargı Tedavisi (Wet Wrap Therapy): Akut Alevlenme Kurtarma Protokolü',
-    category: 'Topikal Tedaviler',
-    summary: 'Şiddetli ve dirençli egzamalarda saatler içinde kaşıntıyı dindiren yoğun bariyer nemlendirme protokolü.',
-    evidenceLevel: 'Klinik Standart Tedavi',
-    content: `Islak Sargı Tedavisi (WWT), akut, yaygın veya tedaviye dirençli alevlenmelerde uygulanan yoğun nemlendirme yöntemidir. Epidermisi derinlemesine nemlendirir, topikal kremlerin emilimini kat kat artırır ve buharlaşma soğutması sağlayarak kaşıntı sinir sinyallerini yatıştırır.
-
-**Uygulama Adımları**:
-1. 15 dakika Ilık banyoda beklenir (pat dry ile kurulama yapılır).
-2. Hekimin önerdiği tedavi edici krem lezyonlara, seramidli yoğun nemlendirici tüm cilde sürülür.
-3. Ilık suyla ıslatılıp sıkılmış pamuklu iç katman giydirilir.
-4. Üzerine kuru dış giysi katmanı eklenir.
-5. 2 ila 8 saat veya gece boyunca ciltte bekletilir.`,
-    keyTakeaways: [
-      'Sağladığı serinlik ile kaşıntı-kazıma döngüsünü anında kırar',
-      'Cilt bariyerinin nem tutma kapasitesini hızla yükseltir',
-      'Şiddetli alevlenme dönemlerinde hekim kontrolünde uygulanır'
-    ],
-    tags: ['Islak Sargı', 'Akut Alevlenme', 'Yoğun Nemlendirme']
-  }
+export const initialJournalEntries: JournalEntry[] = [
+  { id: 'j-1', category: 'Alerji', title: 'Ağaç Poleni', content: 'İlkbahar/yaz aylarında ağaç poleni yoğunluğu arttığında kaşıntı ve kızarıklıkta artış gözlendi.', date: 'Mayıs 2025', severity: 'Orta' },
+  { id: 'j-2', category: 'Tıbbi Geçmiş', title: 'Tanı Süreci', content: 'Çocukluktan beri devam eden atopik dermatit; yetişkinlikte orta-şiddetli seyre ilerledi.', date: '2020' },
+  { id: 'j-3', category: 'Doktor Notu', title: 'Son Kontrol Özeti', content: 'Dupixent tedavisine yanıt olumlu; bir sonraki kontrolde kan tahlili tekrarlanacak.', date: 'Temmuz 2026' },
+  { id: 'j-4', category: 'Kişisel Not', title: 'Gözlem', content: 'Yeterli uyku alınan günlerde ertesi gün kaşıntı belirgin şekilde azalıyor.', date: 'Temmuz 2026' }
 ];
 
 export const initialAuditLogs: AuditLogEntry[] = [
   { id: 'log-1', timestamp: '27 Temmuz 2026, 17:15', action: 'Sağlık Verisi Eşleşmesi', details: 'Apple Health / Google HealthKit senkronizasyonu tamamlandı: 8.420 adım, 7.8 saat uyku', ipAddress: '127.0.0.1 (Şifreli Oturum)' },
   { id: 'log-2', timestamp: '27 Temmuz 2026, 14:30', action: 'Görsel Yapay Zeka Taraması', details: 'Sol Kol fotoğraf analizi tamamlandı. SCORAD: 22.4, Lezyon Alanı: 14.2 cm²', ipAddress: '127.0.0.1 (Şifreli Oturum)' },
-  { id: 'log-3', timestamp: '27 Temmuz 2026, 11:20', action: 'İçerik OCR Taraması', details: 'Bioderma Atoderm ürünü için OCR analizi tamamlandı. Uyum Skoru: %98', ipAddress: '127.0.0.1 (Şifreli Oturum)' }
+  { id: 'log-3', timestamp: '27 Temmuz 2026, 11:20', action: 'İçerik OCR Taraması', details: 'Bioderma Atoderm ürünü için OCR analizi tamamlandı. Uyum Skoru: %96', ipAddress: '127.0.0.1 (Şifreli Oturum)' }
 ];

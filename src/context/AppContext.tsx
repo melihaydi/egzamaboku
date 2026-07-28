@@ -1,30 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type {
   CVAnalysis,
-  EnvironmentalData,
   FamilyProfile,
   FoodLogItem,
-  HealingScoreData,
+  FlareScoreData,
   ProductScanResult,
   RoutineTask,
-  SymptomCorrelation,
   AuditLogEntry,
   TreatmentEntry,
-  ChatMessage
+  ChatMessage,
+  EnvironmentalData,
+  CalendarEvent,
+  JournalEntry
 } from '../types';
 import { AppContext } from './context';
+import { fetchEnvironmentalData } from '../lib/weatherService';
 import {
   initialCVHistory,
-  initialEnvironmental,
   initialFoodLogs,
-  initialHealingScore,
+  initialFlareScore,
   initialProfiles,
   initialRoutines,
   initialScannedProducts,
   initialCorrelations,
   initialAuditLogs,
   initialTreatmentHistory,
-  initialChatMessages
+  initialChatMessages,
+  initialEnvironmental,
+  initialCalendarEvents,
+  initialJournalEntries
 } from '../mock/mockData';
 
 // Yerel Depolama (localStorage) Kalıcılık Katmanı
@@ -64,33 +68,55 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [cvHistory, setCvHistory] = usePersistedState<CVAnalysis[]>('cvHistory', initialCVHistory);
   const [treatmentHistory, setTreatmentHistory] = usePersistedState<TreatmentEntry[]>('treatmentHistory', initialTreatmentHistory);
-  const [healingScore, setHealingScore] = usePersistedState<HealingScoreData>('healingScore', initialHealingScore);
-  const [environmental] = useState<EnvironmentalData>(initialEnvironmental);
+  const [flareScore, setFlareScore] = usePersistedState<FlareScoreData>('flareScore', initialFlareScore);
+  const [environmental, setEnvironmental] = usePersistedState<EnvironmentalData>('environmental', initialEnvironmental);
+  const [environmentalLoading, setEnvironmentalLoading] = useState<boolean>(false);
   const [scannedProducts, setScannedProducts] = usePersistedState<ProductScanResult[]>('scannedProducts', initialScannedProducts);
   const [foodLogs, setFoodLogs] = usePersistedState<FoodLogItem[]>('foodLogs', initialFoodLogs);
-  const [correlations] = useState<SymptomCorrelation[]>(initialCorrelations);
+  const [correlations] = useState(initialCorrelations);
   const [routines, setRoutines] = usePersistedState<RoutineTask[]>('routines', initialRoutines);
+  const [calendarEvents, setCalendarEvents] = usePersistedState<CalendarEvent[]>('calendarEvents', initialCalendarEvents);
+  const [journalEntries, setJournalEntries] = usePersistedState<JournalEntry[]>('journalEntries', initialJournalEntries);
   const [auditLogs, setAuditLogs] = usePersistedState<AuditLogEntry[]>('auditLogs', initialAuditLogs);
   const [chatMessages, setChatMessages] = usePersistedState<ChatMessage[]>('chatMessages', initialChatMessages);
 
-  const [emergencyModalOpen, setEmergencyModalOpen] = useState<boolean>(false);
   const [voiceAssistantOpen, setVoiceAssistantOpen] = useState<boolean>(false);
-  const [doctorPortalMode, setDoctorPortalMode] = useState<boolean>(false);
-  const [doctorAccessCode, setDoctorAccessCode] = useState<string>('');
   const [healthSyncActive, setHealthSyncActive] = useState<boolean>(true);
   const [wearableWidgetOpen, setWearableWidgetOpen] = useState<boolean>(false);
 
+  const addAuditLog = useCallback((action: string, details: string) => {
+    const newEntry: AuditLogEntry = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleString('tr-TR'),
+      action,
+      details,
+      ipAddress: '127.0.0.1 (Şifreli Oturum)'
+    };
+    setAuditLogs(prev => [newEntry, ...prev]);
+  }, [setAuditLogs]);
+
+  const refreshEnvironmental = useCallback(() => {
+    setEnvironmentalLoading(true);
+    fetchEnvironmentalData()
+      .then(data => {
+        setEnvironmental(data);
+        addAuditLog('Çevresel Veri Güncellemesi', `${data.city} için canlı hava/AQI/polen verisi alındı.`);
+      })
+      .catch(() => {
+        setEnvironmental(prev => ({ ...prev, dataSource: 'yedek-veri' as const, fetchedAt: new Date().toLocaleString('tr-TR') }));
+      })
+      .finally(() => setEnvironmentalLoading(false));
+  }, [setEnvironmental, addAuditLog]);
+
+  useEffect(() => {
+    refreshEnvironmental();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const addCVAnalysis = (analysis: CVAnalysis) => {
     setCvHistory(prev => [analysis, ...prev]);
-    setHealingScore(prev => {
-      const newScore = Math.min(100, Math.max(0, prev.currentScore + 2));
-      return {
-        ...prev,
-        currentScore: newScore,
-        weeklyTrend: [...prev.weeklyTrend.slice(1), newScore]
-      };
-    });
-    addAuditLog('Görsel Yapay Zeka Taraması', `${analysis.location} bölgesi için fotoğraf analizi tamamlandı (%${analysis.confidenceScore} doğruluk).`);
+    addCalendarEvent({ dateISO: new Date().toISOString().slice(0, 10), type: 'photo', title: `${analysis.location} fotoğraf taraması`, description: `SCORAD ${analysis.scoradIndex}` });
+    addAuditLog('Görsel Yapay Zeka Taraması', `${analysis.location} bölgesi için fotoğraf analizi tamamlandı (%${analysis.confidenceScore} güven).`);
   };
 
   const updateActiveProfile = (updates: Partial<FamilyProfile>) => {
@@ -99,21 +125,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addTreatmentEntry = (entry: TreatmentEntry) => {
     setTreatmentHistory(prev => [entry, ...prev]);
+    addCalendarEvent({ dateISO: new Date().toISOString().slice(0, 10), type: 'medication', title: `${entry.medicationName} başlandı`, description: entry.drugClass });
     addAuditLog('Tedavi Geçmişi Güncellemesi', `${entry.medicationName} tedavi kaydı eklendi (${entry.status}).`);
   };
 
-  const updateHabitScore = (factorKey: keyof HealingScoreData['habitFactors'], change: number) => {
-    setHealingScore(prev => {
-      const currentFactor = prev.habitFactors[factorKey];
+  const updateFlareFactor = (factorKey: keyof FlareScoreData['factors'], change: number) => {
+    setFlareScore(prev => {
+      const currentFactor = prev.factors[factorKey];
       const updatedFactorScore = Math.min(100, Math.max(0, currentFactor.score + change));
       const factorDelta = (updatedFactorScore - currentFactor.score) * (currentFactor.weight / 100);
       const newCurrentScore = Math.round(Math.min(100, Math.max(0, prev.currentScore + factorDelta)));
-      
+      const severityLevel: FlareScoreData['severityLevel'] =
+        newCurrentScore > 75 ? 'Çok Şiddetli' : newCurrentScore > 50 ? 'Şiddetli' : newCurrentScore > 25 ? 'Orta' : 'Hafif';
+
       return {
         ...prev,
         currentScore: newCurrentScore,
-        habitFactors: {
-          ...prev.habitFactors,
+        severityLevel,
+        factors: {
+          ...prev.factors,
           [factorKey]: {
             ...currentFactor,
             score: updatedFactorScore
@@ -138,9 +168,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (task.id === id) {
         const nextCompleted = !task.completed;
         if (nextCompleted && task.category === 'Nemlendirici') {
-          updateHabitScore('moisturizerConsistency', 5);
+          updateFlareFactor('dryness', -4);
         } else if (nextCompleted && task.category === 'İlaç / Krem') {
-          updateHabitScore('medicationAdherence', 5);
+          updateFlareFactor('medicationAdherence', -4);
         }
         return { ...task, completed: nextCompleted };
       }
@@ -148,19 +178,48 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
   };
 
-  const addRoutineTask = (task: RoutineTask) => {
-    setRoutines(prev => [...prev, task]);
+  const addRoutineTask = (task: Omit<RoutineTask, 'id' | 'order' | 'completed'>) => {
+    setRoutines(prev => {
+      const siblingOrders = prev.filter(t => t.timeOfDay === task.timeOfDay).map(t => t.order);
+      const nextOrder = siblingOrders.length > 0 ? Math.max(...siblingOrders) + 1 : 0;
+      return [...prev, { ...task, id: `r-${Date.now()}`, order: nextOrder, completed: false }];
+    });
   };
 
-  const addAuditLog = (action: string, details: string) => {
-    const newEntry: AuditLogEntry = {
-      id: `log-${Date.now()}`,
-      timestamp: new Date().toLocaleString('tr-TR'),
-      action,
-      details,
-      ipAddress: '127.0.0.1 (Şifreli Oturum)'
-    };
-    setAuditLogs(prev => [newEntry, ...prev]);
+  const removeRoutineTask = (id: string) => {
+    setRoutines(prev => prev.filter(t => t.id !== id));
+  };
+
+  const updateRoutineTask = (id: string, updates: Partial<RoutineTask>) => {
+    setRoutines(prev => prev.map(t => (t.id === id ? { ...t, ...updates } : t)));
+  };
+
+  const reorderRoutineTasks = (timeOfDay: RoutineTask['timeOfDay'], orderedIds: string[]) => {
+    setRoutines(prev => prev.map(t => {
+      if (t.timeOfDay !== timeOfDay) return t;
+      const idx = orderedIds.indexOf(t.id);
+      return idx === -1 ? t : { ...t, order: idx };
+    }));
+  };
+
+  const addCalendarEvent = (event: Omit<CalendarEvent, 'id'>) => {
+    setCalendarEvents(prev => [{ ...event, id: `cal-${Date.now()}-${Math.random().toString(36).slice(2, 7)}` }, ...prev]);
+  };
+
+  const removeCalendarEvent = (id: string) => {
+    setCalendarEvents(prev => prev.filter(e => e.id !== id));
+  };
+
+  const addJournalEntry = (entry: Omit<JournalEntry, 'id'>) => {
+    setJournalEntries(prev => [{ ...entry, id: `j-${Date.now()}` }, ...prev]);
+  };
+
+  const updateJournalEntry = (id: string, updates: Partial<JournalEntry>) => {
+    setJournalEntries(prev => prev.map(e => (e.id === id ? { ...e, ...updates } : e)));
+  };
+
+  const removeJournalEntry = (id: string) => {
+    setJournalEntries(prev => prev.filter(e => e.id !== id));
   };
 
   const addChatMessage = (message: ChatMessage) => {
@@ -172,7 +231,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const clearAllData = () => {
-    const dataKeys = ['activeProfile', 'cvHistory', 'treatmentHistory', 'healingScore', 'scannedProducts', 'foodLogs', 'routines', 'auditLogs', 'chatMessages'];
+    const dataKeys = ['activeProfile', 'cvHistory', 'treatmentHistory', 'flareScore', 'scannedProducts', 'foodLogs', 'routines', 'calendarEvents', 'journalEntries', 'auditLogs', 'chatMessages'];
     dataKeys.forEach(key => {
       try {
         localStorage.removeItem(STORAGE_PREFIX + key);
@@ -184,10 +243,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveProfile(initialProfiles[0]);
     setCvHistory(initialCVHistory);
     setTreatmentHistory(initialTreatmentHistory);
-    setHealingScore(initialHealingScore);
+    setFlareScore(initialFlareScore);
     setScannedProducts(initialScannedProducts);
     setFoodLogs(initialFoodLogs);
     setRoutines(initialRoutines);
+    setCalendarEvents(initialCalendarEvents);
+    setJournalEntries(initialJournalEntries);
     setChatMessages(initialChatMessages);
     setAuditLogs([{
       id: `log-${Date.now()}`,
@@ -218,9 +279,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addCVAnalysis,
       treatmentHistory,
       addTreatmentEntry,
-      healingScore,
-      updateHabitScore,
+      flareScore,
+      updateFlareFactor,
       environmental,
+      environmentalLoading,
+      refreshEnvironmental,
       scannedProducts,
       addScannedProduct,
       foodLogs,
@@ -229,14 +292,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       routines,
       toggleRoutineTask,
       addRoutineTask,
-      emergencyModalOpen,
-      setEmergencyModalOpen,
+      removeRoutineTask,
+      updateRoutineTask,
+      reorderRoutineTasks,
+      calendarEvents,
+      addCalendarEvent,
+      removeCalendarEvent,
+      journalEntries,
+      addJournalEntry,
+      updateJournalEntry,
+      removeJournalEntry,
       voiceAssistantOpen,
       setVoiceAssistantOpen,
-      doctorPortalMode,
-      setDoctorPortalMode,
-      doctorAccessCode,
-      setDoctorAccessCode,
       healthSyncActive,
       setHealthSyncActive,
       wearableWidgetOpen,

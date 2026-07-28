@@ -14,7 +14,7 @@ export const PrivacySettings: React.FC = () => {
     activeProfile,
     cvHistory,
     treatmentHistory,
-    healingScore,
+    flareScore,
     scannedProducts,
     foodLogs,
     routines,
@@ -37,7 +37,7 @@ export const PrivacySettings: React.FC = () => {
       profile: activeProfile,
       cvHistory,
       treatmentHistory,
-      healingScore,
+      flareScore,
       scannedProducts,
       foodLogs,
       routines,
@@ -64,7 +64,7 @@ export const PrivacySettings: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Üst Şerit */}
-      <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-neutral-900 p-6 rounded-3xl border border-neutral-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
@@ -74,7 +74,7 @@ export const PrivacySettings: React.FC = () => {
               Gizlilik, Güvenlik Logları & Erişilebilirlik Ayarları
             </h2>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-neutral-400 mt-1">
             AES-256 lokal şifreleme, yetki kontrolü, KVKK/GDPR veri aktarımı ve erişilebilirlik seçenekleri.
           </p>
         </div>
@@ -82,17 +82,17 @@ export const PrivacySettings: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Güvenlik Ayarları */}
-        <div className="lg:col-span-6 bg-slate-900 p-6 rounded-3xl border border-slate-800 space-y-6">
+        <div className="lg:col-span-6 bg-neutral-900 p-6 rounded-3xl border border-neutral-800 space-y-6">
           <h3 className="text-sm font-bold text-white flex items-center gap-2">
             <Lock className="w-4 h-4 text-emerald-400" />
             Veri Koruması & Şifreleme Ayarları
           </h3>
 
           <div className="space-y-3 text-xs">
-            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+            <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 flex items-center justify-between">
               <div>
                 <span className="font-bold text-white block">AES-256 Uçtan Uca Şifreleme</span>
-                <span className="text-[10px] text-slate-400">Fotoğraf taramaları ve klinik kayıtları şifrelenerek saklanır.</span>
+                <span className="text-[10px] text-neutral-400">Fotoğraf taramaları ve klinik kayıtları şifrelenerek saklanır.</span>
               </div>
               <input
                 type="checkbox"
@@ -102,10 +102,10 @@ export const PrivacySettings: React.FC = () => {
               />
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+            <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 flex items-center justify-between">
               <div>
                 <span className="font-bold text-white block">Apple Health & Google Health Eşleşmesi</span>
-                <span className="text-[10px] text-slate-400">Arka planda uyku, kalp ritmi ve adım verilerini senkronize eder.</span>
+                <span className="text-[10px] text-neutral-400">Arka planda uyku, kalp ritmi ve adım verilerini senkronize eder.</span>
               </div>
               <input
                 type="checkbox"
@@ -115,10 +115,10 @@ export const PrivacySettings: React.FC = () => {
               />
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+            <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 flex items-center justify-between">
               <div>
                 <span className="font-bold text-white block">KVKK / GDPR Araştırma Rızası</span>
-                <span className="text-[10px] text-slate-400">Anonimleştirilmiş klinik telemetri verilerinin egzamaya katkısı.</span>
+                <span className="text-[10px] text-neutral-400">Anonimleştirilmiş klinik telemetri verilerinin egzamaya katkısı.</span>
               </div>
               <input
                 type="checkbox"
@@ -129,17 +129,17 @@ export const PrivacySettings: React.FC = () => {
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-800 space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+          <div className="pt-4 border-t border-neutral-800 space-y-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
               Veri Yönetimi & Haklar:
             </h4>
 
             <div className="flex gap-3">
               <button
                 onClick={handleExportJSON}
-                className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 flex items-center justify-center gap-1.5"
+                className="flex-1 py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 font-bold text-xs border border-neutral-700 flex items-center justify-center gap-1.5"
               >
-                <Download className="w-4 h-4 text-sky-400" />
+                <Download className="w-4 h-4 text-neutral-300" />
                 Tüm Verileri İndir (JSON)
               </button>
 
@@ -153,19 +153,19 @@ export const PrivacySettings: React.FC = () => {
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-800 space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-              <Eye className="w-4 h-4 text-sky-400" />
+          <div className="pt-4 border-t border-neutral-800 space-y-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-2">
+              <Eye className="w-4 h-4 text-neutral-300" />
               Erişilebilirlik & Yazı Boyutu
             </h4>
 
             <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="p-3 rounded-2xl bg-slate-950 border border-slate-800">
-                <span className="text-[10px] text-slate-400 block mb-1">Yazı Boyutu</span>
+              <div className="p-3 rounded-2xl bg-neutral-950 border border-neutral-800">
+                <span className="text-[10px] text-neutral-400 block mb-1">Yazı Boyutu</span>
                 <select
                   value={fontSize}
                   onChange={e => setFontSize(e.target.value as any)}
-                  className="w-full px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none"
+                  className="w-full px-2.5 py-1.5 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-white focus:outline-none"
                 >
                   <option value="normal">Normal (%100)</option>
                   <option value="large">Büyük (%115)</option>
@@ -173,10 +173,10 @@ export const PrivacySettings: React.FC = () => {
                 </select>
               </div>
 
-              <div className="p-3 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+              <div className="p-3 rounded-2xl bg-neutral-950 border border-neutral-800 flex items-center justify-between">
                 <div>
-                  <span className="text-slate-200 font-bold block">Yüksek Kontrast</span>
-                  <span className="text-[10px] text-slate-400">WCAG AAA</span>
+                  <span className="text-neutral-200 font-bold block">Yüksek Kontrast</span>
+                  <span className="text-[10px] text-neutral-400">WCAG AAA</span>
                 </div>
                 <input
                   type="checkbox"
@@ -190,10 +190,10 @@ export const PrivacySettings: React.FC = () => {
         </div>
 
         {/* Gerçek Zamanlı Güvenlik Logları */}
-        <div className="lg:col-span-6 bg-slate-900 p-6 rounded-3xl border border-slate-800 space-y-4">
+        <div className="lg:col-span-6 bg-neutral-900 p-6 rounded-3xl border border-neutral-800 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Database className="w-4 h-4 text-sky-400" />
+              <Database className="w-4 h-4 text-neutral-300" />
               Sistem Denetim Logları ({auditLogs.length} Olay)
             </h3>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
@@ -203,13 +203,13 @@ export const PrivacySettings: React.FC = () => {
 
           <div className="space-y-2 max-h-[480px] overflow-y-auto pr-1">
             {auditLogs.map(log => (
-              <div key={log.id} className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-xs space-y-1">
+              <div key={log.id} className="p-3.5 rounded-2xl bg-neutral-950 border border-neutral-800 text-xs space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-sky-300">{log.action}</span>
-                  <span className="text-[10px] text-slate-500 font-mono">{log.timestamp}</span>
+                  <span className="font-bold text-neutral-300">{log.action}</span>
+                  <span className="text-[10px] text-neutral-500 font-mono">{log.timestamp}</span>
                 </div>
-                <p className="text-slate-300 text-[11px]">{log.details}</p>
-                <span className="text-[9px] text-slate-500 block font-mono">{log.ipAddress}</span>
+                <p className="text-neutral-300 text-[11px]">{log.details}</p>
+                <span className="text-[9px] text-neutral-500 block font-mono">{log.ipAddress}</span>
               </div>
             ))}
           </div>

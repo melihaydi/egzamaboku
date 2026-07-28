@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
-import { 
-  Sparkles, 
-  Camera, 
-  FileText, 
+import React, { useRef, useState } from 'react';
+import {
+  Sparkles,
+  Camera,
+  FileText,
   Check,
-  Ban
+  Ban,
+  Loader2
 } from 'lucide-react';
 import { useApp } from '../../context/useApp';
-import type { ProductScanResult, IngredientItem } from '../../types';
+import type { ProductScanResult } from '../../types';
+import { analyzeIngredientText } from '../../lib/ingredientAnalysis';
 
 export const IngredientScanner: React.FC = () => {
   const { scannedProducts, addScannedProduct } = useApp();
@@ -16,185 +18,200 @@ export const IngredientScanner: React.FC = () => {
   const [productNameInput, setProductNameInput] = useState<string>('');
   const [brandInput, setBrandInput] = useState<string>('');
   const [isScanning, setIsScanning] = useState<boolean>(false);
+  const [ocrStatus, setOcrStatus] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleRunOCRScan = () => {
+  const finalizeResult = (text: string, method: ProductScanResult['scanMethod']) => {
+    const { ingredients, flaggedCount, compatibilityScore, ratingCategory } = analyzeIngredientText(text);
+
+    const newResult: ProductScanResult = {
+      id: `scan-${Date.now()}`,
+      productName: productNameInput || 'Taranan Bakım Ürünü',
+      brand: brandInput || 'Bilinmeyen Marka',
+      scannedAt: new Date().toLocaleString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      compatibilityScore,
+      ratingCategory,
+      ingredients,
+      rawTextScanned: text,
+      flaggedCount,
+      scanMethod: method
+    };
+
+    addScannedProduct(newResult);
+    setActiveScan(newResult);
+    setPastedIngredients('');
+    setProductNameInput('');
+    setBrandInput('');
+  };
+
+  const handleAnalyzeText = () => {
+    if (!pastedIngredients.trim()) return;
     setIsScanning(true);
     setTimeout(() => {
-      const textToAnalyze = pastedIngredients || 'İçindekiler: Aqua, Glycerin, Petrolatum, Ceramide NP, Parfum (Fragrance), Sodium Lauryl Sulfate, Phenoxyethanol, CI 19140.';
-      
-      const parsedIngredients: IngredientItem[] = [];
-      let flagged = 0;
-
-      if (/fragrance|parfum|esans/i.test(textToAnalyze)) {
-        parsedIngredients.push({
-          name: 'Parfum (Sentetik Esans)',
-          category: 'Sentetik Parfüm',
-          riskLevel: 'Yüksek',
-          explanation: 'Egzamalı ve hassas ciltlerde temas alerjisinin (kontakt dermatit) 1 numaralı sebebidir.'
-        });
-        flagged++;
-      }
-      if (/sulfate|sls/i.test(textToAnalyze)) {
-        parsedIngredients.push({
-          name: 'Sodium Lauryl Sulfate (SLS)',
-          category: 'Tahriş Edici (İrritan)',
-          riskLevel: 'Yüksek',
-          explanation: 'Cildin koruyucu doğal yağ tabakasını çözerek bariyeri zayıflatır.'
-        });
-        flagged++;
-      }
-      if (/alcohol denat|isopropyl alcohol/i.test(textToAnalyze)) {
-        parsedIngredients.push({
-          name: 'Alcohol Denat (Kurutucu Alkol)',
-          category: 'Kurutucu Alkol',
-          riskLevel: 'Yüksek',
-          explanation: 'Hızla buharlaşarak cildin nem dengesini bozar ve kuruluğu artırır.'
-        });
-        flagged++;
-      }
-
-      parsedIngredients.push(
-        { name: 'Ceramide NP', category: 'Güvenli (Bariyer Onarıcı)', riskLevel: 'Düşük', explanation: 'Cilt bariyer lipid yapısını yeniden inşa eden temel seramid molekülü.' },
-        { name: 'Glycerin', category: 'Güvenli (Bariyer Onarıcı)', riskLevel: 'Düşük', explanation: 'Epidermis hücrelerine su bağlayan güçlü nemlendirici.' },
-        { name: 'Petrolatum (Vazolin)', category: 'Güvenli (Bariyer Onarıcı)', riskLevel: 'Düşük', explanation: 'Nem kaybını %98 oranında önleyen yüksek tıkama (oklüzyon) kapasiteli koruyucu.' }
-      );
-
-      const score = Math.max(20, 100 - flagged * 25);
-      let rating: ProductScanResult['ratingCategory'] = 'Mükemmel Uyumlu';
-      if (score < 50) rating = 'Yüksek Tahriş Riski';
-      else if (score < 75) rating = 'Dikkatli Kullanılmalı';
-      else if (score < 90) rating = 'Genellikle Uygun';
-
-      const newResult: ProductScanResult = {
-        id: `scan-${Date.now()}`,
-        productName: productNameInput || 'Taranan Bakım Ürünü',
-        brand: brandInput || 'Dermatoloji Markası',
-        scannedAt: new Date().toLocaleString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-        compatibilityScore: score,
-        ratingCategory: rating,
-        ingredients: parsedIngredients,
-        rawTextScanned: textToAnalyze,
-        flaggedCount: flagged
-      };
-
-      addScannedProduct(newResult);
-      setActiveScan(newResult);
+      finalizeResult(pastedIngredients, 'metin-girişi');
       setIsScanning(false);
-      setPastedIngredients('');
-      setProductNameInput('');
-      setBrandInput('');
-    }, 1000);
+    }, 400);
+  };
+
+  const handlePhotoSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsScanning(true);
+    setOcrStatus('OCR motoru başlatılıyor...');
+
+    try {
+      const { createWorker } = await import('tesseract.js');
+      const worker = await createWorker('eng', undefined, {
+        logger: (m: { status: string; progress: number }) => {
+          if (m.status === 'recognizing text') {
+            setOcrStatus(`Etiket okunuyor... %${Math.round(m.progress * 100)}`);
+          } else {
+            setOcrStatus(m.status);
+          }
+        }
+      });
+
+      const { data } = await worker.recognize(file);
+      await worker.terminate();
+
+      const extractedText = data.text.trim();
+      if (extractedText.length < 3) {
+        setOcrStatus('Etikette okunabilir metin bulunamadı. Lütfen içerik listesini elle yapıştırın.');
+        setIsScanning(false);
+        return;
+      }
+
+      finalizeResult(extractedText, 'ocr');
+      setOcrStatus('');
+    } catch {
+      setOcrStatus('OCR işlemi başarısız oldu. Lütfen içerik listesini elle yapıştırın.');
+    } finally {
+      setIsScanning(false);
+      e.target.value = '';
+    }
   };
 
   const getRatingBadge = (cat: ProductScanResult['ratingCategory']) => {
     switch (cat) {
-      case 'Mükemmel Uyumlu': return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
-      case 'Genellikle Uygun': return 'bg-sky-500/20 text-sky-300 border-sky-500/40';
+      case 'Güvenli': return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
       case 'Dikkatli Kullanılmalı': return 'bg-amber-500/20 text-amber-300 border-amber-500/40';
-      case 'Yüksek Tahriş Riski': return 'bg-rose-500/20 text-rose-300 border-rose-500/40';
+      case 'Önerilmez': return 'bg-rose-500/20 text-rose-300 border-rose-500/40';
     }
   };
 
   return (
     <div className="space-y-6">
+      <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoSelected} className="hidden" />
+
       {/* Üst Şerit */}
-      <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-neutral-900/60 p-6 rounded-3xl border border-neutral-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+            <span className="p-2 rounded-xl bg-neutral-800 text-neutral-300 border border-neutral-700">
               <Sparkles className="w-5 h-5" />
             </span>
-            <h2 className="text-xl font-bold text-white tracking-tight">
-              Yapay Zeka Kozmetik & İçerik OCR Tarayıcısı
+            <h2 className="text-xl font-semibold text-white tracking-tight">
+              Ürün İçerik Tarayıcı
             </h2>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
-            Bakım ürünlerinin etiketini tarayarak egzamayı tetikleyen irritan maddeleri (SLS, Parfüm, Koruyucu, Alkol) tespit eder.
+          <p className="text-xs text-neutral-400 mt-1">
+            Etiket fotoğrafını gerçek OCR (metin tanıma) ile okur veya yapıştırılan içerik listesini; parfüm, alkol, SLS, MIT/MCI, paraben, uçucu yağ, lanolin, üre, seramid, petrolatum ve gliserin açısından değerlendirir.
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Sol Kolon: Tarama Girdileri */}
-        <div className="lg:col-span-5 bg-slate-900 p-6 rounded-3xl border border-slate-800 space-y-4">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">
-            <Camera className="w-4 h-4 text-sky-400" />
-            Etiket Tara veya İçerik Yapıştır
+        <div className="lg:col-span-5 bg-neutral-900/60 p-6 rounded-3xl border border-neutral-800 space-y-4">
+          <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+            <Camera className="w-4 h-4 text-neutral-400" />
+            Etiket Fotoğrafı Yükle (Gerçek OCR)
           </h3>
 
-          <div className="relative h-40 rounded-2xl bg-slate-950 border-2 border-dashed border-slate-800 flex flex-col items-center justify-center p-4 text-center group">
-            <Camera className="w-8 h-8 text-sky-400 mb-2" />
-            <p className="text-xs font-semibold text-slate-300">Kamerayı Ürün Etiketine Doğrultun</p>
-            <p className="text-[10px] text-slate-500">OCR metin okuma & barkod sorgulama</p>
-
-            <button
-              onClick={handleRunOCRScan}
-              disabled={isScanning}
-              className="mt-3 px-4 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-white font-bold text-xs shadow-md"
-            >
-              {isScanning ? 'OCR İşleniyor...' : 'Kamera İle Oku'}
-            </button>
+          <div className="relative h-40 rounded-2xl bg-neutral-950 border-2 border-dashed border-neutral-800 flex flex-col items-center justify-center p-4 text-center">
+            {isScanning ? (
+              <>
+                <Loader2 className="w-8 h-8 text-neutral-300 mb-2 animate-spin" />
+                <p className="text-xs font-semibold text-neutral-300">{ocrStatus || 'İşleniyor...'}</p>
+              </>
+            ) : (
+              <>
+                <Camera className="w-8 h-8 text-neutral-400 mb-2" />
+                <p className="text-xs font-semibold text-neutral-300">Ürün Etiketinin Fotoğrafını Yükle</p>
+                <p className="text-[10px] text-neutral-500">Tarayıcıda çalışan gerçek metin tanıma (Tesseract OCR)</p>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isScanning}
+                  className="mt-3 px-4 py-1.5 rounded-xl bg-white hover:bg-neutral-200 text-neutral-950 font-semibold text-xs"
+                >
+                  Etiket Fotoğrafı Seç
+                </button>
+              </>
+            )}
           </div>
+          {ocrStatus && !isScanning && (
+            <p className="text-[10px] text-amber-300">{ocrStatus}</p>
+          )}
 
           <div className="space-y-3">
             <div>
-              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Ürün Adı & Markası</label>
+              <label className="text-[10px] font-semibold uppercase text-neutral-500 block mb-1">Ürün Adı & Markası</label>
               <div className="grid grid-cols-2 gap-2">
                 <input
                   type="text"
                   placeholder="Örn: Nemlendirici Krem"
                   value={productNameInput}
                   onChange={e => setProductNameInput(e.target.value)}
-                  className="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-600 focus:outline-none"
+                  className="px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white placeholder-neutral-600 focus:outline-none"
                 />
                 <input
                   type="text"
                   placeholder="Örn: CeraVe"
                   value={brandInput}
                   onChange={e => setBrandInput(e.target.value)}
-                  className="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-600 focus:outline-none"
+                  className="px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white placeholder-neutral-600 focus:outline-none"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Veya İçerik Listesini Yapıştırın</label>
+              <label className="text-[10px] font-semibold uppercase text-neutral-500 block mb-1">Veya İçerik Listesini Yapıştırın</label>
               <textarea
                 rows={3}
-                placeholder="Örn: Aqua, Glycerin, Petrolatum, SLS, Parfum..."
+                placeholder="Örn: Aqua, Glycerin, Petrolatum, Sodium Lauryl Sulfate, Parfum..."
                 value={pastedIngredients}
                 onChange={e => setPastedIngredients(e.target.value)}
-                className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-600 focus:outline-none"
+                className="w-full p-3 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white placeholder-neutral-600 focus:outline-none"
               />
             </div>
 
             <button
-              onClick={handleRunOCRScan}
-              disabled={isScanning}
-              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-sky-500 hover:from-indigo-400 text-white font-bold text-xs shadow-md flex items-center justify-center gap-2"
+              onClick={handleAnalyzeText}
+              disabled={isScanning || !pastedIngredients.trim()}
+              className="w-full py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-100 font-semibold text-xs shadow-md flex items-center justify-center gap-2 disabled:opacity-40"
             >
               <FileText className="w-4 h-4" />
-              {isScanning ? 'İçerik Veritabanı Taranıyor...' : 'İçindekileri İncele'}
+              İçindekileri İncele
             </button>
           </div>
 
           {/* Geçmiş Taramalar */}
-          <div className="pt-4 border-t border-slate-800 space-y-2">
-            <span className="text-[10px] uppercase font-bold text-slate-400 block">Son Taranan Ürünler</span>
+          <div className="pt-4 border-t border-neutral-800 space-y-2">
+            <span className="text-[10px] uppercase font-semibold text-neutral-500 block">Son Taranan Ürünler</span>
             <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
               {scannedProducts.map(prod => (
                 <button
                   key={prod.id}
                   onClick={() => setActiveScan(prod)}
                   className={`w-full p-2.5 rounded-xl border text-left flex items-center justify-between text-xs transition-colors ${
-                    activeScan.id === prod.id ? 'bg-slate-800 border-sky-500/50' : 'bg-slate-950 border-slate-850 hover:bg-slate-800/50'
+                    activeScan.id === prod.id ? 'bg-neutral-800 border-neutral-600' : 'bg-neutral-950 border-neutral-800 hover:bg-neutral-800/50'
                   }`}
                 >
-                  <div>
-                    <p className="font-bold text-slate-200">{prod.productName}</p>
-                    <p className="text-[10px] text-slate-500">{prod.brand} • {prod.scannedAt}</p>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-neutral-200 truncate">{prod.productName}</p>
+                    <p className="text-[10px] text-neutral-500">{prod.brand} • {prod.scanMethod === 'ocr' ? 'OCR' : 'Metin'}</p>
                   </div>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${getRatingBadge(prod.ratingCategory)}`}>
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border shrink-0 ${getRatingBadge(prod.ratingCategory)}`}>
                     %{prod.compatibilityScore}
                   </span>
                 </button>
@@ -204,66 +221,66 @@ export const IngredientScanner: React.FC = () => {
         </div>
 
         {/* Sağ Kolon: Tarama Sonuçları */}
-        <div className="lg:col-span-7 bg-slate-900 p-6 rounded-3xl border border-slate-800 space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+        <div className="lg:col-span-7 bg-neutral-900/60 p-6 rounded-3xl border border-neutral-800 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800 pb-4">
             <div>
-              <span className="text-[10px] uppercase font-bold text-indigo-400 tracking-wider block">
+              <span className="text-[10px] uppercase font-semibold text-neutral-500 tracking-wider block">
                 {activeScan.brand}
               </span>
-              <h3 className="text-xl font-bold text-white mt-0.5">
+              <h3 className="text-xl font-semibold text-white mt-0.5">
                 {activeScan.productName}
               </h3>
-              <p className="text-xs text-slate-400">Tarama Tarihi: {activeScan.scannedAt}</p>
+              <p className="text-xs text-neutral-400">Tarama Tarihi: {activeScan.scannedAt}</p>
             </div>
 
             <div className="text-right shrink-0">
-              <span className={`inline-block px-3 py-1 rounded-xl text-xs font-black border ${getRatingBadge(activeScan.ratingCategory)}`}>
+              <span className={`inline-block px-3 py-1 rounded-xl text-xs font-bold border ${getRatingBadge(activeScan.ratingCategory)}`}>
                 {activeScan.ratingCategory} (%{activeScan.compatibilityScore})
               </span>
-              <span className="text-[10px] text-slate-400 block mt-1">
-                {activeScan.flaggedCount === 0 ? 'İrritan Madde Saptanmadı' : `${activeScan.flaggedCount} Riskli İrritan Madde Tespit Edildi`}
+              <span className="text-[10px] text-neutral-400 block mt-1">
+                {activeScan.flaggedCount === 0 ? 'Riskli Madde Saptanmadı' : `${activeScan.flaggedCount} Riskli Madde Tespit Edildi`}
               </span>
             </div>
           </div>
 
           <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              İçerik Detaylı Değerlendirmesi:
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+              İçerik Değerlendirmesi:
             </h4>
 
             <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
               {activeScan.ingredients.map((ing, idx) => {
-                const isSafe = ing.category.includes('Güvenli');
+                const isSafe = ing.riskLevel === 'Düşük';
                 return (
                   <div
                     key={idx}
                     className={`p-3.5 rounded-2xl border text-xs space-y-1 ${
-                      isSafe ? 'bg-slate-950/60 border-slate-800/80' : 'bg-rose-950/30 border-rose-500/30'
+                      isSafe ? 'bg-neutral-950/60 border-neutral-800' : 'bg-rose-950/20 border-rose-500/25'
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-white flex items-center gap-2">
-                        {isSafe ? (
-                          <Check className="w-4 h-4 text-emerald-400" />
-                        ) : (
-                          <Ban className="w-4 h-4 text-rose-400" />
-                        )}
-                        {ing.name}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-semibold text-white flex items-center gap-2 min-w-0">
+                        {isSafe ? <Check className="w-4 h-4 text-emerald-400 shrink-0" /> : <Ban className="w-4 h-4 text-rose-400 shrink-0" />}
+                        <span className="truncate">{ing.name}</span>
                       </span>
 
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                        isSafe ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded shrink-0 ${
+                        isSafe ? 'bg-emerald-500/20 text-emerald-300' : ing.riskLevel === 'Yüksek' ? 'bg-rose-500/20 text-rose-300' : 'bg-amber-500/20 text-amber-300'
                       }`}>
                         {ing.category}
                       </span>
                     </div>
 
-                    <p className="text-[11px] text-slate-300 leading-relaxed pl-6">
+                    <p className="text-[11px] text-neutral-300 leading-relaxed pl-6">
                       {ing.explanation}
                     </p>
                   </div>
                 );
               })}
+
+              {activeScan.ingredients.length === 0 && (
+                <p className="text-xs text-neutral-500 text-center py-6">Bu taramada tanımlı bir bileşen tespit edilmedi.</p>
+              )}
             </div>
           </div>
         </div>

@@ -1,71 +1,70 @@
-# DermIQ - Akıllı Egzama ve Cilt Sağlığı Platformu
+# DermIQ - Egzama ve Cilt Sağlığı Takip Platformu
 
-> **Yapay Zeka Destekli Bilgisayarlı Görü (Computer Vision), Çevresel Alevlenme Tahmini, İçerik OCR Tarayıcısı ve Klinik Takip Platformu**
+> **Cilt Fotoğraf Analizi, Çevresel Alevlenme Tahmini, İçerik Tarayıcı ve Klinik Takip Platformu**
 
 ![DermIQ Platform](https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1200&q=80)
 
 ---
 
-## 🌟 Öne Çıkan Özellikler
+## Öne Çıkan Özellikler
 
-### 1. 🔍 Görsel Yapay Zeka (Computer Vision) & Isı Haritaları
-- **Çoklu Vücut Bölgesi Taraması**: Sol Kol, Sağ Kol, Yüz & Boyun, Eller, Göğüs/Sırt ve Bacaklar.
-- **Canlı Cihaz Kamerası (WebCam)**: Tarayıcı üzerinden doğrudan kamera görüntüsü alarak anlık cilt taraması.
-- **Öncesi / Sonrası Split Karşılaştırma**: Sürgülü (Slider) ekran ile başlangıç alevlenmesi ile güncel iyileşmeyi birebir kıyaslama.
-- **Klinik Parametre Ölçümü**: Eritem (Kızarıklık), Kserozis (Kuruluk), Soyulma, Fissür (Çatlama), Ödem ve Etkilenen Alan ($cm^2$) tespiti.
-- **SCORAD & EASI İndeksi**: Standartlaştırılmış klinik egzamal şiddet puanlama modeli.
+### 1. Cilt Fotoğraf Analizi
+- Çoklu vücut bölgesi taraması: Sol Kol, Sağ Kol, Yüz & Boyun, Eller, Göğüs/Sırt, Bacaklar.
+- Canlı cihaz kamerası veya fotoğraf yükleme; yüklenen fotoğrafın **gerçek piksel verisi** (renk kanalları, doku/kenar yoğunluğu) analiz edilerek kızarıklık, kuruluk, soyulma, çatlama, sızıntı, şişlik ve pigmentasyon ölçülür.
+- Öncesi/Sonrası split karşılaştırma ve iyileşme zaman tüneli.
+- SCORAD skoru, etkilenen alan (cm²) ve enfeksiyon riski tahmini — tamamı görüntüden türetilir.
 
-### 2. 📊 Özel Yapay Zeka İyileşme Skoru (0–100)
-- 10 klinik ve davranışsal faktörü (alevlenme şiddeti, fotoğraf trendi, ilaç uyumu, nemlendirme, uyku, stres, su tüketimi) harmanlayan canlı skor dial göstergesi.
-- Haftalık ve aylık trend grafikleri, iyileşme hızı ($+\text{puan/hafta}$) ve alevlenme riski göstergeleri.
+### 2. Alevlenme Şiddeti Skoru (0–100)
+- Kaşıntı, kuruluk, kızarıklık, uyku kalitesi, nemlendirici kullanımı, ilaç uyumu, hava koşulları, stres ve beslenme faktörlerinden hesaplanan günlük şiddet skoru.
+- Haftalık/aylık trend grafikleri ve faktör bazlı katkı analizi.
 
-### 3. 🌤️ 72 Saatlik Alevlenme Tahmini & Çevre İstihbaratı
-- Hava sıcaklığı, nem oranı, UV indeksi ve rüzgar takibi.
-- **Polen Takibi**: Ağaç, çim ve yabani ot polen risk seviyeleri.
-- **Hava Kalitesi (AQI)**: PM2.5, PM10, Ozon ($O_3$) ve Azot Dioksit ($NO_2$) ölçümleri.
-- Kişiselleştirilmiş cilt mikro-klima tavsiyeleri.
+### 3. 72 Saatlik Alevlenme Tahmini
+- **Open-Meteo** açık hava durumu ve hava kalitesi API'lerinden gerçek zamanlı sıcaklık, nem, UV indeksi, rüzgar, PM2.5/PM10, Avrupa AQI ve polen (ağaç/çim/yabani ot) verisi — API anahtarı gerekmez.
+- Varsayılan konum: Bahçelievler, İstanbul.
 
-### 4. 🧴 Ürün & İçerik OCR Tarayıcısı
-- Kozmetik etiket metinlerini ve içerik listelerini tarayarak egzamayı tetikleyen irritan maddeleri tespit eder.
-- SLS (Sodium Lauryl Sulfate), sentetik parfümler, kurutucu alkoller, koruyucular (MIT/Paraben) ve boya kontrolü.
-- *Mükemmel Uyumlu*, *Genellikle Uygun*, *Dikkatli Kullanılmalı* veya *Yüksek Tahriş Riski* skorlaması.
+### 4. Ürün İçerik Tarayıcı
+- Etiket fotoğrafını **Tesseract.js** ile tarayıcı içinde gerçek OCR (metin tanıma) kullanarak okur, veya içerik listesi elle yapıştırılabilir.
+- Parfüm, alkol, SLS/sülfat, MIT/MCI, paraben, uçucu yağ, lanolin, üre, seramid, petrolatum ve gliserin tespiti; *Güvenli*, *Dikkatli Kullanılmalı*, *Önerilmez* sınıflandırması.
 
-### 5. 🥗 Beslenme & Histamin Korelasyon Takibi
-- Yüksek histaminli besinler (eski peynirler, şarküteri ürünleri, nitratlı gıdalar) ve alerjen takibi.
-- Besin tüketiminden 12–72 saat sonraki kaşıntı/alevlenme değişimlerini gösteren zamansal korelasyon analizi.
+### 5. Beslenme Asistanı
+- Tetikleyici olabilecek gıdalar (fast food, şekerli gıdalar, alkol, işlenmiş gıdalar vb.) ve cilt dostu besinler (somon, omega-3 kaynakları, yoğurt, kefir, ceviz, avokado vb.) için risk/katkı açıklamaları.
+- Kişisel öğün günlüğü ve besin-belirti korelasyon takibi.
 
-### 6. 📅 Dinamik Bakım Rutini & Ilık Banyo Zamanlayıcısı
-- Sabah, Öğle, Akşam ve Gece bakım adımları. Akut alevlenme ve proaktif idame modlarına otomatik uyum.
-- 10 dakikalık **Ilık Banyo Zamanlayıcısı** ve banyo sonrası 3 dakika nemlendirme kuralı uyarısı.
-- Tamamlanan rutin bölümlerinde kutlama konfetisi.
+### 6. Takvim & Zaman Çizelgesi
+- Fotoğraf taramaları, ilaçlar, enjeksiyonlar, doktor ziyaretleri, alevlenmeler ve notların tek bir aylık takvim görünümünde birleştirilmesi.
 
-### 7. 💊 Tedavi Geçmişi Kronolojisi
+### 7. Günlük Bakım Listesi
+- Sabah, öğle, akşam, gece bakım adımlarını ekleme, düzenleme, sıralama ve kaldırma.
+- Ilık banyo zamanlayıcısı ve hidrasyon takibi.
+
+### 8. Tedavi Geçmişi Kronolojisi
 - Geçmişte ve halen kullanılan sistemik/biyolojik tedavilerin (ör. kortikosteroid → immünsüpresan → JAK inhibitörü → biyolojik) kronolojik zaman çizelgesi.
-- Her kayıt için tedavi sınıfı, uygulama yolu, başlangıç/bitiş tarihi, süre, bir sonraki tedaviye geçiş nedeni ve yanıt/yan etki notları.
-- Yeni tedavi kayıtları eklenebilir; Doktor Özeti raporuna ve PDF çıktısına otomatik olarak yansır.
 
-### 8. 🩺 Doktor Görüşmesi Hazırlık & PDF Raporu
-- Dermatolog randevusu için fotoğraflı kronolojik gelişim, tam tedavi geçmişi ve SCORAD indekslerini içeren **tek tıkla PDF rapor çıktısı**.
-- Davet şifresi ile doktor canlı izleme portalı modu.
+### 9. Sağlık Günlüğü
+- Alerjiler, kişisel notlar, doktor notları ve tıbbi geçmiş için tamamen düzenlenebilir kişisel sağlık günlüğü.
 
-### 9. 🎙️ Sesli Asistan & Akıllı Saat Widget'ı
-- Türkçe Web Speech API ile eller serbest sesli komut alma (*"Nemlendirici sürdüm"*, *"Kaşıntım 4"*).
-- Apple Watch ve Wear OS uyumlu akıllı saat arayüz simülatörü.
+### 10. Sohbet Asistanı
+- Egzama, cilt bariyeri, tedaviler (Dupixent, Cibinqo, Siklosporin, Prednizon vb.), tetikleyiciler ve günlük bakım hakkında geniş bir yerel bilgi tabanından yanıt veren sohbet asistanı.
+
+### 11. Sesli Asistan & Akıllı Saat Widget'ı
+- Türkçe Web Speech API ile eller serbest sesli komut alma.
+- Akıllı saat arayüz simülatörü.
 
 ---
 
-## 🛠️ Teknolojiler
+## Teknolojiler
 
 - **Core**: React 19, TypeScript, Vite
-- **Veri Kalıcılığı**: Tarayıcı `localStorage` katmanı ile oturum verileri (fotoğraf geçmişi, tedavi kronolojisi, iyileşme skoru, rutinler) sayfa yenilense veya tarayıcı kapatılsa dahi korunur.
-- **Styling**: TailwindCSS v4, Custom Glassmorphism, Responsive Dark/Light Mode
-- **Grafikler & Görseller**: HTML5 Canvas (Heatmaps & Split Comparator), Lucide Icons, Canvas Confetti
-- **Raporlama**: jsPDF, html2canvas
+- **Veri Kalıcılığı**: Tarayıcı `localStorage` katmanı ile oturum verileri sayfa yenilense veya tarayıcı kapatılsa dahi korunur.
+- **Styling**: TailwindCSS v4, Glassmorphism, Duyarlı Karanlık/Aydınlık Mod
+- **Görüntü İşleme**: HTML5 Canvas piksel analizi (gerçek renk/doku ölçümü), Lucide Icons, Canvas Confetti
+- **OCR**: Tesseract.js (tarayıcı içinde çalışan gerçek metin tanıma)
+- **Hava/Çevre Verisi**: Open-Meteo Forecast & Air Quality API (anahtar gerektirmez)
 - **Ses Tanıma**: Web Speech API (tr-TR)
 
 ---
 
-## 🚀 Kurulum ve Çalıştırma
+## Kurulum ve Çalıştırma
 
 1. **Bağımlılıkları Yükleyin**:
 ```bash
@@ -84,6 +83,4 @@ npm run build
 
 ---
 
-## 📄 Tıbbi Sorumluluk Reddi
-
-DermIQ, yapay zeka destekli biyofiziksel görsel analiz ve yaşam tarzı takip araçları sunar. Sunulan sonuçlar bilgilendirme ve destek amaçlıdır; tıbbi teşhis, tanı veya tedavi niteliği taşımaz. Sağlık sorunlarınız için daima uzman bir dermatoloğa veya hekime danışınız.
+Bu uygulama kişisel takip ve bilgilendirme amaçlıdır; tıbbi teşhis veya tedavi niteliği taşımaz.

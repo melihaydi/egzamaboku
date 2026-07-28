@@ -9,68 +9,93 @@ export interface CVAnalysis {
   dryness: number; // 0 - 100 Kserozis (Kuruluk)
   scaling: number; // 0 - 100 Soyulma / Kepeklenme
   cracking: number; // 0 - 100 Çatlama (Fissür)
+  oozing: number; // 0 - 100 Sızıntı / Akıntı
   swelling: number; // 0 - 100 Ödem (Şişlik)
   pigmentation: number; // 0 - 100 Pigmentasyon Değişimi
   surfaceAreaCm2: number; // Etkilenen alan (cm²)
   scoradIndex: number; // SCORAD Klinik Şiddet Skoru (0-103)
   healingProgression: number; // Baseline'a göre iyileşme yüzdesi %
   confidenceScore: number; // Güven skoru %
-  heatMapData: Array<{ x: number; y: number; intensity: number; label: string }>;
+  infectionRisk: 'Düşük' | 'Orta' | 'Yüksek';
+  affectedRegions: Array<{ x: number; y: number; radius: number; severity: number; label: string }>;
   notes: string;
+  analysisMethod: 'canlı-piksel-analizi' | 'simüle';
 }
 
-export interface HealingScoreData {
-  currentScore: number; // 0 - 100 İyileşme Endeksi
+export type FlareSeverityLevel = 'Hafif' | 'Orta' | 'Şiddetli' | 'Çok Şiddetli';
+
+export interface FlareScoreData {
+  currentScore: number; // 0 - 100, yüksek = daha kötü alevlenme
+  severityLevel: FlareSeverityLevel;
   previousScore: number;
   weeklyTrend: number[];
   monthlyTrend: number[];
-  recoveryVelocity: number; // puan / hafta
-  healingStreakDays: number; // İyileşme serisi (gün)
-  riskScore: number; // Alevlenme riski %
-  habitFactors: {
-    flareSeverity: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
-    photoTrend: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
-    medicationAdherence: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
-    moisturizerConsistency: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
+  factors: {
+    itching: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
+    dryness: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
+    redness: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
     sleepQuality: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
-    stressLevel: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
-    waterIntake: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
-    loggedTriggers: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
+    moisturizerUsage: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
+    medicationAdherence: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
+    weather: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
+    stress: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
+    diet: { weight: number; score: number; impact: 'positive' | 'negative' | 'neutral'; text: string };
   };
 }
 
 export interface EnvironmentalData {
   city: string;
+  latitude: number;
+  longitude: number;
   temperature: number; // °C
   humidity: number; // % Nem
   uvIndex: number; // 0 - 12
   windSpeed: number; // km/s
+  precipitationProbability: number; // %
   aqi: {
-    overall: number; // 0 - 500
+    overall: number; // European AQI 0-100+
     category: 'İyi' | 'Orta' | 'Hassas Gruplar İçin Riskli' | 'Sağlıksız' | 'Çok Sağlıksız';
     pm25: number;
     pm10: number;
-    ozone: number;
-    no2: number;
   };
   pollen: {
-    tree: 'Düşük' | 'Orta' | 'Yüksek' | 'Çok Yüksek';
-    grass: 'Düşük' | 'Orta' | 'Yüksek' | 'Çok Yüksek';
-    weed: 'Düşük' | 'Orta' | 'Yüksek' | 'Çok Yüksek';
-    overallRisk: 'Düşük' | 'Orta' | 'Yüksek' | 'Şiddetli';
+    tree: number; // grains/m³
+    grass: number;
+    weed: number;
+    overallRisk: 'Düşük' | 'Orta' | 'Yüksek' | 'Çok Yüksek';
   };
   forecast72h: Array<{
     day: string;
+    dateISO: string;
     temp: number;
     humidity: number;
+    uvIndex: number;
+    aqi: number;
     flareRisk: number; // %
     primaryDriver: string;
   }>;
+  dataSource: 'canlı-api' | 'yedek-veri';
+  fetchedAt: string;
 }
+
+export type IngredientCategory =
+  | 'Bariyer Onarıcı'
+  | 'Parfüm / Fragrance'
+  | 'Alkol'
+  | 'SLS / Sülfat'
+  | 'MIT / MCI'
+  | 'Paraben'
+  | 'Uçucu Yağ'
+  | 'Lanolin'
+  | 'Üre'
+  | 'Seramid'
+  | 'Petrolatum'
+  | 'Gliserin'
+  | 'Diğer';
 
 export interface IngredientItem {
   name: string;
-  category: 'Güvenli (Bariyer Onarıcı)' | 'Tahriş Edici (İrritan)' | 'Alerjen Riskli' | 'Sentetik Parfüm' | 'Kurutucu Alkol' | 'Koruyucu (Korozif)' | 'Sentetik Boya';
+  category: IngredientCategory;
   riskLevel: 'Düşük' | 'Orta' | 'Yüksek';
   explanation: string;
 }
@@ -81,10 +106,11 @@ export interface ProductScanResult {
   brand: string;
   scannedAt: string;
   compatibilityScore: number; // 0-100
-  ratingCategory: 'Mükemmel Uyumlu' | 'Genellikle Uygun' | 'Dikkatli Kullanılmalı' | 'Yüksek Tahriş Riski';
+  ratingCategory: 'Güvenli' | 'Dikkatli Kullanılmalı' | 'Önerilmez';
   ingredients: IngredientItem[];
   rawTextScanned: string;
   flaggedCount: number;
+  scanMethod: 'ocr' | 'metin-girişi';
 }
 
 export interface FoodLogItem {
@@ -94,6 +120,16 @@ export interface FoodLogItem {
   timestamp: string;
   histamineLevel: 'Düşük' | 'Orta' | 'Yüksek';
   possibleFlareLink?: string;
+}
+
+export interface FoodCatalogItem {
+  id: string;
+  name: string;
+  group: 'Tetikleyici Olabilir' | 'Cilt Dostu';
+  flareRisk?: number; // 0-100, yalnızca tetikleyici grubu için
+  benefit?: string; // yalnızca cilt dostu grubu için
+  rationale: string;
+  recommendation: string;
 }
 
 export interface SymptomCorrelation {
@@ -110,17 +146,18 @@ export interface RoutineTask {
   completed: boolean;
   category: 'Nemlendirici' | 'İlaç / Krem' | 'Su Tüketimi' | 'Stres Yönetimi' | 'Banyo' | 'Uyku Hazırlığı';
   durationMinutes?: number;
+  reminderTime?: string; // "HH:mm"
+  order: number;
 }
 
-export interface KnowledgeArticle {
+export type CalendarEventType = 'flare' | 'photo' | 'medication' | 'injection' | 'doctorVisit' | 'missedMoisturizer' | 'note';
+
+export interface CalendarEvent {
   id: string;
+  dateISO: string; // YYYY-MM-DD
+  type: CalendarEventType;
   title: string;
-  category: 'İlaçlar & Biyolojikler' | 'Topikal Tedaviler' | 'Egzama Türleri' | 'Çocuk & Hamilelik' | 'Günlük Bakım';
-  summary: string;
-  evidenceLevel: 'FDA Onaylı Biyolojik' | 'Klinik Standart Tedavi' | 'Uzman Konsensüsü' | 'Yeni Araştırma';
-  content: string;
-  keyTakeaways: string[];
-  tags: string[];
+  description?: string;
 }
 
 export interface FamilyProfile {
@@ -145,6 +182,17 @@ export interface TreatmentEntry {
   status: 'Devam Ediyor' | 'Sonlandırıldı';
   reasonForChange?: string; // Bir sonraki tedaviye neden geçildiği
   notes?: string;
+}
+
+export type JournalCategory = 'Alerji' | 'Kişisel Not' | 'Doktor Notu' | 'Tıbbi Geçmiş';
+
+export interface JournalEntry {
+  id: string;
+  category: JournalCategory;
+  title: string;
+  content: string;
+  date: string;
+  severity?: 'Hafif' | 'Orta' | 'Şiddetli'; // yalnızca Alerji kategorisi için
 }
 
 export interface ChatMessage {

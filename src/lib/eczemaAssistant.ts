@@ -208,6 +208,48 @@ export const knowledgeBase: KnowledgeEntry[] = [
     answer: 'Ilımlı güneş ışığı bazı kişilerde egzamayı hafifletebilir (fototerapinin dayandığı prensip budur), ancak aşırı güneşlenme cildi kurutup tahriş edebilir ve bariyer hasarını artırabilir. Güneşe çıkarken egzamalı ciltlerde tahriş yapmayan, mineral bazlı (çinko oksit/titanyum dioksit) güneş kremleri tercih edilmesi önerilir.'
   },
   {
+    id: 'kb-antihistamines',
+    topic: 'Antihistaminikler',
+    keywords: ['antihistaminik', 'alerji hapi', 'kasinti hapi', 'hidroksizin', 'setirizin', 'loratadin'],
+    answer: 'Antihistaminikler, histamin reseptörlerini bloke ederek alerjik kaşıntıyı azaltabilir. Egzamada kaşıntının çoğu histamin dışı yollarla (sitokinler, sinir uçları) tetiklendiğinden etkileri sınırlı olabilir; ancak sedatif (uyku getirici) tipleri (örn. hidroksizin) özellikle gece kaşıntısını ve uyku kalitesini dolaylı olarak iyileştirebilir. Hangi tipin ve dozun uygun olduğuna hekiminiz karar vermelidir.'
+  },
+  {
+    id: 'kb-itch-management',
+    topic: 'Kaşıntı Yönetimi',
+    keywords: ['kasinti yonetimi', 'kasintiyi durdurmak', 'kasinma kazima dongusu', 'kasinti nasil gecer'],
+    answer: 'Kaşıntı-kazıma döngüsünü kırmak egzama yönetiminin temelidir: cildi soğutmak (soğuk kompres), tırnakları kısa tutmak, gece pamuklu eldiven giymek, yoğun nemlendirme, dikkat dağıtma teknikleri ve gerektiğinde hekim önerisiyle antihistaminik/topikal tedavi kullanmak kaşıntıyı azaltabilir. Kazımak cilt bariyerine ek hasar vererek döngüyü şiddetlendirir.'
+  },
+  {
+    id: 'kb-barrier-repair',
+    topic: 'Cilt Bariyeri Onarımı',
+    keywords: ['bariyer onarimi', 'cilt bariyeri', 'bariyer fonksiyonu', 'skin barrier'],
+    answer: 'Cilt bariyeri, epidermisin en dış tabakasındaki lipidler (seramid, kolesterol, yağ asitleri) ve korneositlerden oluşan koruyucu yapıdır. Egzamada bu bariyer hem genetik hem çevresel nedenlerle zayıflar ve nem kaybı (TEWL) artar. Seramid/kolesterol/yağ asidi içeren nemlendiriciler, aşırı yıkamadan kaçınma ve tahriş edici maddelerden uzak durma bariyerin onarılmasına yardımcı olur.'
+  },
+  {
+    id: 'kb-irritants',
+    topic: 'Tahriş Edici Maddeler (İrritanlar)',
+    keywords: ['irritan', 'tahris edici', 'hangi maddeler tahris eder'],
+    answer: 'Yaygın irritanlar: sabun ve deterjanlar (özellikle SLS/SLES içerenler), yün/sentetik kumaşlar, parfüm ve esanslar, alkol bazlı ürünler, klorlu havuz suyu, aşırı sıcak su ve bazı temizlik kimyasallarıdır. İrritanlar alerjik olmasa da cilt bariyerini doğrudan tahriş ederek egzamayı kötüleştirebilir; hipoalerjenik, parfümsüz ürünler tercih edilmelidir.'
+  },
+  {
+    id: 'kb-allergies',
+    topic: 'Alerjiler ve Egzama İlişkisi',
+    keywords: ['alerji egzama iliskisi', 'alerjik egzama', 'atopi'],
+    answer: 'Egzama, astım ve alerjik rinit ile birlikte "atopik yürüyüş" olarak adlandırılan bir örüntünün parçası olabilir. Bazı hastalarda belirli gıda veya çevresel alerjenler semptomları tetikleyebilir, ancak egzamanın kendisi çoğunlukla bir alerjik reaksiyondan çok bariyer disfonksiyonu kaynaklıdır. Gerçek alerji şüphesinde alerji uzmanınca deri testi veya kan testi (IgE) önerilebilir.'
+  },
+  {
+    id: 'kb-daily-skincare',
+    topic: 'Günlük Cilt Bakımı Rutini',
+    keywords: ['gunluk cilt bakimi', 'gunluk rutin', 'cilt bakim adimlari'],
+    answer: 'Genel bir günlük rutin: sabah hafif temizlik + nemlendirici + (reçeteliyse) topikal tedavi + güneş koruyucu; akşam ılık duş/banyo + 3 dakika içinde bariyer kremi + gerekiyorsa ıslak sargı veya yoğun gece bakımı. Tutarlılık, tek bir "mucize ürün"den daha önemlidir; rutini uygulamaya bu uygulamadaki Günlük Bakım Listesi üzerinden devam edebilirsiniz.'
+  },
+  {
+    id: 'kb-clinical-guidelines',
+    topic: 'Klinik Rehberler ve Kanıta Dayalı Yaklaşım',
+    keywords: ['klinik rehber', 'kanita dayali tedavi', 'dermatoloji rehberi', 'guideline'],
+    answer: 'Amerikan Dermatoloji Akademisi (AAD) ve Avrupa (EADV) kılavuzları, egzama tedavisinde basamaklı bir yaklaşımı önerir: temel nemlendirme ve tetikleyiciden kaçınma → topikal kortikosteroid/kalsinörin inhibitörü → orta-şiddetli vakalarda fototerapi veya sistemik tedaviler (biyolojikler, JAK inhibitörleri). Tedavi seçimi hastalık şiddetine, yaşa ve eşlik eden durumlara göre hekim tarafından bireyselleştirilir.'
+  },
+  {
     id: 'kb-scorad',
     topic: 'SCORAD ve EASI Skorları',
     keywords: ['scorad', 'easi', 'siddet skoru', 'klinik skor'],

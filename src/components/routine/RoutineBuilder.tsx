@@ -1,35 +1,54 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  CalendarCheck, 
-  CheckCircle2, 
-  Droplets, 
-  Moon, 
-  Sun, 
-  Sunset, 
-  Timer, 
-  Play, 
-  Pause, 
+import React, { useState } from 'react';
+import {
+  CalendarCheck,
+  CheckCircle2,
+  Droplets,
+  Moon,
+  Sun,
+  Sunset,
+  Timer,
+  Play,
+  Pause,
   RotateCcw,
-  Zap,
-  Award
+  Award,
+  Plus,
+  Trash2,
+  Pencil,
+  ArrowUp,
+  ArrowDown,
+  Check
 } from 'lucide-react';
 import { useApp } from '../../context/useApp';
 import confetti from 'canvas-confetti';
+import type { RoutineTask } from '../../types';
+
+const TIME_TABS: Array<{ id: RoutineTask['timeOfDay']; icon: typeof Sun }> = [
+  { id: 'Sabah', icon: Sun },
+  { id: 'Öğle', icon: Sun },
+  { id: 'Akşam', icon: Sunset },
+  { id: 'Gece', icon: Moon }
+];
+
+const CATEGORIES: RoutineTask['category'][] = ['Nemlendirici', 'İlaç / Krem', 'Su Tüketimi', 'Stres Yönetimi', 'Banyo', 'Uyku Hazırlığı'];
 
 export const RoutineBuilder: React.FC = () => {
-  const { routines, toggleRoutineTask, healingScore } = useApp();
-  const [selectedTimeOfDay, setSelectedTimeOfDay] = useState<'Sabah' | 'Öğle' | 'Akşam' | 'Gece'>('Sabah');
-  
-  // Banyo Zamanlayıcısı
-  const [bathTimeLeft, setBathTimeLeft] = useState<number>(600); // 10 dk
+  const { routines, toggleRoutineTask, addRoutineTask, removeRoutineTask, updateRoutineTask, reorderRoutineTasks } = useApp();
+  const [selectedTimeOfDay, setSelectedTimeOfDay] = useState<RoutineTask['timeOfDay']>('Sabah');
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const [newTitle, setNewTitle] = useState('');
+  const [newCategory, setNewCategory] = useState<RoutineTask['category']>('Nemlendirici');
+  const [newReminder, setNewReminder] = useState('');
+  const [editTitle, setEditTitle] = useState('');
+
+  const [bathTimeLeft, setBathTimeLeft] = useState<number>(600);
   const [isBathTimerRunning, setIsBathTimerRunning] = useState<boolean>(false);
 
-  useEffect(() => {
-    let timer: any;
+  React.useEffect(() => {
+    let timer: ReturnType<typeof setInterval> | undefined;
     if (isBathTimerRunning && bathTimeLeft > 0) {
-      timer = setInterval(() => {
-        setBathTimeLeft(prev => prev - 1);
-      }, 1000);
+      timer = setInterval(() => setBathTimeLeft(prev => prev - 1), 1000);
     }
     return () => clearInterval(timer);
   }, [isBathTimerRunning, bathTimeLeft]);
@@ -50,70 +69,82 @@ export const RoutineBuilder: React.FC = () => {
       const filtered = routines.filter(r => r.timeOfDay === selectedTimeOfDay);
       const allDone = filtered.every(r => (r.id === id ? willBeCompleted : r.completed));
       if (allDone) {
-        confetti({
-          particleCount: 80,
-          spread: 70,
-          origin: { y: 0.6 }
-        });
+        confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
       }
     }
   };
 
-  const filteredTasks = routines.filter(r => r.timeOfDay === selectedTimeOfDay);
+  const filteredTasks = routines
+    .filter(r => r.timeOfDay === selectedTimeOfDay)
+    .sort((a, b) => a.order - b.order);
   const totalCompleted = routines.filter(r => r.completed).length;
+
+  const handleAddTask = () => {
+    if (!newTitle.trim()) return;
+    addRoutineTask({ title: newTitle.trim(), timeOfDay: selectedTimeOfDay, category: newCategory, reminderTime: newReminder || undefined });
+    setNewTitle('');
+    setNewReminder('');
+    setShowAddForm(false);
+  };
+
+  const startEdit = (task: RoutineTask) => {
+    setEditingId(task.id);
+    setEditTitle(task.title);
+  };
+
+  const saveEdit = (id: string) => {
+    if (editTitle.trim()) updateRoutineTask(id, { title: editTitle.trim() });
+    setEditingId(null);
+  };
+
+  const moveTask = (id: string, direction: -1 | 1) => {
+    const ids = filteredTasks.map(t => t.id);
+    const idx = ids.indexOf(id);
+    const swapWith = idx + direction;
+    if (swapWith < 0 || swapWith >= ids.length) return;
+    [ids[idx], ids[swapWith]] = [ids[swapWith], ids[idx]];
+    reorderRoutineTasks(selectedTimeOfDay, ids);
+  };
 
   return (
     <div className="space-y-6">
       {/* Üst Şerit */}
-      <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-neutral-900/60 p-6 rounded-3xl border border-neutral-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+            <span className="p-2 rounded-xl bg-neutral-800 text-neutral-300 border border-neutral-700">
               <CalendarCheck className="w-5 h-5" />
             </span>
-            <h2 className="text-xl font-bold text-white tracking-tight">
-              Kişiselleştirilmiş Dinamik Bakım Rutini & Koçluk
+            <h2 className="text-xl font-semibold text-white tracking-tight">
+              Günlük Bakım Listesi
             </h2>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
-            Aktif alevlenme durumuna, hava kuruluğuna ve uyku kalitesine göre bakım adımlarını otomatik günceller.
+          <p className="text-sm text-neutral-400 mt-1">
+            Kendi bakım adımlarını ekle, düzenle, sırala ve kaldır.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="px-3.5 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5">
-            <Award className="w-4 h-4 text-emerald-400" />
-            <span>Günlük İlerleme: {totalCompleted}/{routines.length} Görev</span>
-          </div>
-
-          <div className="px-4 py-2 rounded-2xl bg-slate-950 border border-slate-800 text-xs flex items-center gap-2">
-            <Zap className="w-4 h-4 text-amber-400" />
-            <span>Rejim Modu: <strong>{healingScore.currentScore < 70 ? 'Akut Alevlenme Protokolü' : 'Proaktif İdame Bakımı'}</strong></span>
+          <div className="px-3.5 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 text-xs font-semibold flex items-center gap-1.5">
+            <Award className="w-4 h-4" />
+            <span>{totalCompleted}/{routines.length} Tamamlandı</span>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Sol Kolon: Rutin Görev Listesi */}
-        <div className="lg:col-span-8 bg-slate-900 p-6 rounded-3xl border border-slate-800 space-y-6">
-          {/* Günün Saatleri Sekmesi */}
-          <div className="flex rounded-2xl bg-slate-950 p-1 border border-slate-800 justify-between">
-            {[
-              { id: 'Sabah', icon: Sun },
-              { id: 'Öğle', icon: Sun },
-              { id: 'Akşam', icon: Sunset },
-              { id: 'Gece', icon: Moon }
-            ].map(tab => {
+        <div className="lg:col-span-8 bg-neutral-900/60 p-6 rounded-3xl border border-neutral-800 space-y-6">
+          <div className="flex rounded-2xl bg-neutral-950 p-1 border border-neutral-800 justify-between">
+            {TIME_TABS.map(tab => {
               const Icon = tab.icon;
               const isActive = selectedTimeOfDay === tab.id;
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setSelectedTimeOfDay(tab.id as any)}
-                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-                    isActive
-                      ? 'bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md'
-                      : 'text-slate-400 hover:text-slate-200'
+                  onClick={() => setSelectedTimeOfDay(tab.id)}
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 ${
+                    isActive ? 'bg-white text-neutral-950 shadow' : 'text-neutral-400 hover:text-neutral-200'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -123,88 +154,142 @@ export const RoutineBuilder: React.FC = () => {
             })}
           </div>
 
-          {/* Görev Kontrol Listesi */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between text-xs text-slate-400">
-              <span>{selectedTimeOfDay} Bakım Adımları</span>
-              <span>{filteredTasks.filter(t => t.completed).length} / {filteredTasks.length} Tamamlandı</span>
+            <div className="flex items-center justify-between text-xs text-neutral-400">
+              <span>{selectedTimeOfDay} Bakım Adımları ({filteredTasks.filter(t => t.completed).length}/{filteredTasks.length})</span>
+              <button
+                onClick={() => setShowAddForm(v => !v)}
+                className="flex items-center gap-1 text-neutral-200 hover:text-white font-semibold"
+              >
+                <Plus className="w-3.5 h-3.5" /> Adım Ekle
+              </button>
             </div>
 
+            {showAddForm && (
+              <div className="p-3 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-2">
+                <input
+                  type="text"
+                  placeholder="Örn: Yüz için hafif nemlendirici uygula"
+                  value={newTitle}
+                  onChange={e => setNewTitle(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-white placeholder-neutral-500 focus:outline-none"
+                />
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    value={newCategory}
+                    onChange={e => setNewCategory(e.target.value as RoutineTask['category'])}
+                    className="px-2.5 py-1.5 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-neutral-300 focus:outline-none"
+                  >
+                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                  <input
+                    type="time"
+                    value={newReminder}
+                    onChange={e => setNewReminder(e.target.value)}
+                    className="px-2.5 py-1.5 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-neutral-300 focus:outline-none"
+                  />
+                  <button
+                    onClick={handleAddTask}
+                    disabled={!newTitle.trim()}
+                    className="ml-auto px-3.5 py-1.5 rounded-xl bg-white text-neutral-950 font-semibold text-xs disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+                  >
+                    <Check className="w-3.5 h-3.5" /> Ekle
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
-              {filteredTasks.map(task => (
+              {filteredTasks.map((task, idx) => (
                 <div
                   key={task.id}
-                  onClick={() => handleTaskClick(task.id)}
-                  className={`p-4 rounded-2xl border cursor-pointer transition-all flex items-center justify-between text-xs ${
-                    task.completed
-                      ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-200'
-                      : 'bg-slate-950 border-slate-800 text-slate-200 hover:border-sky-500/40'
+                  className={`p-4 rounded-2xl border transition-all flex items-center justify-between gap-3 text-xs ${
+                    task.completed ? 'bg-emerald-500/5 border-emerald-500/25 text-emerald-100' : 'bg-neutral-950 border-neutral-800 text-neutral-200'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-5 h-5 rounded-lg border flex items-center justify-center transition-colors ${
-                      task.completed ? 'bg-emerald-500 border-emerald-400 text-white' : 'border-slate-700 bg-slate-900'
-                    }`}>
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <button
+                      onClick={() => handleTaskClick(task.id)}
+                      className={`w-5 h-5 shrink-0 rounded-lg border flex items-center justify-center transition-colors ${
+                        task.completed ? 'bg-emerald-500 border-emerald-400 text-white' : 'border-neutral-700 bg-neutral-900'
+                      }`}
+                    >
                       {task.completed && <CheckCircle2 className="w-4 h-4" />}
-                    </div>
-                    <div>
-                      <p className={`font-bold ${task.completed ? 'line-through opacity-70' : ''}`}>
-                        {task.title}
-                      </p>
-                      <span className="text-[10px] text-slate-400 uppercase font-semibold">
-                        Kategori: {task.category}
-                      </span>
-                    </div>
+                    </button>
+
+                    {editingId === task.id ? (
+                      <input
+                        autoFocus
+                        value={editTitle}
+                        onChange={e => setEditTitle(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && saveEdit(task.id)}
+                        onBlur={() => saveEdit(task.id)}
+                        className="flex-1 min-w-0 px-2 py-1 rounded-lg bg-neutral-900 border border-neutral-700 text-xs text-white focus:outline-none"
+                      />
+                    ) : (
+                      <div className="min-w-0">
+                        <p className={`font-semibold truncate ${task.completed ? 'line-through opacity-70' : ''}`}>{task.title}</p>
+                        <span className="text-[10px] text-neutral-500 uppercase font-semibold">
+                          {task.category}{task.reminderTime ? ` • ${task.reminderTime}` : ''}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
-                  <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
-                    task.completed ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-400'
-                  }`}>
-                    {task.completed ? '+5 Puan' : 'Bekliyor'}
-                  </span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button onClick={() => moveTask(task.id, -1)} disabled={idx === 0} className="p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800 disabled:opacity-30">
+                      <ArrowUp className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => moveTask(task.id, 1)} disabled={idx === filteredTasks.length - 1} className="p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800 disabled:opacity-30">
+                      <ArrowDown className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => startEdit(task)} className="p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800">
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => removeRoutineTask(task.id)} className="p-1.5 rounded-lg text-neutral-500 hover:text-rose-400 hover:bg-rose-500/10">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               ))}
+
+              {filteredTasks.length === 0 && (
+                <p className="text-xs text-neutral-500 text-center py-6">Bu zaman dilimi için henüz bir adım eklenmedi.</p>
+              )}
             </div>
           </div>
         </div>
 
         {/* Sağ Kolon: Banyo Zamanlayıcısı & Su Hedefi */}
         <div className="lg:col-span-4 space-y-6">
-          {/* Banyo Zamanlayıcısı */}
-          <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 space-y-4">
+          <div className="bg-neutral-900/60 p-6 rounded-3xl border border-neutral-800 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <Timer className="w-4 h-4 text-sky-400" />
+              <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                <Timer className="w-4 h-4 text-neutral-500" />
                 Ilık Banyo Zamanlayıcısı
               </h3>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-bold">
-                Maks 12 Dk Kuralı
+              <span className="text-[10px] px-2 py-0.5 rounded bg-neutral-800 text-neutral-400 font-semibold">
+                Maks 12 Dk
               </span>
             </div>
 
-            <div className="text-center py-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-2">
-              <span className="text-4xl font-black text-white font-mono tracking-wider">
-                {formatTime(bathTimeLeft)}
-              </span>
-              <p className="text-[10px] text-slate-400 px-2">
-                Ilık suda (32–34°C) yıkanın. Banyodan sonraki ilk 3 dakika içinde havluyla hafifçe kurulanıp nemlendirici sürün.
+            <div className="text-center py-4 bg-neutral-950 rounded-2xl border border-neutral-800 space-y-2">
+              <span className="text-4xl font-semibold text-white font-mono tracking-wider">{formatTime(bathTimeLeft)}</span>
+              <p className="text-[10px] text-neutral-500 px-2">
+                Ilık suda (32–34°C) yıkanın. Banyodan sonraki ilk 3 dakika içinde nemlendirici sürün.
               </p>
 
               <div className="pt-2 flex items-center justify-center gap-2">
                 <button
                   onClick={() => setIsBathTimerRunning(!isBathTimerRunning)}
-                  className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-white font-bold text-xs flex items-center gap-1.5 shadow-md"
+                  className="px-4 py-2 rounded-xl bg-white hover:bg-neutral-200 text-neutral-950 font-semibold text-xs flex items-center gap-1.5"
                 >
                   {isBathTimerRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                  {isBathTimerRunning ? 'Duraklat' : 'Zamanlayıcıyı Başlat'}
+                  {isBathTimerRunning ? 'Duraklat' : 'Başlat'}
                 </button>
-
                 <button
-                  onClick={() => {
-                    setIsBathTimerRunning(false);
-                    setBathTimeLeft(600);
-                  }}
-                  className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs"
+                  onClick={() => { setIsBathTimerRunning(false); setBathTimeLeft(600); }}
+                  className="p-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 text-xs"
                 >
                   <RotateCcw className="w-4 h-4" />
                 </button>
@@ -212,20 +297,19 @@ export const RoutineBuilder: React.FC = () => {
             </div>
           </div>
 
-          {/* Hidrasyon Hedefi */}
-          <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 space-y-3 text-xs">
-            <h3 className="font-bold text-white flex items-center gap-2">
-              <Droplets className="w-4 h-4 text-sky-400" />
-              Günlük Hidrasyon & Bariyer Hedefi
+          <div className="bg-neutral-900/60 p-6 rounded-3xl border border-neutral-800 space-y-3 text-xs">
+            <h3 className="font-semibold text-white flex items-center gap-2">
+              <Droplets className="w-4 h-4 text-neutral-500" />
+              Günlük Hidrasyon Hedefi
             </h3>
 
-            <div className="p-3 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+            <div className="p-3 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-2">
               <div className="flex justify-between font-semibold">
-                <span className="text-slate-300">Günlük Su Tüketimi</span>
-                <span className="text-sky-400">2.2L / 2.5L</span>
+                <span className="text-neutral-300">Su Tüketimi</span>
+                <span className="text-neutral-200">2.2L / 2.5L</span>
               </div>
-              <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
-                <div className="h-full bg-sky-500 w-[88%]" />
+              <div className="h-1.5 w-full bg-neutral-800 rounded-full overflow-hidden">
+                <div className="h-full bg-neutral-400 w-[88%]" />
               </div>
             </div>
           </div>
