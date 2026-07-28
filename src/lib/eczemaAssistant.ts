@@ -279,6 +279,7 @@ export interface AssistantReply {
   text: string;
   matchedTopic?: string;
   urgent?: boolean;
+  source?: 'kb' | 'greeting' | 'thanks' | 'online' | 'none';
 }
 
 const GREETING_KEYWORDS = ['merhaba', 'selam', 'iyi gunler', 'gunaydin', 'iyi aksamlar', 'nasilsin'];
@@ -286,7 +287,7 @@ const THANKS_KEYWORDS = ['tesekkur', 'sagol', 'sagolun', 'elinize saglik'];
 
 // Çok kısa/yaygın Türkçe işlev kelimeleri (soru eki, bağlaç vb.) hemen her cümlede geçebileceğinden
 // kısmi eşleşme puanlamasında hiçbir zaman tek başına anlamlı bir sinyal sayılmaz.
-const STOP_WORDS = new Set(['mi', 'mu', 'mu', 'ne', 'ile', 'de', 'da', 've', 'veya', 'icin', 'gibi', 'var', 'yok', 'ki', 'bu', 'su', 'bir', 'cok', 'nasil']);
+const STOP_WORDS = new Set(['mi', 'mu', 'mu', 'ne', 'nedir', 'ile', 'de', 'da', 've', 'veya', 'icin', 'gibi', 'var', 'yok', 'ki', 'bu', 'su', 'bir', 'cok', 'nasil', 'olur', 'olan']);
 
 // Türkçe eklerin (kaşıntı/kaşıntım/kaşıntıyı gibi) kök üzerinden yakalanmasına izin verir:
 // soru kelimesi, anahtar kelime kökü ile başlıyorsa eşleşme sayılır. Tersi (kısa bir soru
@@ -338,21 +339,93 @@ export function getAssistantReply(rawQuestion: string): AssistantReply {
   // selamlama olsa bile (Örn: "Merhaba, kaşıntım çok fazla ne yapmalıyım?")
   // asıl soru yanıtlanır; selamlama asla asıl soruyu görmezden gelmez.
   if (bestEntry && bestScore >= MIN_MATCH_SCORE) {
-    return { text: bestEntry.answer, matchedTopic: bestEntry.topic, urgent: bestEntry.urgent };
+    return { text: bestEntry.answer, matchedTopic: bestEntry.topic, urgent: bestEntry.urgent, source: 'kb' };
   }
 
   // Konuyla ilgili bir eşleşme bulunamadıysa ve mesaj kısa/yalnızca selamlama niteliğindeyse
   if (questionWords.length <= 4 && GREETING_KEYWORDS.some(k => question.includes(k))) {
     return {
-      text: 'Merhaba! Egzama, cilt bariyeri, tedaviler (Dupixent, Cibinqo, Siklosporin, Prednizon vb.) veya günlük bakım hakkında istediğiniz soruyu sorabilirsiniz.'
+      text: 'Merhaba! Egzama, cilt bariyeri, tedaviler (Dupixent, Cibinqo, Siklosporin, Prednizon vb.) veya günlük bakım hakkında istediğiniz soruyu sorabilirsiniz.',
+      source: 'greeting'
     };
   }
 
   if (THANKS_KEYWORDS.some(k => question.includes(k))) {
-    return { text: 'Rica ederim! Başka bir sorunuz olursa buradayım. Ciddi veya beklenmedik belirtilerde her zaman hekiminize danışmayı unutmayın.' };
+    return { text: 'Rica ederim! Başka bir sorunuz olursa buradayım. Ciddi veya beklenmedik belirtilerde her zaman hekiminize danışmayı unutmayın.', source: 'thanks' };
   }
 
   return {
-    text: 'Bu konuda hazır bir yanıtım yok. Sorunuzu farklı veya daha basit kelimelerle tekrar dener misin? (Örn: "nemlendirici", "Dupixent", "kaşıntı", "ıslak sargı" gibi tek bir anahtar kelime bile yeterli olabilir.) Ciddi veya hızla kötüleşen belirtiler için lütfen bir dermatoloğa başvurun.'
+    text: 'Bu konuda hazır bir yanıtım yok. Sorunuzu farklı veya daha basit kelimelerle tekrar dener misin? Ciddi veya hızla kötüleşen belirtiler için lütfen bir dermatoloğa başvurun.',
+    source: 'none'
   };
+}
+
+const WIKIPEDIA_LANG = 'tr';
+const ONLINE_FETCH_TIMEOUT_MS = 6000;
+
+interface WikiSearchResult {
+  title: string;
+}
+
+// Yavaş veya kopan bir bağlantıda kullanıcı "İnternette aranıyor..." durumunda sonsuza
+// kadar takılı kalmasın diye her ağ isteğine sınırlı bir süre tanınır.
+async function fetchWithTimeout(url: string): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), ONLINE_FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function searchWikipediaTitle(query: string): Promise<string | null> {
+  const url = `https://${WIKIPEDIA_LANG}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*&srlimit=1`;
+  const res = await fetchWithTimeout(url);
+  if (!res.ok) return null;
+  const data = await res.json();
+  const results: WikiSearchResult[] = data?.query?.search;
+  if (!results || results.length === 0) return null;
+  return results[0].title;
+}
+
+async function fetchWikipediaSummary(title: string): Promise<string | null> {
+  const url = `https://${WIKIPEDIA_LANG}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
+  const res = await fetchWithTimeout(url);
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data?.extract || null;
+}
+
+// Yerel bilgi tabanında gerçek bir eşleşme bulunamadığında son çare olarak Wikipedia'da
+// arama yapar (ücretsiz, anahtarsız, herkese açık API). Bu bir Google araması DEĞİLDİR
+// (Google Arama API'si ücretli bir anahtar ve sunucu taraflı bir proxy gerektirir, bu
+// istemci-taraflı uygulamada bulunmuyor); ancak yerel kürasyonlu bilgi tabanının kapsamını
+// gerçek, canlı bir internet kaynağıyla genişletilmiş bir soru-cevap kapasitesine ulaştırır.
+export async function searchOnlineFallback(rawQuestion: string): Promise<AssistantReply | null> {
+  try {
+    const title = await searchWikipediaTitle(rawQuestion);
+    if (!title) return null;
+    const summary = await fetchWikipediaSummary(title);
+    if (!summary) return null;
+    return {
+      text: `${summary}\n\n(Bu yanıt Wikipedia'dan otomatik olarak bulundu; bu uygulamanın kürasyonlu bilgi tabanının parçası değildir. Sağlıkla ilgili kararlar için mutlaka bir hekime danışın.)`,
+      matchedTopic: title,
+      source: 'online'
+    };
+  } catch {
+    return null;
+  }
+}
+
+// Önce yerel bilgi tabanında arar; gerçek bir konu eşleşmesi, selamlama veya teşekkür
+// bulunamazsa arka planda Wikipedia'da arama yaparak yanıt kapsamını genişletir.
+export async function getAssistantReplyWithFallback(rawQuestion: string): Promise<AssistantReply> {
+  const localReply = getAssistantReply(rawQuestion);
+  if (localReply.source !== 'none') {
+    return localReply;
+  }
+
+  const onlineReply = await searchOnlineFallback(rawQuestion);
+  return onlineReply || localReply;
 }

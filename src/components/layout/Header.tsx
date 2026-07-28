@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Activity,
   Mic,
-  Watch,
   Sun,
   Moon,
   CheckCircle2,
@@ -25,8 +24,6 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileNav }) => {
     setHighContrast,
     activeProfile,
     setVoiceAssistantOpen,
-    wearableWidgetOpen,
-    setWearableWidgetOpen,
     healthSyncActive
   } = useApp();
 
@@ -85,21 +82,6 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileNav }) => {
           >
             <Mic className="w-4 h-4" />
             <span className="hidden xl:inline">Sesli Asistan</span>
-          </button>
-
-          {/* Akıllı Saat Simülatörü Button */}
-          <button
-            onClick={() => setWearableWidgetOpen(!wearableWidgetOpen)}
-            title="Akıllı Saat Ekranı"
-            aria-pressed={wearableWidgetOpen}
-            className={`p-2 rounded-xl border transition-all text-xs font-medium hidden sm:flex items-center gap-1.5 ${
-              wearableWidgetOpen
-                ? 'bg-white text-neutral-950 border-white'
-                : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border-neutral-700'
-            }`}
-          >
-            <Watch className="w-4 h-4" />
-            <span className="hidden xl:inline">Akıllı Saat</span>
           </button>
 
           {/* Yüksek Kontrast Toggle */}

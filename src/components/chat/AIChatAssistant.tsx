@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Bot, Send, Trash2, AlertTriangle, User } from 'lucide-react';
+import { Bot, Send, Trash2, AlertTriangle, User, Globe } from 'lucide-react';
 import { useApp } from '../../context/useApp';
-import { getAssistantReply } from '../../lib/eczemaAssistant';
+import { getAssistantReply, searchOnlineFallback } from '../../lib/eczemaAssistant';
 import type { ChatMessage } from '../../types';
 
 const SUGGESTED_QUESTIONS = [
@@ -17,13 +17,14 @@ export const AIChatAssistant: React.FC = () => {
   const { chatMessages, addChatMessage, clearChatMessages } = useApp();
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isSearchingOnline, setIsSearchingOnline] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-  }, [chatMessages, isTyping]);
+  }, [chatMessages, isTyping, isSearchingOnline]);
 
-  const sendMessage = (text: string) => {
+  const sendMessage = async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed || isTyping) return;
 
@@ -37,19 +38,25 @@ export const AIChatAssistant: React.FC = () => {
     setInput('');
     setIsTyping(true);
 
-    const delay = 400 + Math.random() * 400;
-    setTimeout(() => {
-      const reply = getAssistantReply(trimmed);
-      const assistantMessage: ChatMessage = {
-        id: `chat-${Date.now()}-a`,
-        role: 'assistant',
-        text: reply.text,
-        timestamp: new Date().toLocaleString('tr-TR'),
-        urgent: reply.urgent
-      };
-      addChatMessage(assistantMessage);
-      setIsTyping(false);
-    }, delay);
+    await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 300));
+
+    let reply = getAssistantReply(trimmed);
+    if (reply.source === 'none') {
+      setIsSearchingOnline(true);
+      const online = await searchOnlineFallback(trimmed);
+      setIsSearchingOnline(false);
+      if (online) reply = online;
+    }
+
+    const assistantMessage: ChatMessage = {
+      id: `chat-${Date.now()}-a`,
+      role: 'assistant',
+      text: reply.text,
+      timestamp: new Date().toLocaleString('tr-TR'),
+      urgent: reply.urgent
+    };
+    addChatMessage(assistantMessage);
+    setIsTyping(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -131,10 +138,19 @@ export const AIChatAssistant: React.FC = () => {
               <span className="w-7 h-7 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center shrink-0">
                 <Bot className="w-4 h-4 text-neutral-300" />
               </span>
-              <div className="p-3.5 rounded-2xl rounded-bl-sm bg-neutral-950 border border-neutral-800 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-neutral-500 motion-safe:animate-bounce [animation-delay:-0.3s]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-neutral-500 motion-safe:animate-bounce [animation-delay:-0.15s]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-neutral-500 motion-safe:animate-bounce" />
+              <div className="p-3.5 rounded-2xl rounded-bl-sm bg-neutral-950 border border-neutral-800 flex items-center gap-2">
+                {isSearchingOnline ? (
+                  <span className="text-[10px] text-neutral-400 flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: '2s' }} />
+                    İnternette aranıyor...
+                  </span>
+                ) : (
+                  <>
+                    <span className="w-1.5 h-1.5 rounded-full bg-neutral-500 motion-safe:animate-bounce [animation-delay:-0.3s]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-neutral-500 motion-safe:animate-bounce [animation-delay:-0.15s]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-neutral-500 motion-safe:animate-bounce" />
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -164,7 +180,7 @@ export const AIChatAssistant: React.FC = () => {
               type="text"
               value={input}
               onChange={e => setInput(e.target.value)}
-              placeholder="Egzama, tedaviler veya cilt bakımı hakkında sorunuzu yazın..."
+              placeholder="Sorunuzu yazın..."
               className="flex-1 px-4 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-600"
             />
             <button

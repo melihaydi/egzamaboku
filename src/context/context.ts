@@ -39,6 +39,7 @@ export interface AppContextType {
   // Kullanıcının kendi bildirdiği belirti şiddetleri (0-10 sliderlar)
   symptomEntries: SymptomEntry[];
   addSymptomEntry: (entry: Omit<SymptomEntry, 'id' | 'timestamp'>) => void;
+  updateSymptomEntry: (id: string, updates: Partial<SymptomEntry>) => void;
   removeSymptomEntry: (id: string) => void;
 
   // Tedavi Geçmişi
@@ -98,11 +99,9 @@ export interface AppContextType {
   voiceAssistantOpen: boolean;
   setVoiceAssistantOpen: (v: boolean) => void;
 
-  // Sağlık Eşleşmesi & Akıllı Saat
+  // Sağlık Eşleşmesi
   healthSyncActive: boolean;
   setHealthSyncActive: (v: boolean) => void;
-  wearableWidgetOpen: boolean;
-  setWearableWidgetOpen: (v: boolean) => void;
 
   // Loglar
   auditLogs: AuditLogEntry[];

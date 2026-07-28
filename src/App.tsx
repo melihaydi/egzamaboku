@@ -5,7 +5,6 @@ import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 import type { ActiveTab } from './components/layout/Sidebar';
 import { VoiceAssistantModal } from './components/voice/VoiceAssistantModal';
-import { WearableWidget } from './components/wearable/WearableWidget';
 
 const FlareReport = lazy(() => import('./components/flare/FlareReport').then(m => ({ default: m.FlareReport })));
 const ComputerVisionEngine = lazy(() => import('./components/cv/ComputerVisionEngine').then(m => ({ default: m.ComputerVisionEngine })));
@@ -70,7 +69,6 @@ const MainLayout: React.FC = () => {
       </div>
 
       <VoiceAssistantModal />
-      <WearableWidget />
     </div>
   );
 };

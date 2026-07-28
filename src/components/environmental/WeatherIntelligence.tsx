@@ -10,7 +10,8 @@ import {
   MapPin,
   RefreshCw,
   Gauge,
-  Leaf
+  Leaf,
+  ShieldAlert
 } from 'lucide-react';
 import { useApp } from '../../context/useApp';
 
@@ -21,11 +22,53 @@ const getPollenLevel = (val: number): 'Düşük' | 'Orta' | 'Yüksek' | 'Çok Y�
   return 'Düşük';
 };
 
+interface Alert {
+  level: 'yuksek' | 'orta';
+  title: string;
+  effect: string;
+}
+
 export const WeatherIntelligence: React.FC = () => {
   const { environmental, environmentalLoading, refreshEnvironmental } = useApp();
   const [selectedDay, setSelectedDay] = useState<number>(0);
 
   const activeForecast = environmental.forecast[selectedDay];
+
+  const alerts: Alert[] = [];
+  if (environmental.aqi.category === 'Çok Sağlıksız' || environmental.aqi.category === 'Sağlıksız') {
+    alerts.push({
+      level: 'yuksek',
+      title: `Bugün hava kalitesi kötü (${environmental.aqi.category}, AQI ${Math.round(environmental.aqi.overall)})`,
+      effect: 'İnce parçacıklar (PM2.5/PM10) zayıflamış cilt bariyerinden nüfuz ederek oksidatif stres ve kaşıntı artışına yol açabilir. Mümkünse dışarıda geçirilen süreyi kısaltın ve eve girince cildinizi durulayın.'
+    });
+  } else if (environmental.aqi.category === 'Hassas Gruplar İçin Riskli') {
+    alerts.push({
+      level: 'orta',
+      title: `Hava kalitesi hassas gruplar için riskli (AQI ${Math.round(environmental.aqi.overall)})`,
+      effect: 'Egzama gibi bariyer bozukluğu olan ciltlerde hafif tahriş/kaşıntı artışı görülebilir; yoğun trafik saatlerinde dışarıda uzun süre kalmaktan kaçının.'
+    });
+  }
+  if (environmental.pollen.overallRisk === 'Çok Yüksek' || environmental.pollen.overallRisk === 'Yüksek') {
+    alerts.push({
+      level: environmental.pollen.overallRisk === 'Çok Yüksek' ? 'yuksek' : 'orta',
+      title: `Bugün polen yoğunluğu ${environmental.pollen.overallRisk.toLowerCase()}`,
+      effect: 'Polen, alerjik/atopik ciltlerde histamin salınımını tetikleyerek kaşıntı ve kızarıklığı artırabilir. Dışarıdan gelince yüz ve saçları durulamak, pencereleri polen yoğun saatlerde kapalı tutmak faydalı olabilir.'
+    });
+  }
+  if (environmental.uvIndex > 7) {
+    alerts.push({
+      level: 'orta',
+      title: `Bugün UV indeksi yüksek (${environmental.uvIndex.toFixed(1)})`,
+      effect: 'Yüksek UV, zaten zayıflamış cilt bariyerinde ek kuruma ve tahrişe yol açabilir. Mineral bazlı (çinko oksit/titanyum dioksit) güneş kremi ve gölgede kalmak önerilir.'
+    });
+  }
+  if (environmental.humidity < 30) {
+    alerts.push({
+      level: 'orta',
+      title: `Bugün hava çok kuru (%${Math.round(environmental.humidity)} nem)`,
+      effect: 'Düşük nem, ciltteki su kaybını (TEWL) hızlandırarak kuruluk ve çatlamayı artırabilir. Nemlendiriciyi normalden daha sık uygulamak faydalı olur.'
+    });
+  }
 
   const getPollenBadge = (lvl: string) => {
     switch (lvl) {
@@ -87,6 +130,26 @@ export const WeatherIntelligence: React.FC = () => {
           Bu bölüm yalnızca ölçülen/tahmin edilen meteorolojik ve hava kalitesi verilerini gösterir. Bir alevlenme olasılığı hesaplanmaz veya tahmin edilmez — bu tür tahminler yeterli klinik kanıt olmadan yanıltıcı olabilir.
         </p>
       </div>
+
+      {/* Bugüne Ait Önemli Uyarılar */}
+      {alerts.length > 0 && (
+        <div className="space-y-2">
+          {alerts.map((a, idx) => (
+            <div
+              key={idx}
+              className={`p-4 rounded-2xl border flex items-start gap-3 ${
+                a.level === 'yuksek' ? 'bg-rose-500/8 border-rose-500/30' : 'bg-amber-500/8 border-amber-500/30'
+              }`}
+            >
+              <ShieldAlert className={`w-4 h-4 shrink-0 mt-0.5 ${a.level === 'yuksek' ? 'text-rose-400' : 'text-amber-400'}`} />
+              <div>
+                <p className={`text-sm font-semibold ${a.level === 'yuksek' ? 'text-rose-200' : 'text-amber-200'}`}>{a.title}</p>
+                <p className="text-xs text-neutral-300 mt-1 leading-relaxed">{a.effect}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Metrikler Izgarası */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -87,7 +87,7 @@ export const HealthJournal: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex rounded-2xl bg-neutral-950 p-1 border border-neutral-800 overflow-x-auto">
+      <div className="grid grid-cols-2 sm:flex gap-1 rounded-2xl bg-neutral-950 p-1 border border-neutral-800">
         {CATEGORIES.map(cat => {
           const meta = CATEGORY_META[cat];
           const Icon = meta.icon;
@@ -96,12 +96,12 @@ export const HealthJournal: React.FC = () => {
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`flex-1 min-w-fit px-4 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 ${
+              className={`sm:flex-1 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
                 isActive ? 'bg-white text-neutral-950' : 'text-neutral-400 hover:text-neutral-200'
               }`}
             >
-              <Icon className="w-4 h-4" />
-              <span>{cat}</span>
+              <Icon className="w-4 h-4 shrink-0" />
+              <span className="truncate">{cat}</span>
             </button>
           );
         })}

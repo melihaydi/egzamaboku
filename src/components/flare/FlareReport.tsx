@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Sparkles,
   Trash2,
   Scan,
   UserCheck,
   Layers,
-  Info
+  Info,
+  Check
 } from 'lucide-react';
 import { useApp } from '../../context/useApp';
 import type { SymptomEntry } from '../../types';
@@ -28,6 +29,20 @@ const CV_METRICS: Array<{ key: 'redness' | 'scaling' | 'swelling' | 'crusting' |
   { key: 'oozing', label: 'Sızıntı' }
 ];
 
+const EMPTY_SLIDERS = { itching: 0, pain: 0, burning: 0, dryness: 0, cracking: 0, bleeding: 0, sleepImpact: 0 };
+
+function extractSliderValues(entry: SymptomEntry): Record<string, number> {
+  return {
+    itching: entry.itching,
+    pain: entry.pain,
+    burning: entry.burning,
+    dryness: entry.dryness,
+    cracking: entry.cracking,
+    bleeding: entry.bleeding,
+    sleepImpact: entry.sleepImpact
+  };
+}
+
 function severityColor(score: number) {
   if (score > 70) return '#f43f5e';
   if (score > 45) return '#fb923c';
@@ -43,11 +58,23 @@ function severityLabel(score: number) {
 }
 
 export const FlareReport: React.FC = () => {
-  const { symptomEntries, addSymptomEntry, removeSymptomEntry, cvHistory, activeProfile } = useApp();
-  const [sliders, setSliders] = useState<Record<string, number>>({
-    itching: 0, pain: 0, burning: 0, dryness: 0, cracking: 0, bleeding: 0, sleepImpact: 0
-  });
-  const [note, setNote] = useState('');
+  const { symptomEntries, addSymptomEntry, updateSymptomEntry, removeSymptomEntry, cvHistory, activeProfile } = useApp();
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const todayEntry = symptomEntries.find(e => e.dateISO === todayISO);
+
+  const [sliders, setSliders] = useState<Record<string, number>>(todayEntry ? extractSliderValues(todayEntry) : { ...EMPTY_SLIDERS });
+  const [note, setNote] = useState(todayEntry?.note || '');
+  const [justSaved, setJustSaved] = useState(false);
+
+  // Bugüne ait kayıt başka bir yerden (örn. sayfa yenilendiğinde localStorage'dan) yüklendiğinde
+  // slider değerlerini o kayıtla eşitle; böylece girilen değer asla sıfıra dönmüş gibi görünmez.
+  useEffect(() => {
+    if (todayEntry) {
+      setSliders(extractSliderValues(todayEntry));
+      setNote(todayEntry.note || '');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [todayEntry?.id]);
 
   const latestSymptom = symptomEntries[0];
   const latestCV = cvHistory[0];
@@ -65,8 +92,7 @@ export const FlareReport: React.FC = () => {
     : userScore ?? visualScore;
 
   const handleSave = () => {
-    addSymptomEntry({
-      dateISO: new Date().toISOString().slice(0, 10),
+    const payload = {
       itching: sliders.itching,
       pain: sliders.pain,
       burning: sliders.burning,
@@ -75,9 +101,18 @@ export const FlareReport: React.FC = () => {
       bleeding: sliders.bleeding,
       sleepImpact: sliders.sleepImpact,
       note: note.trim() || undefined
-    });
-    setSliders({ itching: 0, pain: 0, burning: 0, dryness: 0, cracking: 0, bleeding: 0, sleepImpact: 0 });
-    setNote('');
+    };
+
+    if (todayEntry) {
+      // Bugün için zaten bir kayıt varsa yeni bir tane oluşturmak yerine onu güncelle;
+      // böylece aynı gün içinde birden fazla kayıt birikmez ve girdiğin değer korunur.
+      updateSymptomEntry(todayEntry.id, { ...payload, timestamp: new Date().toLocaleString('tr-TR') });
+    } else {
+      addSymptomEntry({ dateISO: todayISO, ...payload });
+    }
+
+    setJustSaved(true);
+    setTimeout(() => setJustSaved(false), 2500);
   };
 
   return (
@@ -149,7 +184,9 @@ export const FlareReport: React.FC = () => {
             <Sparkles className="w-4 h-4 text-neutral-500" />
             Bugünkü Belirtilerini Puanla
           </h3>
-          <p className="text-xs text-neutral-400 mt-1">Her belirti için 0 (yok) ile 10 (çok şiddetli) arasında bir değer seç.</p>
+          <p className="text-xs text-neutral-400 mt-1">
+            Her belirti için 0 (yok) ile 10 (çok şiddetli) arasında bir değer seç. {todayEntry ? 'Bugün için daha önce kaydettiğin değerler aşağıda; değiştirip tekrar kaydedebilirsin.' : ''}
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
@@ -179,12 +216,19 @@ export const FlareReport: React.FC = () => {
           className="w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white placeholder-neutral-500 focus:outline-none resize-none"
         />
 
-        <button
-          onClick={handleSave}
-          className="px-5 py-2.5 rounded-xl bg-white hover:bg-neutral-200 text-neutral-950 font-semibold text-xs"
-        >
-          Bugünün Belirtilerini Kaydet
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleSave}
+            className="px-5 py-2.5 rounded-xl bg-white hover:bg-neutral-200 text-neutral-950 font-semibold text-xs"
+          >
+            {todayEntry ? 'Bugünün Belirtilerini Güncelle' : 'Bugünün Belirtilerini Kaydet'}
+          </button>
+          {justSaved && (
+            <span className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
+              <Check className="w-3.5 h-3.5" /> Kaydedildi
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Geçmiş */}
@@ -197,7 +241,10 @@ export const FlareReport: React.FC = () => {
           {symptomEntries.map(entry => (
             <div key={entry.id} className="p-3.5 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-neutral-300">{entry.timestamp}</span>
+                <span className="text-xs font-semibold text-neutral-300">
+                  {entry.timestamp}
+                  {entry.dateISO === todayISO && <span className="ml-2 text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 uppercase font-semibold">Bugün</span>}
+                </span>
                 <button onClick={() => removeSymptomEntry(entry.id)} className="p-1 rounded-lg text-neutral-600 hover:text-rose-400 hover:bg-rose-500/10">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>

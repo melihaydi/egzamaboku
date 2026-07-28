@@ -88,7 +88,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [voiceAssistantOpen, setVoiceAssistantOpen] = useState<boolean>(false);
   const [healthSyncActive, setHealthSyncActive] = useState<boolean>(true);
-  const [wearableWidgetOpen, setWearableWidgetOpen] = useState<boolean>(false);
 
   const addAuditLog = useCallback((action: string, details: string) => {
     const newEntry: AuditLogEntry = {
@@ -129,6 +128,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newEntry: SymptomEntry = { ...entry, id: `sym-${Date.now()}`, timestamp: new Date().toLocaleString('tr-TR') };
     setSymptomEntries(prev => [newEntry, ...prev]);
     addAuditLog('Belirti Kaydı', `Kullanıcı belirti şiddetlerini kaydetti (kaşıntı: ${entry.itching}/10).`);
+  };
+
+  const updateSymptomEntry = (id: string, updates: Partial<SymptomEntry>) => {
+    setSymptomEntries(prev => prev.map(e => (e.id === id ? { ...e, ...updates } : e)));
   };
 
   const removeSymptomEntry = (id: string) => {
@@ -323,6 +326,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addCVAnalysis,
       symptomEntries,
       addSymptomEntry,
+      updateSymptomEntry,
       removeSymptomEntry,
       treatmentHistory,
       addTreatmentEntry,
@@ -365,8 +369,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setVoiceAssistantOpen,
       healthSyncActive,
       setHealthSyncActive,
-      wearableWidgetOpen,
-      setWearableWidgetOpen,
       auditLogs,
       addAuditLog,
       chatMessages,
