@@ -442,17 +442,23 @@ async function callGeminiFallback(rawQuestion: string): Promise<AssistantReply |
   }
 }
 
-// Önce yerel bilgi tabanında arar; gerçek bir konu eşleşmesi, selamlama veya teşekkür
-// bulunamazsa sırasıyla Gemini AI'ya (varsa) ve ardından Wikipedia'ya (son çare) başvurarak
-// yanıt kapsamını genişletir.
+// Selamlama ve teşekkür gibi hızlı yollar hâlâ tamamen yerelde (ağ isteği olmadan) yanıtlanır.
+// Gerçek bir soru için önce Gemini AI'ya danışılır (kullanıcının açıkça talep ettiği davranış);
+// Gemini kullanılamıyorsa (API anahtarı tanımlı değil, ağ hatası veya Netlify Functions'sız bir
+// ortamda çalışılıyorsa, örn. yerel `vite dev`) kürasyonlu yerel bilgi tabanına, o da eşleşmezse
+// son çare olarak Wikipedia'ya düşülür.
 export async function getAssistantReplyWithFallback(rawQuestion: string): Promise<AssistantReply> {
   const localReply = getAssistantReply(rawQuestion);
-  if (localReply.source !== 'none') {
+  if (localReply.source === 'greeting' || localReply.source === 'thanks') {
     return localReply;
   }
 
   const geminiReply = await callGeminiFallback(rawQuestion);
   if (geminiReply) return geminiReply;
+
+  if (localReply.source === 'kb') {
+    return localReply;
+  }
 
   const onlineReply = await searchOnlineFallback(rawQuestion);
   return onlineReply || localReply;

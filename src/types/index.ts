@@ -225,6 +225,7 @@ export interface ChatMessage {
   text: string;
   timestamp: string;
   urgent?: boolean;
+  source?: 'kb' | 'greeting' | 'thanks' | 'gemini' | 'online' | 'none';
 }
 
 export interface AuditLogEntry {

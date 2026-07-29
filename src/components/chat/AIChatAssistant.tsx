@@ -1,8 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Bot, Send, Trash2, AlertTriangle, User, Globe } from 'lucide-react';
+import { Bot, Send, Trash2, AlertTriangle, User, Globe, Sparkles, BookOpen, HelpCircle } from 'lucide-react';
 import { useApp } from '../../context/useApp';
 import { getAssistantReply, getAssistantReplyWithFallback } from '../../lib/eczemaAssistant';
 import type { ChatMessage } from '../../types';
+
+const SOURCE_BADGES: Record<string, { label: string; icon: typeof Sparkles }> = {
+  gemini: { label: 'Gemini AI', icon: Sparkles },
+  kb: { label: 'Yerel Bilgi Bankası', icon: BookOpen },
+  online: { label: 'Wikipedia', icon: Globe },
+  none: { label: 'Yanıt Bulunamadı', icon: HelpCircle }
+};
 
 const SUGGESTED_QUESTIONS = [
   'Dupixent nasıl etki eder?',
@@ -40,9 +47,11 @@ export const AIChatAssistant: React.FC = () => {
 
     await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 300));
 
-    const localReply = getAssistantReply(trimmed);
-    let reply = localReply;
-    if (localReply.source === 'none') {
+    // Selamlama/teşekkür dışındaki HER gerçek soru için (yerel bilgi tabanında eşleşse bile)
+    // önce Gemini AI'ya danışılır; yalnızca hızlı selamlama/teşekkür yolları tamamen yerelde kalır.
+    const quickCheck = getAssistantReply(trimmed);
+    let reply = quickCheck;
+    if (quickCheck.source !== 'greeting' && quickCheck.source !== 'thanks') {
       setIsSearchingOnline(true);
       reply = await getAssistantReplyWithFallback(trimmed);
       setIsSearchingOnline(false);
@@ -53,7 +62,8 @@ export const AIChatAssistant: React.FC = () => {
       role: 'assistant',
       text: reply.text,
       timestamp: new Date().toLocaleString('tr-TR'),
-      urgent: reply.urgent
+      urgent: reply.urgent,
+      source: reply.source
     };
     addChatMessage(assistantMessage);
     setIsTyping(false);
@@ -120,9 +130,18 @@ export const AIChatAssistant: React.FC = () => {
                   </span>
                 )}
                 <p className="whitespace-pre-line">{msg.text}</p>
-                <span className={`text-[9px] block mt-1.5 ${msg.role === 'user' ? 'text-neutral-500' : 'text-neutral-500'}`}>
-                  {msg.timestamp}
-                </span>
+                <div className="flex items-center gap-2 mt-1.5">
+                  <span className="text-[9px] text-neutral-500">{msg.timestamp}</span>
+                  {msg.role === 'assistant' && msg.source && SOURCE_BADGES[msg.source] && (
+                    <span className="text-[9px] font-semibold text-neutral-500 flex items-center gap-1">
+                      {(() => {
+                        const Icon = SOURCE_BADGES[msg.source].icon;
+                        return <Icon className="w-2.5 h-2.5" />;
+                      })()}
+                      {SOURCE_BADGES[msg.source].label}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {msg.role === 'user' && (
@@ -141,8 +160,8 @@ export const AIChatAssistant: React.FC = () => {
               <div className="p-3.5 rounded-2xl rounded-bl-sm bg-neutral-950 border border-neutral-800 flex items-center gap-2">
                 {isSearchingOnline ? (
                   <span className="text-[10px] text-neutral-400 flex items-center gap-1.5">
-                    <Globe className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: '2s' }} />
-                    İnternette aranıyor...
+                    <Sparkles className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: '2s' }} />
+                    Gemini AI'ya danışılıyor...
                   </span>
                 ) : (
                   <>

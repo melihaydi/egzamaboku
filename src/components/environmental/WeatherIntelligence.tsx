@@ -79,6 +79,34 @@ export const WeatherIntelligence: React.FC = () => {
     }
   };
 
+  const getAqiBadge = (category: string) => {
+    switch (category) {
+      case 'İyi': return 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30';
+      case 'Orta': return 'bg-neutral-800 text-neutral-300 border-neutral-700';
+      case 'Hassas Gruplar İçin Riskli': return 'bg-amber-500/10 text-amber-300 border-amber-500/30';
+      case 'Sağlıksız': return 'bg-rose-500/10 text-rose-300 border-rose-500/30';
+      default: return 'bg-rose-500/20 text-rose-200 border-rose-500/40';
+    }
+  };
+
+  // Kullanıcının tek bakışta anlaması için AQI + polen verisinden düz, tek cümlelik bir özet:
+  // "hava iyi mi kötü mü" sorusuna sayı yorumlamaya gerek kalmadan doğrudan cevap verir.
+  const getOverallVerdict = (): { label: string; className: string } => {
+    const { category } = environmental.aqi;
+    const pollenBad = environmental.pollen.overallRisk === 'Çok Yüksek' || environmental.pollen.overallRisk === 'Yüksek';
+    if (category === 'Çok Sağlıksız' || category === 'Sağlıksız') {
+      return { label: 'Hava Kirli — Dışarıda Dikkatli Ol', className: 'bg-rose-500/10 border-rose-500/30 text-rose-200' };
+    }
+    if (category === 'Hassas Gruplar İçin Riskli' || pollenBad) {
+      return { label: 'Hava Orta Derecede Kirli', className: 'bg-amber-500/10 border-amber-500/30 text-amber-200' };
+    }
+    if (category === 'Orta') {
+      return { label: 'Hava Kalitesi Orta', className: 'bg-neutral-800 border-neutral-700 text-neutral-200' };
+    }
+    return { label: 'Hava Temiz', className: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200' };
+  };
+  const overallVerdict = getOverallVerdict();
+
   return (
     <div className="space-y-6">
       {/* Üst Şerit & Günlük Görünüm */}
@@ -129,6 +157,17 @@ export const WeatherIntelligence: React.FC = () => {
         <p className="text-[11px] text-neutral-500 leading-relaxed">
           Bu bölüm yalnızca ölçülen/tahmin edilen meteorolojik ve hava kalitesi verilerini gösterir. Bir alevlenme olasılığı hesaplanmaz veya tahmin edilmez — bu tür tahminler yeterli klinik kanıt olmadan yanıltıcı olabilir.
         </p>
+      </div>
+
+      {/* Tek Bakışta Hava Kalitesi Özeti */}
+      <div className={`p-4 rounded-2xl border flex items-center gap-3 ${overallVerdict.className}`}>
+        <Activity className="w-5 h-5 shrink-0" />
+        <div>
+          <p className="text-sm font-bold">{overallVerdict.label}</p>
+          <p className="text-[11px] opacity-80">
+            AQI {Math.round(environmental.aqi.overall)} ({environmental.aqi.category}) • Polen: {environmental.pollen.overallRisk}
+          </p>
+        </div>
       </div>
 
       {/* Bugüne Ait Önemli Uyarılar */}
@@ -244,7 +283,7 @@ export const WeatherIntelligence: React.FC = () => {
               <Activity className="w-4 h-4 text-neutral-500" />
               Hava Kalitesi (Avrupa AQI)
             </h3>
-            <span className="text-xs font-semibold text-neutral-200 px-2 py-0.5 rounded-md bg-neutral-800 border border-neutral-700">
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-md border ${getAqiBadge(environmental.aqi.category)}`}>
               {environmental.aqi.category} ({Math.round(environmental.aqi.overall)})
             </span>
           </div>

@@ -19,6 +19,7 @@ import type {
 } from '../types';
 import { AppContext } from './context';
 import { fetchEnvironmentalData } from '../lib/weatherService';
+import { getDeviceLocation } from '../lib/geolocation';
 import { generateSalt, hashPin } from '../lib/pinLock';
 import { translate, type Language, type TranslationKey } from '../lib/i18n';
 import {
@@ -162,7 +163,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const refreshEnvironmental = useCallback(() => {
     setEnvironmentalLoading(true);
-    fetchEnvironmentalData()
+    // Önce cihazın gerçek konumunu almayı dener (kullanıcıdan izin ister); reddedilir veya
+    // desteklenmezse sabit varsayılan konuma (fetchEnvironmentalData'nın kendi öntanımlısı) düşülür.
+    getDeviceLocation()
+      .then(loc => fetchEnvironmentalData(loc ? { latitude: loc.latitude, longitude: loc.longitude, name: loc.name } : undefined))
       .then(data => {
         setEnvironmental(data);
         addAuditLog('Çevresel Veri Güncellemesi', `${data.city} için canlı hava/AQI/polen verisi alındı.`);
