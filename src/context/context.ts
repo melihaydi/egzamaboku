@@ -101,10 +101,6 @@ export interface AppContextType {
   voiceAssistantOpen: boolean;
   setVoiceAssistantOpen: (v: boolean) => void;
 
-  // Sağlık Eşleşmesi
-  healthSyncActive: boolean;
-  setHealthSyncActive: (v: boolean) => void;
-
   // Loglar
   auditLogs: AuditLogEntry[];
   addAuditLog: (action: string, details: string) => void;

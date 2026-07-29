@@ -5,6 +5,7 @@ import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 import type { ActiveTab } from './components/layout/Sidebar';
 import { VoiceAssistantModal } from './components/voice/VoiceAssistantModal';
+import { ReminderScheduler } from './components/notifications/ReminderScheduler';
 
 const FlareReport = lazy(() => import('./components/flare/FlareReport').then(m => ({ default: m.FlareReport })));
 const InsightsPanel = lazy(() => import('./components/insights/InsightsPanel').then(m => ({ default: m.InsightsPanel })));
@@ -71,6 +72,7 @@ const MainLayout: React.FC = () => {
       </div>
 
       <VoiceAssistantModal />
+      <ReminderScheduler />
     </div>
   );
 };

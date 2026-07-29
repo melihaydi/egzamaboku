@@ -24,8 +24,6 @@ export const PrivacySettings: React.FC = () => {
     setFontSize,
     highContrast,
     setHighContrast,
-    healthSyncActive,
-    setHealthSyncActive,
     clearAllData
   } = useApp();
 
@@ -100,19 +98,6 @@ export const PrivacySettings: React.FC = () => {
                 type="checkbox"
                 checked={e2eEncrypted}
                 onChange={e => setE2eEncrypted(e.target.checked)}
-                className="w-4 h-4 accent-emerald-500 rounded"
-              />
-            </div>
-
-            <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 flex items-center justify-between">
-              <div>
-                <span className="font-bold text-white block">Apple Health & Google Health Eşleşmesi</span>
-                <span className="text-[10px] text-neutral-400">Arka planda uyku, kalp ritmi ve adım verilerini senkronize eder.</span>
-              </div>
-              <input
-                type="checkbox"
-                checked={healthSyncActive}
-                onChange={e => setHealthSyncActive(e.target.checked)}
                 className="w-4 h-4 accent-emerald-500 rounded"
               />
             </div>

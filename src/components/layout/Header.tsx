@@ -4,13 +4,13 @@ import {
   Mic,
   Sun,
   Moon,
-  CheckCircle2,
   Eye,
   Menu,
   Pencil
 } from 'lucide-react';
 import { useApp } from '../../context/useApp';
 import { ProfileEditModal } from '../profile/ProfileEditModal';
+import { NotificationToggle } from '../notifications/NotificationToggle';
 
 interface HeaderProps {
   onOpenMobileNav: () => void;
@@ -23,8 +23,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileNav }) => {
     highContrast,
     setHighContrast,
     activeProfile,
-    setVoiceAssistantOpen,
-    healthSyncActive
+    setVoiceAssistantOpen
   } = useApp();
 
   const [profileEditOpen, setProfileEditOpen] = useState(false);
@@ -69,10 +68,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileNav }) => {
 
         {/* Aksiyonlar & Profil */}
         <div className="flex items-center gap-1.5 lg:gap-2 shrink-0">
-          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-neutral-800 border border-neutral-700 text-xs text-neutral-300">
-            <CheckCircle2 className={`w-3.5 h-3.5 ${healthSyncActive ? 'text-emerald-400' : 'text-neutral-500'}`} />
-            <span>{healthSyncActive ? 'Sağlık Verisi Eşleşti' : 'Çevrimdışı'}</span>
-          </div>
+          <NotificationToggle />
 
           {/* Sesli Asistan Button */}
           <button

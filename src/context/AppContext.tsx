@@ -89,7 +89,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [chatMessages, setChatMessages] = usePersistedState<ChatMessage[]>('chatMessages', initialChatMessages);
 
   const [voiceAssistantOpen, setVoiceAssistantOpen] = useState<boolean>(false);
-  const [healthSyncActive, setHealthSyncActive] = useState<boolean>(true);
 
   const addAuditLog = useCallback((action: string, details: string) => {
     const newEntry: AuditLogEntry = {
@@ -387,8 +386,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       removeJournalEntry,
       voiceAssistantOpen,
       setVoiceAssistantOpen,
-      healthSyncActive,
-      setHealthSyncActive,
       auditLogs,
       addAuditLog,
       chatMessages,
