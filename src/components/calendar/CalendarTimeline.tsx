@@ -15,10 +15,12 @@ import {
   Pencil,
   Copy,
   X,
-  Check
+  Check,
+  Download
 } from 'lucide-react';
 import { useApp } from '../../context/useApp';
 import type { CalendarEvent, CalendarEventType } from '../../types';
+import { downloadICS } from '../../lib/icsExport';
 
 const EVENT_META: Record<CalendarEventType, { icon: typeof Camera; color: string; chip: string; dot: string; label: string }> = {
   photo: { icon: Camera, color: 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30', chip: 'bg-cyan-500/25 text-cyan-100', dot: 'bg-cyan-400', label: 'Fotoğraf' },
@@ -117,6 +119,14 @@ export const CalendarTimeline: React.FC = () => {
             Fotoğraf taramaları, ilaçlar, enjeksiyonlar, doktor ziyaretleri ve notların tek bir zaman çizelgesi.
           </p>
         </div>
+
+        <button
+          onClick={() => downloadICS(calendarEvents, 'dermiq-takvim.ics')}
+          disabled={calendarEvents.length === 0}
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border border-neutral-700 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+        >
+          <Download className="w-3.5 h-3.5" /> Tümünü Dışa Aktar (.ics)
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -261,6 +271,9 @@ export const CalendarTimeline: React.FC = () => {
                     <span className="text-[10px] text-neutral-500 uppercase font-semibold">{meta.label}</span>
                   </div>
                   <div className="flex items-center gap-0.5 shrink-0">
+                    <button onClick={() => downloadICS([ev], `${ev.title.replace(/[^\p{L}\p{N}\- ]/gu, '').trim() || 'etkinlik'}.ics`)} title="Takvime Ekle (.ics)" className="p-1.5 rounded-lg text-neutral-600 hover:text-white hover:bg-neutral-800">
+                      <Download className="w-3.5 h-3.5" />
+                    </button>
                     <button onClick={() => startEdit(ev)} className="p-1.5 rounded-lg text-neutral-600 hover:text-white hover:bg-neutral-800">
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
