@@ -1,15 +1,18 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Sparkles,
   Camera,
   FileText,
   Check,
   Ban,
-  Loader2
+  Loader2,
+  ScanBarcode,
+  X
 } from 'lucide-react';
 import { useApp } from '../../context/useApp';
 import type { ProductScanResult } from '../../types';
 import { analyzeIngredientText } from '../../lib/ingredientAnalysis';
+import { createBarcodeDetector, lookupBarcodeProduct } from '../../lib/barcodeScan';
 
 export const IngredientScanner: React.FC = () => {
   const { scannedProducts, addScannedProduct } = useApp();
@@ -21,13 +24,21 @@ export const IngredientScanner: React.FC = () => {
   const [ocrStatus, setOcrStatus] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const finalizeResult = (text: string, method: ProductScanResult['scanMethod']) => {
+  const [isBarcodeCameraOpen, setIsBarcodeCameraOpen] = useState<boolean>(false);
+  const [isLookingUpBarcode, setIsLookingUpBarcode] = useState<boolean>(false);
+  const [barcodeStatus, setBarcodeStatus] = useState<string>('');
+  const [manualBarcode, setManualBarcode] = useState<string>('');
+  const barcodeVideoRef = useRef<HTMLVideoElement | null>(null);
+  const barcodeStreamRef = useRef<MediaStream | null>(null);
+  const barcodeIntervalRef = useRef<number | null>(null);
+
+  const finalizeResult = (text: string, method: ProductScanResult['scanMethod'], nameOverride?: string, brandOverride?: string) => {
     const { ingredients, flaggedCount, compatibilityScore, ratingCategory } = analyzeIngredientText(text);
 
     const newResult: ProductScanResult = {
       id: `scan-${Date.now()}`,
-      productName: productNameInput || 'Taranan Bakım Ürünü',
-      brand: brandInput || 'Bilinmeyen Marka',
+      productName: nameOverride || productNameInput || 'Taranan Bakım Ürünü',
+      brand: brandOverride || brandInput || 'Bilinmeyen Marka',
       scannedAt: new Date().toLocaleString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
       compatibilityScore,
       ratingCategory,
@@ -89,6 +100,93 @@ export const IngredientScanner: React.FC = () => {
       setIsScanning(false);
       e.target.value = '';
     }
+  };
+
+  const stopBarcodeCamera = () => {
+    if (barcodeStreamRef.current) {
+      barcodeStreamRef.current.getTracks().forEach(track => track.stop());
+      barcodeStreamRef.current = null;
+    }
+    if (barcodeIntervalRef.current !== null) {
+      window.clearInterval(barcodeIntervalRef.current);
+      barcodeIntervalRef.current = null;
+    }
+  };
+
+  useEffect(() => stopBarcodeCamera, []);
+
+  const handleBarcodeFound = async (code: string) => {
+    stopBarcodeCamera();
+    setIsBarcodeCameraOpen(false);
+    setIsLookingUpBarcode(true);
+    setBarcodeStatus(`Barkod okundu: ${code}. Open Food Facts / Open Beauty Facts veritabanında aranıyor...`);
+
+    const info = await lookupBarcodeProduct(code);
+    setIsLookingUpBarcode(false);
+
+    if (!info) {
+      setBarcodeStatus(`${code} barkodu veritabanında bulunamadı ya da içerik listesi kayıtlı değil. İçerik listesini elle yapıştırabilirsin.`);
+      return;
+    }
+
+    setBarcodeStatus('');
+    finalizeResult(info.ingredientsText, 'barkod', info.productName, info.brand);
+  };
+
+  const startBarcodeCamera = async () => {
+    setBarcodeStatus('');
+    setIsBarcodeCameraOpen(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      barcodeStreamRef.current = stream;
+      if (barcodeVideoRef.current) {
+        barcodeVideoRef.current.srcObject = stream;
+      }
+
+      const detector = createBarcodeDetector();
+      if (!detector) {
+        setBarcodeStatus('Bu tarayıcı otomatik barkod okumayı desteklemiyor. Barkod numarasını elle girebilirsin.');
+        return;
+      }
+
+      barcodeIntervalRef.current = window.setInterval(async () => {
+        if (!barcodeVideoRef.current) return;
+        try {
+          const codes = await detector.detect(barcodeVideoRef.current);
+          if (codes.length > 0) {
+            handleBarcodeFound(codes[0].rawValue);
+          }
+        } catch {
+          // Tespit sırasında geçici bir hata olabilir; bir sonraki denemede devam edilir
+        }
+      }, 400);
+    } catch {
+      setIsBarcodeCameraOpen(false);
+      setBarcodeStatus('Kameraya erişilemedi. Barkod numarasını elle girebilirsin.');
+    }
+  };
+
+  const cancelBarcodeCamera = () => {
+    stopBarcodeCamera();
+    setIsBarcodeCameraOpen(false);
+  };
+
+  const handleManualBarcodeSubmit = async () => {
+    if (!manualBarcode.trim()) return;
+    setIsLookingUpBarcode(true);
+    setBarcodeStatus('Ürün veritabanında aranıyor...');
+
+    const info = await lookupBarcodeProduct(manualBarcode.trim());
+    setIsLookingUpBarcode(false);
+
+    if (!info) {
+      setBarcodeStatus(`${manualBarcode} barkodu veritabanında bulunamadı ya da içerik listesi kayıtlı değil.`);
+      return;
+    }
+
+    setBarcodeStatus('');
+    finalizeResult(info.ingredientsText, 'barkod', info.productName, info.brand);
+    setManualBarcode('');
   };
 
   const getRatingBadge = (cat: ProductScanResult['ratingCategory']) => {
@@ -153,6 +251,63 @@ export const IngredientScanner: React.FC = () => {
             <p className="text-[10px] text-amber-300">{ocrStatus}</p>
           )}
 
+          <div className="pt-3 border-t border-neutral-800 space-y-2">
+            <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+              <ScanBarcode className="w-4 h-4 text-neutral-400" />
+              Barkod ile Tara
+            </h3>
+            <p className="text-[10px] text-neutral-500">
+              Open Food Facts / Open Beauty Facts veritabanından gerçek ürün adı, marka ve içerik listesi getirilir.
+            </p>
+
+            {isBarcodeCameraOpen ? (
+              <div className="space-y-2">
+                <div className="relative rounded-2xl overflow-hidden bg-black h-40 flex items-center justify-center">
+                  <video ref={barcodeVideoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+                  <div className="absolute inset-x-6 inset-y-10 border-2 border-white/70 rounded-lg pointer-events-none" />
+                </div>
+                <button
+                  onClick={cancelBarcodeCamera}
+                  className="w-full py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-200 font-semibold text-xs flex items-center justify-center gap-1.5"
+                >
+                  <X className="w-3.5 h-3.5" /> Taramayı İptal Et
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={startBarcodeCamera}
+                disabled={isLookingUpBarcode}
+                className="w-full py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-100 font-semibold text-xs flex items-center justify-center gap-2 disabled:opacity-40"
+              >
+                <ScanBarcode className="w-4 h-4" />
+                Kamera ile Barkod Tara
+              </button>
+            )}
+
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="Ya da barkod numarasını gir"
+                value={manualBarcode}
+                onChange={e => setManualBarcode(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleManualBarcodeSubmit()}
+                className="flex-1 px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white placeholder-neutral-600 focus:outline-none"
+              />
+              <button
+                onClick={handleManualBarcodeSubmit}
+                disabled={!manualBarcode.trim() || isLookingUpBarcode}
+                className="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-200 text-xs font-semibold disabled:opacity-40 shrink-0"
+              >
+                {isLookingUpBarcode ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Ara'}
+              </button>
+            </div>
+
+            {barcodeStatus && (
+              <p className="text-[10px] text-amber-300">{barcodeStatus}</p>
+            )}
+          </div>
+
           <div className="space-y-3">
             <div>
               <label className="text-[10px] font-semibold uppercase text-neutral-500 block mb-1">Ürün Adı & Markası</label>
@@ -209,7 +364,7 @@ export const IngredientScanner: React.FC = () => {
                 >
                   <div className="min-w-0">
                     <p className="font-semibold text-neutral-200 truncate">{prod.productName}</p>
-                    <p className="text-[10px] text-neutral-500">{prod.brand} • {prod.scanMethod === 'ocr' ? 'OCR' : 'Metin'}</p>
+                    <p className="text-[10px] text-neutral-500">{prod.brand} • {prod.scanMethod === 'ocr' ? 'OCR' : prod.scanMethod === 'barkod' ? 'Barkod' : 'Metin'}</p>
                   </div>
                   <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border shrink-0 ${getRatingBadge(prod.ratingCategory)}`}>
                     %{prod.compatibilityScore}

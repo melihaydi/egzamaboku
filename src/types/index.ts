@@ -119,7 +119,7 @@ export interface ProductScanResult {
   ingredients: IngredientItem[];
   rawTextScanned: string;
   flaggedCount: number;
-  scanMethod: 'ocr' | 'metin-girişi';
+  scanMethod: 'ocr' | 'metin-girişi' | 'barkod';
 }
 
 export type FoodRating = 'Güvenli' | 'Bazen Sorunlu' | 'Her Zaman Tetikliyor';
