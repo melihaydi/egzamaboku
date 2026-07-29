@@ -55,7 +55,7 @@ export const PrivacySettings: React.FC = () => {
 
   const handleClearLocalData = () => {
     const confirmed = window.confirm(
-      'Tüm yerel verileriniz (fotoğraf geçmişi, belirti kayıtları, tedavi kayıtları, rutinler) kalıcı olarak silinecek ve fabrika ayarlarına dönülecektir. Devam etmek istiyor musunuz?'
+      `${activeProfile.name} profiline ait tüm yerel veriler (fotoğraf geçmişi, belirti kayıtları, tedavi kayıtları, rutinler) kalıcı olarak silinecek ve fabrika ayarlarına dönülecektir. Diğer aile profilleri etkilenmez. Devam etmek istiyor musunuz?`
     );
     if (confirmed) {
       clearAllData();

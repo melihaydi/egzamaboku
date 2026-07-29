@@ -27,11 +27,13 @@ export interface AppContextType {
   fontSize: 'normal' | 'large' | 'xlarge';
   setFontSize: (s: 'normal' | 'large' | 'xlarge') => void;
 
-  // Profil Yönetimi
+  // Profil Yönetimi (Aile Profilleri) — her profilin belirti/tedavi/fotoğraf vb. verisi ayrı tutulur
   activeProfile: FamilyProfile;
-  setActiveProfile: (p: FamilyProfile) => void;
-  updateActiveProfile: (updates: Partial<FamilyProfile>) => void;
   profiles: FamilyProfile[];
+  switchProfile: (id: string) => void;
+  addProfile: (profile: Omit<FamilyProfile, 'id'>) => FamilyProfile;
+  removeProfile: (id: string) => void;
+  updateActiveProfile: (updates: Partial<FamilyProfile>) => void;
 
   // Görsel Analiz (yalnızca fotoğraftan ölçülen veriler)
   cvHistory: CVAnalysis[];

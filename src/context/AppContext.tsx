@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type {
   CVAnalysis,
   FamilyProfile,
@@ -40,54 +40,108 @@ import {
 
 // Yerel Depolama (localStorage) Kalıcılık Katmanı
 const STORAGE_PREFIX = 'dermiq:';
+const PROFILE_DATA_KEYS = ['cvHistory', 'symptomEntries', 'treatmentHistory', 'scannedProducts', 'triggerEntries', 'foodItems', 'meals', 'recipes', 'routines', 'calendarEvents', 'journalEntries', 'chatMessages'];
 
-function loadPersisted<T>(key: string, fallback: T): T {
+function loadPersisted<T>(storageKey: string, fallback: T): T {
   try {
-    const raw = localStorage.getItem(STORAGE_PREFIX + key);
+    const raw = localStorage.getItem(STORAGE_PREFIX + storageKey);
     return raw ? (JSON.parse(raw) as T) : fallback;
   } catch {
     return fallback;
   }
 }
 
-function usePersistedState<T>(key: string, initial: T) {
-  const [state, setState] = useState<T>(() => loadPersisted(key, initial));
+// namespace verilirse (aktif profil id'si), state o profile özel bir anahtarda saklanır ve
+// profil değiştiğinde otomatik olarak o profilin kendi verisiyle yeniden yüklenir.
+function usePersistedState<T>(key: string, initial: T, namespace?: string) {
+  const storageKey = namespace ? `${namespace}:${key}` : key;
+  const [state, setState] = useState<T>(() => loadPersisted(storageKey, initial));
+  const prevStorageKeyRef = useRef(storageKey);
+
+  useEffect(() => {
+    if (prevStorageKeyRef.current !== storageKey) {
+      prevStorageKeyRef.current = storageKey;
+      setState(loadPersisted(storageKey, initial));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey]);
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(state));
+      localStorage.setItem(STORAGE_PREFIX + storageKey, JSON.stringify(state));
     } catch {
       // localStorage kotası dolu ya da erişilemez durumda: veri kaybı yaşanmaması için sessizce yoksay
     }
-  }, [key, state]);
+  }, [storageKey, state]);
 
   return [state, setState] as const;
 }
 
+// Çoklu profil özelliğinden önce tüm veriler isimsiz (profilsiz) anahtarlarda tutuluyordu.
+// Bu, mevcut kullanıcının gerçek verisini kaybetmeden yeni "profile özel anahtar" düzenine
+// bir kereliğine taşır; zaten migrate edilmişse hiçbir şey yapmaz.
+function migrateLegacyProfileData(defaultProfileId: string) {
+  try {
+    let targetProfileId = defaultProfileId;
+
+    if (localStorage.getItem(STORAGE_PREFIX + 'profiles') === null) {
+      const legacyActiveProfileRaw = localStorage.getItem(STORAGE_PREFIX + 'activeProfile');
+      if (legacyActiveProfileRaw) {
+        const legacyProfile = JSON.parse(legacyActiveProfileRaw);
+        targetProfileId = legacyProfile.id || targetProfileId;
+        localStorage.setItem(STORAGE_PREFIX + 'profiles', JSON.stringify([legacyProfile]));
+        localStorage.setItem(STORAGE_PREFIX + 'activeProfileId', JSON.stringify(targetProfileId));
+      }
+    } else {
+      const activeIdRaw = localStorage.getItem(STORAGE_PREFIX + 'activeProfileId');
+      if (activeIdRaw) {
+        try { targetProfileId = JSON.parse(activeIdRaw); } catch { /* yoksay */ }
+      }
+    }
+
+    PROFILE_DATA_KEYS.forEach(key => {
+      const newKey = `${STORAGE_PREFIX}${targetProfileId}:${key}`;
+      const legacyKey = STORAGE_PREFIX + key;
+      if (localStorage.getItem(newKey) === null) {
+        const legacyValue = localStorage.getItem(legacyKey);
+        if (legacyValue !== null) localStorage.setItem(newKey, legacyValue);
+      }
+    });
+  } catch {
+    // localStorage'a erişilemiyorsa sessizce geç; varsayılan seed veriler kullanılır
+  }
+}
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  migrateLegacyProfileData(initialProfiles[0].id);
+
   const [theme, setTheme] = usePersistedState<'dark' | 'light'>('theme', 'dark');
   const [highContrast, setHighContrast] = usePersistedState<boolean>('highContrast', false);
   const [fontSize, setFontSize] = usePersistedState<'normal' | 'large' | 'xlarge'>('fontSize', 'normal');
 
-  const [profiles] = useState<FamilyProfile[]>(initialProfiles);
-  const [activeProfile, setActiveProfile] = usePersistedState<FamilyProfile>('activeProfile', initialProfiles[0]);
+  // Profiller ve aktif profil cihaz genelinde ortak (isimsiz) anahtarlarda tutulur;
+  // her profile özel sağlık verisi ise aşağıda profil id'siyle adlandırılmış anahtarlarda tutulur.
+  const [profiles, setProfiles] = usePersistedState<FamilyProfile[]>('profiles', initialProfiles);
+  const [activeProfileId, setActiveProfileId] = usePersistedState<string>('activeProfileId', initialProfiles[0].id);
+  const activeProfile = profiles.find(p => p.id === activeProfileId) ?? profiles[0] ?? initialProfiles[0];
+  const isDefaultProfile = activeProfileId === initialProfiles[0].id;
 
-  const [cvHistory, setCvHistory] = usePersistedState<CVAnalysis[]>('cvHistory', initialCVHistory);
-  const [symptomEntries, setSymptomEntries] = usePersistedState<SymptomEntry[]>('symptomEntries', initialSymptomEntries);
-  const [treatmentHistory, setTreatmentHistory] = usePersistedState<TreatmentEntry[]>('treatmentHistory', initialTreatmentHistory);
+  const [cvHistory, setCvHistory] = usePersistedState<CVAnalysis[]>('cvHistory', isDefaultProfile ? initialCVHistory : [], activeProfileId);
+  const [symptomEntries, setSymptomEntries] = usePersistedState<SymptomEntry[]>('symptomEntries', isDefaultProfile ? initialSymptomEntries : [], activeProfileId);
+  const [treatmentHistory, setTreatmentHistory] = usePersistedState<TreatmentEntry[]>('treatmentHistory', isDefaultProfile ? initialTreatmentHistory : [], activeProfileId);
   const [environmental, setEnvironmental] = usePersistedState<EnvironmentalData>('environmental', initialEnvironmental);
   const [environmentalLoading, setEnvironmentalLoading] = useState<boolean>(false);
   const [environmentalHistory, setEnvironmentalHistory] = usePersistedState<EnvironmentalSnapshot[]>('environmentalHistory', []);
-  const [scannedProducts, setScannedProducts] = usePersistedState<ProductScanResult[]>('scannedProducts', initialScannedProducts);
-  const [triggerEntries, setTriggerEntries] = usePersistedState<TriggerEntry[]>('triggerEntries', initialTriggerEntries);
-  const [foodItems, setFoodItems] = usePersistedState<FoodItem[]>('foodItems', initialFoodItems);
-  const [meals, setMeals] = usePersistedState<Meal[]>('meals', initialMeals);
-  const [recipes, setRecipes] = usePersistedState<Recipe[]>('recipes', initialRecipes);
-  const [routines, setRoutines] = usePersistedState<RoutineTask[]>('routines', initialRoutines);
-  const [calendarEvents, setCalendarEvents] = usePersistedState<CalendarEvent[]>('calendarEvents', initialCalendarEvents);
-  const [journalEntries, setJournalEntries] = usePersistedState<JournalEntry[]>('journalEntries', initialJournalEntries);
+  const [scannedProducts, setScannedProducts] = usePersistedState<ProductScanResult[]>('scannedProducts', isDefaultProfile ? initialScannedProducts : [], activeProfileId);
+  const [triggerEntries, setTriggerEntries] = usePersistedState<TriggerEntry[]>('triggerEntries', isDefaultProfile ? initialTriggerEntries : [], activeProfileId);
+  const [foodItems, setFoodItems] = usePersistedState<FoodItem[]>('foodItems', isDefaultProfile ? initialFoodItems : [], activeProfileId);
+  const [meals, setMeals] = usePersistedState<Meal[]>('meals', isDefaultProfile ? initialMeals : [], activeProfileId);
+  const [recipes, setRecipes] = usePersistedState<Recipe[]>('recipes', isDefaultProfile ? initialRecipes : [], activeProfileId);
+  const [routines, setRoutines] = usePersistedState<RoutineTask[]>('routines', isDefaultProfile ? initialRoutines : [], activeProfileId);
+  const [calendarEvents, setCalendarEvents] = usePersistedState<CalendarEvent[]>('calendarEvents', isDefaultProfile ? initialCalendarEvents : [], activeProfileId);
+  const [journalEntries, setJournalEntries] = usePersistedState<JournalEntry[]>('journalEntries', isDefaultProfile ? initialJournalEntries : [], activeProfileId);
   const [auditLogs, setAuditLogs] = usePersistedState<AuditLogEntry[]>('auditLogs', initialAuditLogs);
-  const [chatMessages, setChatMessages] = usePersistedState<ChatMessage[]>('chatMessages', initialChatMessages);
+  const [chatMessages, setChatMessages] = usePersistedState<ChatMessage[]>('chatMessages', isDefaultProfile ? initialChatMessages : [], activeProfileId);
 
   const [voiceAssistantOpen, setVoiceAssistantOpen] = useState<boolean>(false);
   const [pinLock, setPinLock] = usePersistedState<{ hash: string; salt: string } | null>('pinLock', null);
@@ -158,7 +212,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateActiveProfile = (updates: Partial<FamilyProfile>) => {
-    setActiveProfile(prev => ({ ...prev, ...updates }));
+    setProfiles(prev => prev.map(p => (p.id === activeProfileId ? { ...p, ...updates } : p)));
+  };
+
+  const switchProfile = (id: string) => {
+    if (profiles.some(p => p.id === id)) {
+      setActiveProfileId(id);
+    }
+  };
+
+  const addProfile = (profile: Omit<FamilyProfile, 'id'>): FamilyProfile => {
+    const newProfile: FamilyProfile = { ...profile, id: `p-${Date.now()}` };
+    setProfiles(prev => [...prev, newProfile]);
+    setActiveProfileId(newProfile.id);
+    addAuditLog('Yeni Profil', `${newProfile.name} adlı yeni bir aile profili oluşturuldu.`);
+    return newProfile;
+  };
+
+  const removeProfile = (id: string) => {
+    if (profiles.length <= 1) return;
+    const removed = profiles.find(p => p.id === id);
+    const fallback = profiles.find(p => p.id !== id);
+    setProfiles(prev => prev.filter(p => p.id !== id));
+    if (activeProfileId === id && fallback) {
+      setActiveProfileId(fallback.id);
+    }
+    PROFILE_DATA_KEYS.forEach(key => {
+      try {
+        localStorage.removeItem(`${STORAGE_PREFIX}${id}:${key}`);
+      } catch {
+        // localStorage'a erişilemiyorsa sessizce devam et
+      }
+    });
+    if (removed) addAuditLog('Profil Silindi', `${removed.name} adlı profil ve buna bağlı yerel veriler kaldırıldı.`);
   };
 
   const addTreatmentEntry = (entry: TreatmentEntry) => {
@@ -311,37 +397,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return attemptHash === pinLock.hash;
   };
 
+  // Yalnızca AKTİF profilin sağlık verilerini sıfırlar; diğer aile profilleri etkilenmez.
   const clearAllData = () => {
-    const dataKeys = ['activeProfile', 'cvHistory', 'symptomEntries', 'treatmentHistory', 'scannedProducts', 'triggerEntries', 'foodItems', 'meals', 'recipes', 'routines', 'calendarEvents', 'journalEntries', 'auditLogs', 'chatMessages', 'environmentalHistory'];
-    dataKeys.forEach(key => {
+    PROFILE_DATA_KEYS.forEach(key => {
       try {
-        localStorage.removeItem(STORAGE_PREFIX + key);
+        localStorage.removeItem(`${STORAGE_PREFIX}${activeProfileId}:${key}`);
       } catch {
         // localStorage'a erişilemiyorsa sessizce devam et
       }
     });
 
-    setActiveProfile(initialProfiles[0]);
-    setCvHistory(initialCVHistory);
-    setSymptomEntries(initialSymptomEntries);
-    setTreatmentHistory(initialTreatmentHistory);
-    setScannedProducts(initialScannedProducts);
-    setTriggerEntries(initialTriggerEntries);
-    setFoodItems(initialFoodItems);
-    setMeals(initialMeals);
-    setRecipes(initialRecipes);
-    setRoutines(initialRoutines);
-    setCalendarEvents(initialCalendarEvents);
-    setJournalEntries(initialJournalEntries);
-    setChatMessages(initialChatMessages);
-    setEnvironmentalHistory([]);
-    setAuditLogs([{
-      id: `log-${Date.now()}`,
-      timestamp: new Date().toLocaleString('tr-TR'),
-      action: 'Yerel Veri Sıfırlama',
-      details: 'Kullanıcı talebiyle tüm yerel oturum verileri fabrika ayarlarına sıfırlandı.',
-      ipAddress: '127.0.0.1 (Şifreli Oturum)'
-    }]);
+    setCvHistory(isDefaultProfile ? initialCVHistory : []);
+    setSymptomEntries(isDefaultProfile ? initialSymptomEntries : []);
+    setTreatmentHistory(isDefaultProfile ? initialTreatmentHistory : []);
+    setScannedProducts(isDefaultProfile ? initialScannedProducts : []);
+    setTriggerEntries(isDefaultProfile ? initialTriggerEntries : []);
+    setFoodItems(isDefaultProfile ? initialFoodItems : []);
+    setMeals(isDefaultProfile ? initialMeals : []);
+    setRecipes(isDefaultProfile ? initialRecipes : []);
+    setRoutines(isDefaultProfile ? initialRoutines : []);
+    setCalendarEvents(isDefaultProfile ? initialCalendarEvents : []);
+    setJournalEntries(isDefaultProfile ? initialJournalEntries : []);
+    setChatMessages(isDefaultProfile ? initialChatMessages : []);
+    addAuditLog('Yerel Veri Sıfırlama', `${activeProfile.name} profiline ait yerel veriler fabrika ayarlarına sıfırlandı.`);
   };
 
   useEffect(() => {
@@ -357,9 +435,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       fontSize,
       setFontSize,
       activeProfile,
-      setActiveProfile,
-      updateActiveProfile,
       profiles,
+      switchProfile,
+      addProfile,
+      removeProfile,
+      updateActiveProfile,
       cvHistory,
       addCVAnalysis,
       symptomEntries,

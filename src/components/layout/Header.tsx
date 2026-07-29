@@ -1,15 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Activity,
   Mic,
   Sun,
   Moon,
   Eye,
-  Menu,
-  Pencil
+  Menu
 } from 'lucide-react';
 import { useApp } from '../../context/useApp';
-import { ProfileEditModal } from '../profile/ProfileEditModal';
+import { ProfileSwitcher } from '../profile/ProfileSwitcher';
 import { NotificationToggle } from '../notifications/NotificationToggle';
 
 interface HeaderProps {
@@ -22,11 +21,8 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileNav }) => {
     setTheme,
     highContrast,
     setHighContrast,
-    activeProfile,
     setVoiceAssistantOpen
   } = useApp();
-
-  const [profileEditOpen, setProfileEditOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-40 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800 text-neutral-100 px-3 sm:px-4 lg:px-8 py-3 [padding-top:calc(env(safe-area-inset-top)+0.75rem)]">
@@ -104,28 +100,9 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileNav }) => {
           </button>
 
           {/* Profil */}
-          <button
-            onClick={() => setProfileEditOpen(true)}
-            className="flex items-center gap-2 pl-1.5 pr-2 sm:pr-3 py-1 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 transition-all group"
-            title="Profili Düzenle"
-          >
-            <div className={`w-7 h-7 rounded-lg overflow-hidden bg-gradient-to-tr ${activeProfile.avatarColor} flex items-center justify-center font-bold text-xs text-white shrink-0`}>
-              {activeProfile.avatarUrl ? (
-                <img src={activeProfile.avatarUrl} alt={activeProfile.name} className="w-full h-full object-cover" />
-              ) : (
-                <span>{activeProfile.name[0]}</span>
-              )}
-            </div>
-            <div className="text-left hidden md:block">
-              <p className="text-xs font-semibold text-neutral-200 leading-tight">{activeProfile.name}</p>
-              <p className="text-[10px] text-neutral-400">{activeProfile.age} yaş</p>
-            </div>
-            <Pencil className="w-3 h-3 text-neutral-500 group-hover:text-neutral-300 hidden sm:block" />
-          </button>
+          <ProfileSwitcher />
         </div>
       </div>
-
-      {profileEditOpen && <ProfileEditModal onClose={() => setProfileEditOpen(false)} />}
     </header>
   );
 };
