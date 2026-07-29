@@ -21,7 +21,8 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileNav }) => {
     setTheme,
     highContrast,
     setHighContrast,
-    setVoiceAssistantOpen
+    setVoiceAssistantOpen,
+    t
   } = useApp();
 
   return (
@@ -53,11 +54,11 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileNav }) => {
                 DermIQ
               </h1>
               <span className="hidden sm:inline text-[10px] font-semibold px-2 py-0.5 rounded-full bg-neutral-800 text-neutral-400 border border-neutral-700">
-                Cilt Takip
+                {t('header.badge')}
               </span>
             </div>
             <p className="text-[11px] text-neutral-500 hidden lg:block truncate">
-              Egzama ve Bariyer Takip Platformu
+              {t('header.subtitle')}
             </p>
           </div>
         </div>
@@ -73,7 +74,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileNav }) => {
             className="p-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 transition-all flex items-center gap-1.5 text-xs font-medium"
           >
             <Mic className="w-4 h-4" />
-            <span className="hidden xl:inline">Sesli Asistan</span>
+            <span className="hidden xl:inline">{t('header.voiceAssistant')}</span>
           </button>
 
           {/* Yüksek Kontrast Toggle */}

@@ -6,18 +6,18 @@ import type { TriggerCategory } from '../../types';
 const CATEGORIES: TriggerCategory[] = ['Gıda', 'Çevresel', 'Ürün', 'Diğer'];
 
 export const TriggerJournal: React.FC = () => {
-  const { triggerEntries, addTriggerEntry, removeTriggerEntry } = useApp();
+  const { triggerEntries, addTriggerEntry, removeTriggerEntry, t } = useApp();
   const [name, setName] = useState('');
   const [category, setCategory] = useState<TriggerCategory>('Gıda');
   const [severity, setSeverity] = useState(5);
   const [reasonNote, setReasonNote] = useState('');
   const [filter, setFilter] = useState<TriggerCategory | 'Tümü'>('Tümü');
 
-  const filtered = filter === 'Tümü' ? triggerEntries : triggerEntries.filter(t => t.category === filter);
+  const filtered = filter === 'Tümü' ? triggerEntries : triggerEntries.filter(trig => trig.category === filter);
 
   const recurring = useMemo(() => {
     const counts: Record<string, number> = {};
-    triggerEntries.forEach(t => { counts[t.name.toLowerCase()] = (counts[t.name.toLowerCase()] || 0) + 1; });
+    triggerEntries.forEach(trig => { counts[trig.name.toLowerCase()] = (counts[trig.name.toLowerCase()] || 0) + 1; });
     return Object.entries(counts).filter(([, count]) => count > 1).map(([n, count]) => ({ name: n, count }));
   }, [triggerEntries]);
 
@@ -42,7 +42,7 @@ export const TriggerJournal: React.FC = () => {
           <span className="p-2 rounded-xl bg-neutral-800 text-neutral-300 border border-neutral-700">
             <ShieldAlert className="w-5 h-5" />
           </span>
-          <h2 className="text-xl font-semibold text-white tracking-tight">Tetikleyici Günlüğü</h2>
+          <h2 className="text-xl font-semibold text-white tracking-tight">{t('title.triggers')}</h2>
         </div>
         <p className="text-xs text-neutral-400 mt-1">
           Bir şeyin alevlenmene neden olduğunu düşünüyorsan burada kaydet: ne, ne zaman, ne kadar şiddetli ve neden öyle düşündüğün. Uygulama sana bir tetikleyici önermez veya tahmin etmez — yalnızca kendi kayıtlarını gösterir.

@@ -1,4 +1,5 @@
 import { createContext } from 'react';
+import type { Language, TranslationKey } from '../lib/i18n';
 import type {
   CVAnalysis,
   EnvironmentalData,
@@ -26,6 +27,9 @@ export interface AppContextType {
   setHighContrast: (v: boolean) => void;
   fontSize: 'normal' | 'large' | 'xlarge';
   setFontSize: (s: 'normal' | 'large' | 'xlarge') => void;
+  language: Language;
+  setLanguage: (l: Language) => void;
+  t: (key: TranslationKey) => string;
 
   // Profil Yönetimi (Aile Profilleri) — her profilin belirti/tedavi/fotoğraf vb. verisi ayrı tutulur
   activeProfile: FamilyProfile;

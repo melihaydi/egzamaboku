@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { 
-  ShieldCheck, 
-  Lock, 
-  Download, 
-  Trash2, 
-  Eye, 
-  Database
+import {
+  ShieldCheck,
+  Lock,
+  Download,
+  Trash2,
+  Eye,
+  Database,
+  Languages
 } from 'lucide-react';
 import { useApp } from '../../context/useApp';
 import { PinLockSettings } from './PinLockSettings';
@@ -25,7 +26,10 @@ export const PrivacySettings: React.FC = () => {
     setFontSize,
     highContrast,
     setHighContrast,
-    clearAllData
+    language,
+    setLanguage,
+    clearAllData,
+    t
   } = useApp();
 
   const [e2eEncrypted, setE2eEncrypted] = useState<boolean>(true);
@@ -72,7 +76,7 @@ export const PrivacySettings: React.FC = () => {
               <ShieldCheck className="w-5 h-5" />
             </span>
             <h2 className="text-xl font-bold text-white tracking-tight">
-              Gizlilik, Güvenlik Logları & Erişilebilirlik Ayarları
+              {t('title.security')}
             </h2>
           </div>
           <p className="text-xs text-neutral-400 mt-1">
@@ -174,6 +178,21 @@ export const PrivacySettings: React.FC = () => {
                   onChange={e => setHighContrast(e.target.checked)}
                   className="w-4 h-4 accent-amber-500 rounded"
                 />
+              </div>
+
+              <div className="col-span-2 p-3 rounded-2xl bg-neutral-950 border border-neutral-800">
+                <span className="text-[10px] text-neutral-400 flex items-center gap-1 mb-1">
+                  <Languages className="w-3 h-3" /> {t('settings.language')}
+                </span>
+                <select
+                  value={language}
+                  onChange={e => setLanguage(e.target.value as 'tr' | 'en')}
+                  className="w-full px-2.5 py-1.5 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-white focus:outline-none"
+                >
+                  <option value="tr">Türkçe</option>
+                  <option value="en">English</option>
+                </select>
+                <p className="text-[10px] text-neutral-500 mt-1.5">{t('settings.languageHint')}</p>
               </div>
             </div>
           </div>

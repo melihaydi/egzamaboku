@@ -24,7 +24,7 @@ const CATEGORY_META: Record<JournalCategory, { icon: typeof ShieldAlert; color: 
 const CATEGORIES: JournalCategory[] = ['Alerji', 'Kişisel Not', 'Doktor Notu', 'Tıbbi Geçmiş'];
 
 export const HealthJournal: React.FC = () => {
-  const { journalEntries, addJournalEntry, updateJournalEntry, removeJournalEntry } = useApp();
+  const { journalEntries, addJournalEntry, updateJournalEntry, removeJournalEntry, t } = useApp();
   const [activeCategory, setActiveCategory] = useState<JournalCategory>('Alerji');
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -79,7 +79,7 @@ export const HealthJournal: React.FC = () => {
             <span className="p-2 rounded-xl bg-neutral-800 text-neutral-300 border border-neutral-700">
               <NotebookText className="w-5 h-5" />
             </span>
-            <h2 className="text-xl font-semibold text-white tracking-tight">Sağlık Günlüğü</h2>
+            <h2 className="text-xl font-semibold text-white tracking-tight">{t('title.journal')}</h2>
           </div>
           <p className="text-sm text-neutral-400 mt-1">
             Alerjilerini, kişisel notlarını, doktor notlarını ve tıbbi geçmişini kendi düzenleyebileceğin bir günlük.

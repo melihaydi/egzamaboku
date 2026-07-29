@@ -15,7 +15,7 @@ import { analyzeIngredientText } from '../../lib/ingredientAnalysis';
 import { createBarcodeDetector, lookupBarcodeProduct } from '../../lib/barcodeScan';
 
 export const IngredientScanner: React.FC = () => {
-  const { scannedProducts, addScannedProduct } = useApp();
+  const { scannedProducts, addScannedProduct, t } = useApp();
   const [activeScan, setActiveScan] = useState<ProductScanResult>(scannedProducts[0]);
   const [pastedIngredients, setPastedIngredients] = useState<string>('');
   const [productNameInput, setProductNameInput] = useState<string>('');
@@ -209,7 +209,7 @@ export const IngredientScanner: React.FC = () => {
               <Sparkles className="w-5 h-5" />
             </span>
             <h2 className="text-xl font-semibold text-white tracking-tight">
-              Ürün İçerik Tarayıcı
+              {t('title.scanner')}
             </h2>
           </div>
           <p className="text-xs text-neutral-400 mt-1">

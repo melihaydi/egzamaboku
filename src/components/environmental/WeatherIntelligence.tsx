@@ -29,7 +29,7 @@ interface Alert {
 }
 
 export const WeatherIntelligence: React.FC = () => {
-  const { environmental, environmentalLoading, refreshEnvironmental } = useApp();
+  const { environmental, environmentalLoading, refreshEnvironmental, t } = useApp();
   const [selectedDay, setSelectedDay] = useState<number>(0);
 
   const activeForecast = environmental.forecast[selectedDay];
@@ -91,7 +91,7 @@ export const WeatherIntelligence: React.FC = () => {
               </span>
               <div>
                 <h2 className="text-xl font-semibold text-white tracking-tight">
-                  Hava & Çevre Verileri
+                  {t('title.environmental')}
                 </h2>
                 <p className="text-xs text-neutral-500 flex items-center gap-1 mt-0.5">
                   <MapPin className="w-3.5 h-3.5" />

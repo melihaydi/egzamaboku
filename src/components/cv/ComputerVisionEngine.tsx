@@ -56,7 +56,7 @@ const METRIC_DEFS: Array<{ key: keyof Pick<CVAnalysis, 'redness' | 'scaling' | '
 ];
 
 export const ComputerVisionEngine: React.FC = () => {
-  const { cvHistory, addCVAnalysis } = useApp();
+  const { cvHistory, addCVAnalysis, t } = useApp();
   const [selectedLocation, setSelectedLocation] = useState<BodyLocation>('Sol Kol');
   const [activeAnalysis, setActiveAnalysis] = useState<CVAnalysis>(cvHistory[0]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -239,7 +239,7 @@ export const ComputerVisionEngine: React.FC = () => {
               <Scan className="w-5 h-5" />
             </span>
             <h2 className="text-xl font-semibold text-white tracking-tight">
-              Cilt Fotoğraf Analizi
+              {t('title.cv')}
             </h2>
           </div>
           <p className="text-xs text-neutral-400 mt-1">

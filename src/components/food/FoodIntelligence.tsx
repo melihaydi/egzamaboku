@@ -17,7 +17,7 @@ const RATING_STYLE: Record<FoodRating, string> = {
 };
 
 export const FoodIntelligence: React.FC = () => {
-  const { foodItems, addFoodItem, updateFoodItem, removeFoodItem, meals, addMeal, removeMeal, recipes, addRecipe, removeRecipe } = useApp();
+  const { foodItems, addFoodItem, updateFoodItem, removeFoodItem, meals, addMeal, removeMeal, recipes, addRecipe, removeRecipe, t } = useApp();
   const [tab, setTab] = useState<'foods' | 'meals' | 'recipes'>('foods');
 
   const [newFoodName, setNewFoodName] = useState('');
@@ -76,7 +76,7 @@ export const FoodIntelligence: React.FC = () => {
           <span className="p-2 rounded-xl bg-neutral-800 text-neutral-300 border border-neutral-700">
             <Utensils className="w-5 h-5" />
           </span>
-          <h2 className="text-xl font-semibold text-white tracking-tight">Beslenme Asistanı</h2>
+          <h2 className="text-xl font-semibold text-white tracking-tight">{t('title.food')}</h2>
         </div>
         <p className="text-xs text-neutral-400 mt-1">
           Tamamen senin kontrolünde: kendi besinlerini, öğünlerini ve tariflerini ekle, güvenli/bazen sorunlu/her zaman tetikliyor olarak derecelendir. Uygulama zamanla kendi kayıtlarından örüntü çıkarır — varsayımda bulunmaz.
@@ -97,17 +97,17 @@ export const FoodIntelligence: React.FC = () => {
           { id: 'foods' as const, label: 'Besinler', icon: Utensils },
           { id: 'meals' as const, label: 'Öğünler', icon: ChefHat },
           { id: 'recipes' as const, label: 'Tarifler', icon: BookOpen }
-        ].map(t => {
-          const Icon = t.icon;
+        ].map(tabItem => {
+          const Icon = tabItem.icon;
           return (
             <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
+              key={tabItem.id}
+              onClick={() => setTab(tabItem.id)}
               className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
-                tab === t.id ? 'bg-white text-neutral-950' : 'text-neutral-400'
+                tab === tabItem.id ? 'bg-white text-neutral-950' : 'text-neutral-400'
               }`}
             >
-              <Icon className="w-3.5 h-3.5" /> {t.label}
+              <Icon className="w-3.5 h-3.5" /> {tabItem.label}
             </button>
           );
         })}

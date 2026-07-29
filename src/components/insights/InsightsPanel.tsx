@@ -24,7 +24,7 @@ const READINESS_TARGETS = {
 };
 
 export const InsightsPanel: React.FC = () => {
-  const { symptomEntries, triggerEntries, meals, cvHistory, environmentalHistory } = useApp();
+  const { symptomEntries, triggerEntries, meals, cvHistory, environmentalHistory, t } = useApp();
 
   const insights = useMemo(
     () => buildInsights({ symptomEntries, triggerEntries, meals, cvHistory, environmentalHistory }),
@@ -74,7 +74,7 @@ export const InsightsPanel: React.FC = () => {
           <span className="p-2 rounded-xl bg-neutral-800 text-neutral-300 border border-neutral-700">
             <Sparkles className="w-5 h-5" />
           </span>
-          <h2 className="text-xl font-semibold text-white tracking-tight">İçgörüler</h2>
+          <h2 className="text-xl font-semibold text-white tracking-tight">{t('title.insights')}</h2>
         </div>
         <p className="text-sm text-neutral-400 mt-1">
           Burada hiçbir şey tahmin edilmez: yalnızca kendi kaydettiğin belirtiler, tetikleyiciler, öğünler, fotoğraf analizleri ve zamanla biriken gerçek hava/çevre verisi arasında basit istatistiksel karşılaştırmalar yapılır. Yeterli veri yoksa hiçbir sonuç gösterilmez.

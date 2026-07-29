@@ -36,7 +36,7 @@ function pad(n: number) { return n.toString().padStart(2, '0'); }
 function toISODate(y: number, m: number, d: number) { return `${y}-${pad(m + 1)}-${pad(d)}`; }
 
 export const CalendarTimeline: React.FC = () => {
-  const { calendarEvents, addCalendarEvent, updateCalendarEvent, removeCalendarEvent, duplicateCalendarEvent } = useApp();
+  const { calendarEvents, addCalendarEvent, updateCalendarEvent, removeCalendarEvent, duplicateCalendarEvent, t } = useApp();
   const today = new Date();
   const [viewDate, setViewDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDate, setSelectedDate] = useState<string>(toISODate(today.getFullYear(), today.getMonth(), today.getDate()));
@@ -113,7 +113,7 @@ export const CalendarTimeline: React.FC = () => {
             <span className="p-2 rounded-xl bg-neutral-800 text-neutral-300 border border-neutral-700">
               <CalendarDays className="w-5 h-5" />
             </span>
-            <h2 className="text-xl font-semibold text-white tracking-tight">Takvim & Zaman Çizelgesi</h2>
+            <h2 className="text-xl font-semibold text-white tracking-tight">{t('title.calendar')}</h2>
           </div>
           <p className="text-sm text-neutral-400 mt-1">
             Fotoğraf taramaları, ilaçlar, enjeksiyonlar, doktor ziyaretleri ve notların tek bir zaman çizelgesi.

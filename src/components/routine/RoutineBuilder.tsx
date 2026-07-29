@@ -32,7 +32,7 @@ const TIME_TABS: Array<{ id: RoutineTask['timeOfDay']; icon: typeof Sun }> = [
 const CATEGORIES: RoutineTask['category'][] = ['Nemlendirici', 'İlaç / Krem', 'Su Tüketimi', 'Stres Yönetimi', 'Banyo', 'Uyku Hazırlığı'];
 
 export const RoutineBuilder: React.FC = () => {
-  const { routines, toggleRoutineTask, addRoutineTask, removeRoutineTask, updateRoutineTask, reorderRoutineTasks } = useApp();
+  const { routines, toggleRoutineTask, addRoutineTask, removeRoutineTask, updateRoutineTask, reorderRoutineTasks, t } = useApp();
   const [selectedTimeOfDay, setSelectedTimeOfDay] = useState<RoutineTask['timeOfDay']>('Sabah');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -98,7 +98,7 @@ export const RoutineBuilder: React.FC = () => {
   };
 
   const moveTask = (id: string, direction: -1 | 1) => {
-    const ids = filteredTasks.map(t => t.id);
+    const ids = filteredTasks.map(task => task.id);
     const idx = ids.indexOf(id);
     const swapWith = idx + direction;
     if (swapWith < 0 || swapWith >= ids.length) return;
@@ -116,7 +116,7 @@ export const RoutineBuilder: React.FC = () => {
               <CalendarCheck className="w-5 h-5" />
             </span>
             <h2 className="text-xl font-semibold text-white tracking-tight">
-              Günlük Bakım Listesi
+              {t('title.routine')}
             </h2>
           </div>
           <p className="text-sm text-neutral-400 mt-1">
@@ -156,7 +156,7 @@ export const RoutineBuilder: React.FC = () => {
 
           <div className="space-y-3">
             <div className="flex items-center justify-between text-xs text-neutral-400">
-              <span>{selectedTimeOfDay} Bakım Adımları ({filteredTasks.filter(t => t.completed).length}/{filteredTasks.length})</span>
+              <span>{selectedTimeOfDay} Bakım Adımları ({filteredTasks.filter(task => task.completed).length}/{filteredTasks.length})</span>
               <button
                 onClick={() => setShowAddForm(v => !v)}
                 className="flex items-center gap-1 text-neutral-200 hover:text-white font-semibold"

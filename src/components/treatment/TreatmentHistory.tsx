@@ -20,7 +20,7 @@ import { BodyMap } from '../shared/BodyMap';
 const BODY_AREAS: BodyLocation[] = ['Sol Kol', 'Sağ Kol', 'Yüz & Boyun', 'Eller & Bilekler', 'Göğüs & Sırt', 'Bacaklar'];
 
 export const TreatmentHistory: React.FC = () => {
-  const { treatmentHistory, addTreatmentEntry, updateTreatmentEntry, removeTreatmentEntry, cvHistory } = useApp();
+  const { treatmentHistory, addTreatmentEntry, updateTreatmentEntry, removeTreatmentEntry, cvHistory, t } = useApp();
   const [showForm, setShowForm] = useState<boolean>(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -115,7 +115,7 @@ export const TreatmentHistory: React.FC = () => {
               <History className="w-5 h-5" />
             </span>
             <h2 className="text-xl font-bold text-white tracking-tight">
-              Tedavi Geçmişi Kronolojisi
+              {t('title.treatment')}
             </h2>
           </div>
           <p className="text-xs text-neutral-400 mt-1">

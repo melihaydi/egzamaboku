@@ -58,7 +58,7 @@ function severityLabel(score: number) {
 }
 
 export const FlareReport: React.FC = () => {
-  const { symptomEntries, addSymptomEntry, updateSymptomEntry, removeSymptomEntry, cvHistory, activeProfile } = useApp();
+  const { symptomEntries, addSymptomEntry, updateSymptomEntry, removeSymptomEntry, cvHistory, activeProfile, t } = useApp();
   const todayISO = new Date().toISOString().slice(0, 10);
   const todayEntry = symptomEntries.find(e => e.dateISO === todayISO);
 
@@ -118,7 +118,7 @@ export const FlareReport: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="bg-neutral-900/60 p-6 rounded-3xl border border-neutral-800">
-        <h2 className="text-xl font-semibold text-white tracking-tight">Alevlenme Raporu</h2>
+        <h2 className="text-xl font-semibold text-white tracking-tight">{t('title.overview')}</h2>
         <p className="text-sm text-neutral-400 mt-1">
           {activeProfile.name} için — belirtilerini SEN puanlarsın, yapay zeka yalnızca yüklediğin fotoğrafta görüneni ölçer. Hiçbir belirti skoru otomatik tahmin edilmez.
         </p>

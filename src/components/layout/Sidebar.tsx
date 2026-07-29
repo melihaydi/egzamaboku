@@ -15,6 +15,7 @@ import {
   TrendingUp,
   X
 } from 'lucide-react';
+import { useApp } from '../../context/useApp';
 
 export type ActiveTab = 'overview' | 'insights' | 'cv' | 'treatment' | 'environmental' | 'scanner' | 'triggers' | 'food' | 'routine' | 'journal' | 'calendar' | 'chat' | 'security';
 
@@ -26,20 +27,21 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen, onCloseMobile }) => {
+  const { t } = useApp();
   const navItems = [
-    { id: 'overview' as ActiveTab, label: 'Alevlenme Raporu', icon: LayoutDashboard },
-    { id: 'insights' as ActiveTab, label: 'İçgörüler', icon: TrendingUp },
-    { id: 'cv' as ActiveTab, label: 'Cilt Fotoğraf Analizi', icon: Scan },
-    { id: 'calendar' as ActiveTab, label: 'Takvim & Zaman Çizelgesi', icon: CalendarDays },
-    { id: 'treatment' as ActiveTab, label: 'Tedavi Geçmişi', icon: History },
-    { id: 'chat' as ActiveTab, label: 'Sohbet Asistanı', icon: MessageCircle },
-    { id: 'environmental' as ActiveTab, label: 'Hava & Çevre Verileri', icon: CloudSun },
-    { id: 'scanner' as ActiveTab, label: 'Ürün İçerik Tarayıcı', icon: Sparkles },
-    { id: 'triggers' as ActiveTab, label: 'Tetikleyici Günlüğü', icon: ShieldAlert },
-    { id: 'food' as ActiveTab, label: 'Beslenme Asistanı', icon: Utensils },
-    { id: 'routine' as ActiveTab, label: 'Günlük Bakım Listesi', icon: CalendarCheck },
-    { id: 'journal' as ActiveTab, label: 'Sağlık Günlüğü', icon: NotebookText },
-    { id: 'security' as ActiveTab, label: 'Gizlilik & Erişilebilirlik', icon: ShieldCheck }
+    { id: 'overview' as ActiveTab, label: t('nav.overview'), icon: LayoutDashboard },
+    { id: 'insights' as ActiveTab, label: t('nav.insights'), icon: TrendingUp },
+    { id: 'cv' as ActiveTab, label: t('nav.cv'), icon: Scan },
+    { id: 'calendar' as ActiveTab, label: t('nav.calendar'), icon: CalendarDays },
+    { id: 'treatment' as ActiveTab, label: t('nav.treatment'), icon: History },
+    { id: 'chat' as ActiveTab, label: t('nav.chat'), icon: MessageCircle },
+    { id: 'environmental' as ActiveTab, label: t('nav.environmental'), icon: CloudSun },
+    { id: 'scanner' as ActiveTab, label: t('nav.scanner'), icon: Sparkles },
+    { id: 'triggers' as ActiveTab, label: t('nav.triggers'), icon: ShieldAlert },
+    { id: 'food' as ActiveTab, label: t('nav.food'), icon: Utensils },
+    { id: 'routine' as ActiveTab, label: t('nav.routine'), icon: CalendarCheck },
+    { id: 'journal' as ActiveTab, label: t('nav.journal'), icon: NotebookText },
+    { id: 'security' as ActiveTab, label: t('nav.security'), icon: ShieldCheck }
   ];
 
   const handleSelect = (tab: ActiveTab) => {
@@ -68,7 +70,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMob
         <div className="space-y-1">
           <div className="flex items-center justify-between px-3 py-2">
             <span className="text-[10px] uppercase font-semibold tracking-wider text-neutral-500">
-              Uygulama Modülleri
+              {t('sidebar.modules')}
             </span>
             <button
               onClick={onCloseMobile}

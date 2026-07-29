@@ -20,6 +20,7 @@ import type {
 import { AppContext } from './context';
 import { fetchEnvironmentalData } from '../lib/weatherService';
 import { generateSalt, hashPin } from '../lib/pinLock';
+import { translate, type Language, type TranslationKey } from '../lib/i18n';
 import {
   initialCVHistory,
   initialSymptomEntries,
@@ -118,6 +119,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [theme, setTheme] = usePersistedState<'dark' | 'light'>('theme', 'dark');
   const [highContrast, setHighContrast] = usePersistedState<boolean>('highContrast', false);
   const [fontSize, setFontSize] = usePersistedState<'normal' | 'large' | 'xlarge'>('fontSize', 'normal');
+  const [language, setLanguage] = usePersistedState<Language>('language', 'tr');
+  const t = useCallback((key: TranslationKey) => translate(language, key), [language]);
 
   // Profiller ve aktif profil cihaz genelinde ortak (isimsiz) anahtarlarda tutulur;
   // her profile özel sağlık verisi ise aşağıda profil id'siyle adlandırılmış anahtarlarda tutulur.
@@ -434,6 +437,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setHighContrast,
       fontSize,
       setFontSize,
+      language,
+      setLanguage,
+      t,
       activeProfile,
       profiles,
       switchProfile,

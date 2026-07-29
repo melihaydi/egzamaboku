@@ -14,7 +14,7 @@ const SUGGESTED_QUESTIONS = [
 ];
 
 export const AIChatAssistant: React.FC = () => {
-  const { chatMessages, addChatMessage, clearChatMessages } = useApp();
+  const { chatMessages, addChatMessage, clearChatMessages, t } = useApp();
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isSearchingOnline, setIsSearchingOnline] = useState(false);
@@ -76,7 +76,7 @@ export const AIChatAssistant: React.FC = () => {
               <Bot className="w-5 h-5" />
             </span>
             <h2 className="text-xl font-semibold text-white tracking-tight">
-              Sohbet Asistanı
+              {t('title.chat')}
             </h2>
           </div>
           <p className="text-xs text-neutral-400 mt-1">
