@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/useApp';
 import type { TreatmentEntry, BodyLocation } from '../../types';
+import { BodyMap } from '../shared/BodyMap';
 
 const BODY_AREAS: BodyLocation[] = ['Sol Kol', 'Sağ Kol', 'Yüz & Boyun', 'Eller & Bilekler', 'Göğüs & Sırt', 'Bacaklar'];
 
@@ -32,6 +33,7 @@ export const TreatmentHistory: React.FC = () => {
   const [endDate, setEndDate] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
 
+  const [showBodyMap, setShowBodyMap] = useState<boolean>(false);
   const [filterMedication, setFilterMedication] = useState('');
   const [filterBodyArea, setFilterBodyArea] = useState<BodyLocation | 'Tümü'>('Tümü');
 
@@ -206,7 +208,12 @@ export const TreatmentHistory: React.FC = () => {
               />
             </div>
             <div>
-              <label className="text-[10px] font-bold uppercase text-neutral-400 block mb-1">Vücut Bölgesi (isteğe bağlı)</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[10px] font-bold uppercase text-neutral-400">Vücut Bölgesi (isteğe bağlı)</label>
+                <button type="button" onClick={() => setShowBodyMap(v => !v)} className="text-[10px] font-semibold text-neutral-400 hover:text-white">
+                  {showBodyMap ? 'Haritayı Gizle' : 'Vücut Haritasından Seç'}
+                </button>
+              </div>
               <select
                 value={bodyArea}
                 onChange={e => setBodyArea(e.target.value as BodyLocation | '')}
@@ -216,6 +223,12 @@ export const TreatmentHistory: React.FC = () => {
                 {BODY_AREAS.map(a => <option key={a} value={a}>{a}</option>)}
               </select>
             </div>
+
+            {showBodyMap && (
+              <div className="md:col-span-2 p-4 rounded-2xl bg-neutral-950 border border-neutral-800">
+                <BodyMap value={bodyArea} onSelect={loc => { setBodyArea(loc); setShowBodyMap(false); }} />
+              </div>
+            )}
             <div>
               <label className="text-[10px] font-bold uppercase text-neutral-400 block mb-1">Başlangıç Tarihi</label>
               <input

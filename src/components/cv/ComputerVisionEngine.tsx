@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   Scan,
   Upload,
@@ -13,11 +13,13 @@ import {
   ListChecks,
   TrendingDown,
   TrendingUp,
-  Minus
+  Minus,
+  PersonStanding
 } from 'lucide-react';
 import { useApp } from '../../context/useApp';
 import type { BodyLocation, CVAnalysis } from '../../types';
 import { analyzeImagePixels, estimateInfectionRisk } from '../../lib/imageAnalysis';
+import { BodyMap } from '../shared/BodyMap';
 
 function buildAnalysisFromCanvas(canvas: HTMLCanvasElement, location: BodyLocation, photoUrl: string): CVAnalysis {
   const result = analyzeImagePixels(canvas);
@@ -69,10 +71,17 @@ export const ComputerVisionEngine: React.FC = () => {
   const [isSplitMode, setIsSplitMode] = useState<boolean>(false);
   const [splitPos, setSplitPos] = useState<number>(50);
 
+  const [showBodyMap, setShowBodyMap] = useState<boolean>(false);
   const [isWebCamActive, setIsWebCamActive] = useState<boolean>(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const regionCounts = useMemo(() => {
+    const counts: Partial<Record<BodyLocation, number>> = {};
+    cvHistory.forEach(item => { counts[item.location] = (counts[item.location] || 0) + 1; });
+    return counts;
+  }, [cvHistory]);
 
   const locationHistory = cvHistory.filter(item => item.location === selectedLocation);
   const baselineAnalysis = locationHistory[locationHistory.length - 1] || activeAnalysis;
@@ -250,6 +259,17 @@ export const ComputerVisionEngine: React.FC = () => {
           </select>
 
           <button
+            onClick={() => setShowBodyMap(v => !v)}
+            aria-pressed={showBodyMap}
+            className={`px-3 py-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              showBodyMap ? 'bg-white text-neutral-950 border-white' : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border-neutral-700'
+            }`}
+          >
+            <PersonStanding className="w-4 h-4" />
+            Vücut Haritası
+          </button>
+
+          <button
             onClick={toggleWebCam}
             className={`px-3.5 py-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all ${
               isWebCamActive ? 'bg-rose-500 text-white border-rose-400' : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border-neutral-700'
@@ -269,6 +289,17 @@ export const ComputerVisionEngine: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Vücut Haritası */}
+      {showBodyMap && (
+        <div className="p-6 rounded-3xl bg-neutral-900/60 border border-neutral-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-white">Taranacak Bölgeyi Seç</h3>
+            <span className="text-[10px] text-neutral-500">Parantez içindeki sayı o bölgede kayıtlı gerçek tarama adedi</span>
+          </div>
+          <BodyMap value={selectedLocation} onSelect={setSelectedLocation} counts={regionCounts} />
+        </div>
+      )}
 
       {/* Canlı Kamera Modalı */}
       {isWebCamActive && (
