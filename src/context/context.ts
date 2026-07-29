@@ -101,6 +101,12 @@ export interface AppContextType {
   voiceAssistantOpen: boolean;
   setVoiceAssistantOpen: (v: boolean) => void;
 
+  // Uygulama Kilidi (PIN) — PIN düz metin olarak asla saklanmaz, yalnızca karması
+  pinLockEnabled: boolean;
+  setPinCode: (pin: string) => Promise<void>;
+  clearPinCode: () => void;
+  verifyPinCode: (pin: string) => Promise<boolean>;
+
   // Loglar
   auditLogs: AuditLogEntry[];
   addAuditLog: (action: string, details: string) => void;

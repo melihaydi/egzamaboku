@@ -8,6 +8,7 @@ import {
   Database
 } from 'lucide-react';
 import { useApp } from '../../context/useApp';
+import { PinLockSettings } from './PinLockSettings';
 
 export const PrivacySettings: React.FC = () => {
   const {
@@ -101,6 +102,8 @@ export const PrivacySettings: React.FC = () => {
                 className="w-4 h-4 accent-emerald-500 rounded"
               />
             </div>
+
+            <PinLockSettings />
 
             <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 flex items-center justify-between">
               <div>

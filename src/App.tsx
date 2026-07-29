@@ -6,6 +6,7 @@ import { Sidebar } from './components/layout/Sidebar';
 import type { ActiveTab } from './components/layout/Sidebar';
 import { VoiceAssistantModal } from './components/voice/VoiceAssistantModal';
 import { ReminderScheduler } from './components/notifications/ReminderScheduler';
+import { AppLockGate } from './components/security/AppLockGate';
 
 const FlareReport = lazy(() => import('./components/flare/FlareReport').then(m => ({ default: m.FlareReport })));
 const InsightsPanel = lazy(() => import('./components/insights/InsightsPanel').then(m => ({ default: m.InsightsPanel })));
@@ -80,7 +81,9 @@ const MainLayout: React.FC = () => {
 export default function App() {
   return (
     <AppProvider>
-      <MainLayout />
+      <AppLockGate>
+        <MainLayout />
+      </AppLockGate>
     </AppProvider>
   );
 }

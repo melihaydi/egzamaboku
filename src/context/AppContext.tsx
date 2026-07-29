@@ -19,6 +19,7 @@ import type {
 } from '../types';
 import { AppContext } from './context';
 import { fetchEnvironmentalData } from '../lib/weatherService';
+import { generateSalt, hashPin } from '../lib/pinLock';
 import {
   initialCVHistory,
   initialSymptomEntries,
@@ -89,6 +90,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [chatMessages, setChatMessages] = usePersistedState<ChatMessage[]>('chatMessages', initialChatMessages);
 
   const [voiceAssistantOpen, setVoiceAssistantOpen] = useState<boolean>(false);
+  const [pinLock, setPinLock] = usePersistedState<{ hash: string; salt: string } | null>('pinLock', null);
 
   const addAuditLog = useCallback((action: string, details: string) => {
     const newEntry: AuditLogEntry = {
@@ -291,6 +293,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setChatMessages(initialChatMessages);
   };
 
+  const setPinCode = async (pin: string) => {
+    const salt = generateSalt();
+    const hash = await hashPin(pin, salt);
+    setPinLock({ hash, salt });
+    addAuditLog('Uygulama Kilidi', 'PIN kodu oluşturuldu/güncellendi.');
+  };
+
+  const clearPinCode = () => {
+    setPinLock(null);
+    addAuditLog('Uygulama Kilidi', 'PIN kodu kaldırıldı.');
+  };
+
+  const verifyPinCode = async (pin: string) => {
+    if (!pinLock) return true;
+    const attemptHash = await hashPin(pin, pinLock.salt);
+    return attemptHash === pinLock.hash;
+  };
+
   const clearAllData = () => {
     const dataKeys = ['activeProfile', 'cvHistory', 'symptomEntries', 'treatmentHistory', 'scannedProducts', 'triggerEntries', 'foodItems', 'meals', 'recipes', 'routines', 'calendarEvents', 'journalEntries', 'auditLogs', 'chatMessages', 'environmentalHistory'];
     dataKeys.forEach(key => {
@@ -386,6 +406,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       removeJournalEntry,
       voiceAssistantOpen,
       setVoiceAssistantOpen,
+      pinLockEnabled: pinLock !== null,
+      setPinCode,
+      clearPinCode,
+      verifyPinCode,
       auditLogs,
       addAuditLog,
       chatMessages,
