@@ -279,7 +279,7 @@ export interface AssistantReply {
   text: string;
   matchedTopic?: string;
   urgent?: boolean;
-  source?: 'kb' | 'greeting' | 'thanks' | 'online' | 'none';
+  source?: 'kb' | 'greeting' | 'thanks' | 'gemini' | 'online' | 'none';
 }
 
 const GREETING_KEYWORDS = ['merhaba', 'selam', 'iyi gunler', 'gunaydin', 'iyi aksamlar', 'nasilsin'];
@@ -369,11 +369,11 @@ interface WikiSearchResult {
 
 // Yavaş veya kopan bir bağlantıda kullanıcı "İnternette aranıyor..." durumunda sonsuza
 // kadar takılı kalmasın diye her ağ isteğine sınırlı bir süre tanınır.
-async function fetchWithTimeout(url: string): Promise<Response> {
+async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), ONLINE_FETCH_TIMEOUT_MS);
   try {
-    return await fetch(url, { signal: controller.signal });
+    return await fetch(url, { ...init, signal: controller.signal });
   } finally {
     clearTimeout(timeoutId);
   }
@@ -418,13 +418,41 @@ export async function searchOnlineFallback(rawQuestion: string): Promise<Assista
   }
 }
 
+// Gemini API'yi DOĞRUDAN tarayıcıdan değil, bir Netlify Function üzerinden çağırır;
+// böylece API anahtarı sunucu tarafında (ortam değişkeni) kalır ve istemci koduna hiç sızmaz.
+// Fonksiyon dağıtılmamışsa (örn. yerel `vite dev` ile, Netlify olmadan) bu istek 404 döner
+// ve searchOnlineFallback'e (Wikipedia) sorunsuzca geçilir.
+async function callGeminiFallback(rawQuestion: string): Promise<AssistantReply | null> {
+  try {
+    const res = await fetchWithTimeout('/.netlify/functions/gemini-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: rawQuestion })
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data?.text) return null;
+    return {
+      text: `${data.text}\n\n(Bu yanıt Gemini AI tarafından oluşturuldu; bu uygulamanın kürasyonlu bilgi tabanının parçası değildir.)`,
+      matchedTopic: 'Gemini AI',
+      source: 'gemini'
+    };
+  } catch {
+    return null;
+  }
+}
+
 // Önce yerel bilgi tabanında arar; gerçek bir konu eşleşmesi, selamlama veya teşekkür
-// bulunamazsa arka planda Wikipedia'da arama yaparak yanıt kapsamını genişletir.
+// bulunamazsa sırasıyla Gemini AI'ya (varsa) ve ardından Wikipedia'ya (son çare) başvurarak
+// yanıt kapsamını genişletir.
 export async function getAssistantReplyWithFallback(rawQuestion: string): Promise<AssistantReply> {
   const localReply = getAssistantReply(rawQuestion);
   if (localReply.source !== 'none') {
     return localReply;
   }
+
+  const geminiReply = await callGeminiFallback(rawQuestion);
+  if (geminiReply) return geminiReply;
 
   const onlineReply = await searchOnlineFallback(rawQuestion);
   return onlineReply || localReply;

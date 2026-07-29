@@ -75,6 +75,18 @@ export interface EnvironmentalData {
   fetchedAt: string;
 }
 
+// Her gün canlı veri başarıyla çekildiğinde o günün özeti burada birikir; İçgörüler sekmesi
+// gerçek zamanla oluşan bu geçmişi kullanıcının kendi belirti kayıtlarıyla karşılaştırır.
+// Geriye dönük hiçbir gün UYDURULMAZ — geçmiş yalnızca uygulama kullanıldıkça büyür.
+export interface EnvironmentalSnapshot {
+  dateISO: string;
+  temperature: number;
+  humidity: number;
+  uvIndex: number;
+  aqiOverall: number;
+  pollenTotal: number;
+}
+
 export type IngredientCategory =
   | 'Bariyer Onarıcı'
   | 'Parfüm / Fragrance'

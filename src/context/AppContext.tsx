@@ -13,6 +13,7 @@ import type {
   TreatmentEntry,
   ChatMessage,
   EnvironmentalData,
+  EnvironmentalSnapshot,
   CalendarEvent,
   JournalEntry
 } from '../types';
@@ -75,6 +76,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [treatmentHistory, setTreatmentHistory] = usePersistedState<TreatmentEntry[]>('treatmentHistory', initialTreatmentHistory);
   const [environmental, setEnvironmental] = usePersistedState<EnvironmentalData>('environmental', initialEnvironmental);
   const [environmentalLoading, setEnvironmentalLoading] = useState<boolean>(false);
+  const [environmentalHistory, setEnvironmentalHistory] = usePersistedState<EnvironmentalSnapshot[]>('environmentalHistory', []);
   const [scannedProducts, setScannedProducts] = usePersistedState<ProductScanResult[]>('scannedProducts', initialScannedProducts);
   const [triggerEntries, setTriggerEntries] = usePersistedState<TriggerEntry[]>('triggerEntries', initialTriggerEntries);
   const [foodItems, setFoodItems] = usePersistedState<FoodItem[]>('foodItems', initialFoodItems);
@@ -106,12 +108,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       .then(data => {
         setEnvironmental(data);
         addAuditLog('Çevresel Veri Güncellemesi', `${data.city} için canlı hava/AQI/polen verisi alındı.`);
+
+        // Bugünün gerçek ölçümünü geçmişe ekle/güncelle (İçgörüler sekmesi için).
+        // Yalnızca canlı veri başarıyla geldiğinde kaydedilir; yedek veri asla geçmişe yazılmaz.
+        const todayISO = new Date().toISOString().slice(0, 10);
+        const snapshot: EnvironmentalSnapshot = {
+          dateISO: todayISO,
+          temperature: data.temperature,
+          humidity: data.humidity,
+          uvIndex: data.uvIndex,
+          aqiOverall: data.aqi.overall,
+          pollenTotal: data.pollen.tree + data.pollen.grass + data.pollen.weed
+        };
+        setEnvironmentalHistory(prev => {
+          const withoutToday = prev.filter(s => s.dateISO !== todayISO);
+          return [...withoutToday, snapshot].slice(-180);
+        });
       })
       .catch(() => {
         setEnvironmental(prev => ({ ...prev, dataSource: 'yedek-veri' as const, fetchedAt: new Date().toLocaleString('tr-TR') }));
       })
       .finally(() => setEnvironmentalLoading(false));
-  }, [setEnvironmental, addAuditLog]);
+  }, [setEnvironmental, setEnvironmentalHistory, addAuditLog]);
 
   useEffect(() => {
     refreshEnvironmental();
@@ -275,7 +293,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const clearAllData = () => {
-    const dataKeys = ['activeProfile', 'cvHistory', 'symptomEntries', 'treatmentHistory', 'scannedProducts', 'triggerEntries', 'foodItems', 'meals', 'recipes', 'routines', 'calendarEvents', 'journalEntries', 'auditLogs', 'chatMessages'];
+    const dataKeys = ['activeProfile', 'cvHistory', 'symptomEntries', 'treatmentHistory', 'scannedProducts', 'triggerEntries', 'foodItems', 'meals', 'recipes', 'routines', 'calendarEvents', 'journalEntries', 'auditLogs', 'chatMessages', 'environmentalHistory'];
     dataKeys.forEach(key => {
       try {
         localStorage.removeItem(STORAGE_PREFIX + key);
@@ -297,6 +315,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCalendarEvents(initialCalendarEvents);
     setJournalEntries(initialJournalEntries);
     setChatMessages(initialChatMessages);
+    setEnvironmentalHistory([]);
     setAuditLogs([{
       id: `log-${Date.now()}`,
       timestamp: new Date().toLocaleString('tr-TR'),
@@ -335,6 +354,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       environmental,
       environmentalLoading,
       refreshEnvironmental,
+      environmentalHistory,
       scannedProducts,
       addScannedProduct,
       triggerEntries,

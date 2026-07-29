@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Bot, Send, Trash2, AlertTriangle, User, Globe } from 'lucide-react';
 import { useApp } from '../../context/useApp';
-import { getAssistantReply, searchOnlineFallback } from '../../lib/eczemaAssistant';
+import { getAssistantReply, getAssistantReplyWithFallback } from '../../lib/eczemaAssistant';
 import type { ChatMessage } from '../../types';
 
 const SUGGESTED_QUESTIONS = [
@@ -40,12 +40,12 @@ export const AIChatAssistant: React.FC = () => {
 
     await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 300));
 
-    let reply = getAssistantReply(trimmed);
-    if (reply.source === 'none') {
+    const localReply = getAssistantReply(trimmed);
+    let reply = localReply;
+    if (localReply.source === 'none') {
       setIsSearchingOnline(true);
-      const online = await searchOnlineFallback(trimmed);
+      reply = await getAssistantReplyWithFallback(trimmed);
       setIsSearchingOnline(false);
-      if (online) reply = online;
     }
 
     const assistantMessage: ChatMessage = {

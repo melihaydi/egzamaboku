@@ -2,6 +2,7 @@ import { createContext } from 'react';
 import type {
   CVAnalysis,
   EnvironmentalData,
+  EnvironmentalSnapshot,
   FamilyProfile,
   FoodItem,
   Meal,
@@ -52,6 +53,7 @@ export interface AppContextType {
   environmental: EnvironmentalData;
   environmentalLoading: boolean;
   refreshEnvironmental: () => void;
+  environmentalHistory: EnvironmentalSnapshot[];
 
   // Ürün Tarayıcı
   scannedProducts: ProductScanResult[];

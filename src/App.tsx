@@ -7,6 +7,7 @@ import type { ActiveTab } from './components/layout/Sidebar';
 import { VoiceAssistantModal } from './components/voice/VoiceAssistantModal';
 
 const FlareReport = lazy(() => import('./components/flare/FlareReport').then(m => ({ default: m.FlareReport })));
+const InsightsPanel = lazy(() => import('./components/insights/InsightsPanel').then(m => ({ default: m.InsightsPanel })));
 const ComputerVisionEngine = lazy(() => import('./components/cv/ComputerVisionEngine').then(m => ({ default: m.ComputerVisionEngine })));
 const TreatmentHistory = lazy(() => import('./components/treatment/TreatmentHistory').then(m => ({ default: m.TreatmentHistory })));
 const WeatherIntelligence = lazy(() => import('./components/environmental/WeatherIntelligence').then(m => ({ default: m.WeatherIntelligence })));
@@ -53,6 +54,7 @@ const MainLayout: React.FC = () => {
         <main className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full space-y-6 [padding-bottom:calc(env(safe-area-inset-bottom)+1rem)]">
           <Suspense fallback={<TabFallback />}>
             {activeTab === 'overview' && <FlareReport />}
+            {activeTab === 'insights' && <InsightsPanel />}
             {activeTab === 'cv' && <ComputerVisionEngine />}
             {activeTab === 'calendar' && <CalendarTimeline />}
             {activeTab === 'treatment' && <TreatmentHistory />}

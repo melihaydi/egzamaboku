@@ -12,10 +12,11 @@ import {
   ShieldCheck,
   ShieldAlert,
   MessageCircle,
+  TrendingUp,
   X
 } from 'lucide-react';
 
-export type ActiveTab = 'overview' | 'cv' | 'treatment' | 'environmental' | 'scanner' | 'triggers' | 'food' | 'routine' | 'journal' | 'calendar' | 'chat' | 'security';
+export type ActiveTab = 'overview' | 'insights' | 'cv' | 'treatment' | 'environmental' | 'scanner' | 'triggers' | 'food' | 'routine' | 'journal' | 'calendar' | 'chat' | 'security';
 
 interface SidebarProps {
   activeTab: ActiveTab;
@@ -27,6 +28,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isMobileOpen, onCloseMobile }) => {
   const navItems = [
     { id: 'overview' as ActiveTab, label: 'Alevlenme Raporu', icon: LayoutDashboard },
+    { id: 'insights' as ActiveTab, label: 'İçgörüler', icon: TrendingUp },
     { id: 'cv' as ActiveTab, label: 'Cilt Fotoğraf Analizi', icon: Scan },
     { id: 'calendar' as ActiveTab, label: 'Takvim & Zaman Çizelgesi', icon: CalendarDays },
     { id: 'treatment' as ActiveTab, label: 'Tedavi Geçmişi', icon: History },
