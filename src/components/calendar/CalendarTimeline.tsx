@@ -16,7 +16,8 @@ import {
   Copy,
   X,
   Check,
-  Download
+  Download,
+  Repeat
 } from 'lucide-react';
 import { useApp } from '../../context/useApp';
 import type { CalendarEvent, CalendarEventType } from '../../types';
@@ -44,6 +45,7 @@ export const CalendarTimeline: React.FC = () => {
   const [newType, setNewType] = useState<CalendarEventType>('note');
   const [newTitle, setNewTitle] = useState('');
   const [newDescription, setNewDescription] = useState('');
+  const [newRecurrence, setNewRecurrence] = useState<number>(0);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [duplicateDate, setDuplicateDate] = useState('');
@@ -76,6 +78,7 @@ export const CalendarTimeline: React.FC = () => {
     setNewTitle('');
     setNewDescription('');
     setNewType('note');
+    setNewRecurrence(0);
     setEditingId(null);
     setShowAddForm(false);
   };
@@ -85,7 +88,13 @@ export const CalendarTimeline: React.FC = () => {
     if (editingId) {
       updateCalendarEvent(editingId, { title: newTitle.trim(), type: newType, description: newDescription.trim() || undefined });
     } else {
-      addCalendarEvent({ dateISO: selectedDate, type: newType, title: newTitle.trim(), description: newDescription.trim() || undefined });
+      addCalendarEvent({
+        dateISO: selectedDate,
+        type: newType,
+        title: newTitle.trim(),
+        description: newDescription.trim() || undefined,
+        recurrenceIntervalDays: newRecurrence > 0 ? newRecurrence : undefined
+      });
     }
     resetForm();
   };
@@ -216,7 +225,7 @@ export const CalendarTimeline: React.FC = () => {
                 onChange={e => setNewDescription(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-white placeholder-neutral-500 focus:outline-none"
               />
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <select
                   value={newType}
                   onChange={e => setNewType(e.target.value as CalendarEventType)}
@@ -226,6 +235,19 @@ export const CalendarTimeline: React.FC = () => {
                     <option key={key} value={key}>{meta.label}</option>
                   ))}
                 </select>
+                {!editingId && (
+                  <select
+                    value={newRecurrence}
+                    onChange={e => setNewRecurrence(Number(e.target.value))}
+                    title="Tekrar"
+                    className="px-2.5 py-1.5 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-neutral-300 focus:outline-none"
+                  >
+                    <option value={0}>Tekrar Yok</option>
+                    <option value={7}>Her 7 Günde Bir</option>
+                    <option value={14}>Her 14 Günde Bir</option>
+                    <option value={28}>Her 28 Günde Bir</option>
+                  </select>
+                )}
                 <button
                   onClick={handleSaveEvent}
                   disabled={!newTitle.trim()}
@@ -234,6 +256,11 @@ export const CalendarTimeline: React.FC = () => {
                   <Check className="w-3.5 h-3.5" /> {editingId ? 'Kaydet' : 'Ekle'}
                 </button>
               </div>
+              {!editingId && newRecurrence > 0 && (
+                <p className="text-[10px] text-neutral-500">
+                  Önümüzdeki ~6 ay için {newRecurrence} günde bir tekrarlayan ayrı etkinlikler oluşturulacak; her biri sonradan bağımsız olarak düzenlenebilir/silinebilir.
+                </p>
+              )}
             </div>
           )}
 
@@ -266,7 +293,10 @@ export const CalendarTimeline: React.FC = () => {
                     <Icon className="w-4 h-4" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-white">{ev.title}</p>
+                    <p className="text-xs font-semibold text-white flex items-center gap-1.5">
+                      {ev.title}
+                      {ev.recurrenceGroupId && <Repeat className="w-3 h-3 text-neutral-500 shrink-0" />}
+                    </p>
                     {ev.description && <p className="text-[11px] text-neutral-400 mt-0.5">{ev.description}</p>}
                     <span className="text-[10px] text-neutral-500 uppercase font-semibold">{meta.label}</span>
                   </div>

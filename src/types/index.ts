@@ -188,6 +188,8 @@ export interface CalendarEvent {
   type: CalendarEventType;
   title: string;
   description?: string;
+  recurrenceIntervalDays?: number; // örn. 14 = "14 günde bir tekrarla"; yalnızca oluşturulduğunda gelecek tekrarları üretmek için kullanılır
+  recurrenceGroupId?: string; // aynı tekrar serisinden üretilen etkinlikleri birbirine bağlar
 }
 
 export interface FamilyProfile {

@@ -389,8 +389,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
   };
 
+  // Tekrarlayan etkinlikler (ör. 14 günde bir enjeksiyon) oluşturulduğu anda sınırlı bir
+  // ufka (180 gün / en fazla 30 tekrar) kadar gerçek, ayrı ayrı düzenlenebilir/silinebilir
+  // kayıtlar olarak üretilir — sonsuza kadar otomatik büyüyen gizli bir kural değildir.
+  const RECURRENCE_HORIZON_DAYS = 180;
+  const RECURRENCE_MAX_OCCURRENCES = 30;
+
   const addCalendarEvent = (event: Omit<CalendarEvent, 'id'>) => {
-    setCalendarEvents(prev => [{ ...event, id: `cal-${Date.now()}-${Math.random().toString(36).slice(2, 7)}` }, ...prev]);
+    const baseId = `cal-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
+    if (!event.recurrenceIntervalDays || event.recurrenceIntervalDays < 1) {
+      setCalendarEvents(prev => [{ ...event, id: baseId }, ...prev]);
+      return;
+    }
+
+    const groupId = `rec-${Date.now()}`;
+    const occurrences: CalendarEvent[] = [{ ...event, id: baseId, recurrenceGroupId: groupId }];
+    const [startY, startM, startD] = event.dateISO.split('-').map(Number);
+    const startMs = Date.UTC(startY, startM - 1, startD);
+
+    for (let i = 1; i < RECURRENCE_MAX_OCCURRENCES; i++) {
+      const offsetDays = event.recurrenceIntervalDays * i;
+      if (offsetDays > RECURRENCE_HORIZON_DAYS) break;
+      const next = new Date(startMs + offsetDays * 86400000);
+      const nextDateISO = `${next.getUTCFullYear()}-${String(next.getUTCMonth() + 1).padStart(2, '0')}-${String(next.getUTCDate()).padStart(2, '0')}`;
+      occurrences.push({
+        ...event,
+        id: `cal-${Date.now()}-${Math.random().toString(36).slice(2, 7)}-${i}`,
+        dateISO: nextDateISO,
+        recurrenceGroupId: groupId
+      });
+    }
+
+    setCalendarEvents(prev => [...occurrences, ...prev]);
   };
 
   const updateCalendarEvent = (id: string, updates: Partial<CalendarEvent>) => {
