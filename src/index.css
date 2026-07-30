@@ -1,5 +1,88 @@
 @import "tailwindcss";
 
+/* Açık Tema (Light Mode)
+   Bu uygulama tamamen Tailwind'in "neutral" gri skalası + beyaz/siyah ve birkaç
+   vurgu rengi (emerald/rose/amber/sky/violet/cyan/orange/yellow) üzerine kurulu;
+   hiçbir bileşen renkleri satır içi (inline) sabit değer olarak kullanmıyor, hepsi
+   Tailwind v4'ün ürettiği --color-* CSS değişkenlerinden geliyor. Bu sayede tüm
+   uygulamayı (40+ bileşen dosyasını) tek tek değiştirmeden, yalnızca bu değişkenleri
+   .light sınıfı altında tersine çevirerek gerçek ve tutarlı bir açık tema elde ederiz.
+   --color-black kasıtlı olarak DEĞİŞTİRİLMEZ: modal arka plan karartmaları (bg-black/60,
+   bg-black/80) ve kamera önizleme kutuları her iki temada da koyu kalmalıdır. */
+:root.light {
+  --color-white: oklch(10% 0 none);
+
+  --color-neutral-100: oklch(8% 0 none);
+  --color-neutral-200: oklch(14% 0 none);
+  --color-neutral-300: oklch(22% 0 none);
+  --color-neutral-400: oklch(38% 0 none);
+  --color-neutral-500: oklch(50% 0 none);
+  --color-neutral-600: oklch(63% 0 none);
+  --color-neutral-700: oklch(78% 0 none);
+  --color-neutral-800: oklch(89% 0 none);
+  --color-neutral-900: oklch(94% 0 none);
+  --color-neutral-950: oklch(98% 0 none);
+
+  --color-amber-100: oklch(3.8% .059 95.617);
+  --color-amber-200: oklch(7.6% .12 95.746);
+  --color-amber-300: oklch(12.1% .169 91.605);
+  --color-amber-400: oklch(17.2% .189 84.429);
+  --color-amber-500: oklch(23.1% .188 70.08);
+  --color-amber-700: oklch(44.5% .163 48.998);
+  --color-yellow-600: oklch(31.9% .162 75.834);
+
+  --color-emerald-100: oklch(5% .052 163.051);
+  --color-emerald-200: oklch(9.5% .093 164.15);
+  --color-emerald-300: oklch(15.5% .143 164.978);
+  --color-emerald-400: oklch(23.5% .177 163.223);
+  --color-emerald-500: oklch(30.4% .17 162.48);
+  --color-emerald-600: oklch(40.4% .145 163.225);
+  --color-emerald-700: oklch(49.2% .118 165.612);
+  --color-emerald-900: oklch(62.2% .077 168.94);
+  --color-emerald-950: oklch(73.8% .051 172.552);
+
+  --color-cyan-100: oklch(4.4% .045 203.388);
+  --color-cyan-300: oklch(13.5% .127 207.078);
+  --color-cyan-400: oklch(21.1% .154 211.53);
+  --color-cyan-500: oklch(28.5% .143 215.221);
+
+  --color-sky-100: oklch(4.9% .026 236.824);
+  --color-sky-300: oklch(17.2% .111 230.318);
+  --color-sky-400: oklch(25.4% .16 232.661);
+  --color-sky-500: oklch(31.5% .169 237.323);
+  --color-sky-700: oklch(50% .134 242.749);
+
+  --color-violet-100: oklch(5.7% .029 294.588);
+  --color-violet-300: oklch(18.9% .111 293.571);
+  --color-violet-400: oklch(29.8% .183 293.541);
+  --color-violet-500: oklch(39.4% .25 292.717);
+  --color-violet-700: oklch(50.9% .27 292.581);
+
+  --color-rose-100: oklch(5.9% .03 12.58);
+  --color-rose-200: oklch(10.8% .058 10.001);
+  --color-rose-300: oklch(19% .117 11.638);
+  --color-rose-400: oklch(28.8% .194 13.428);
+  --color-rose-500: oklch(35.5% .246 16.439);
+  --color-rose-600: oklch(41.4% .253 17.585);
+  --color-rose-700: oklch(48.6% .222 16.935);
+  --color-rose-900: oklch(59% .159 10.272);
+  --color-rose-950: oklch(72.9% .105 12.094);
+
+  --color-orange-500: oklch(29.5% .213 47.604);
+}
+
+:root.light ::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+
+:root.light ::-webkit-scrollbar-thumb {
+  background: #d4d4d4;
+}
+
+:root.light ::-webkit-scrollbar-thumb:hover {
+  background: #a3a3a3;
+}
+
 @layer base {
   body {
     @apply bg-neutral-950 text-neutral-100 antialiased selection:bg-neutral-300 selection:text-neutral-950;
