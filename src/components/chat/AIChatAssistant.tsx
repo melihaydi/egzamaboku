@@ -1,12 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Bot, Send, Trash2, AlertTriangle, User, Globe, Sparkles, BookOpen, HelpCircle } from 'lucide-react';
+import { Bot, Send, Trash2, AlertTriangle, User, Globe, Sparkles, HelpCircle } from 'lucide-react';
 import { useApp } from '../../context/useApp';
-import { getAssistantReply, getAssistantReplyWithFallback } from '../../lib/eczemaAssistant';
+import { getAssistantReply } from '../../lib/eczemaAssistant';
 import type { ChatMessage } from '../../types';
 
 const SOURCE_BADGES: Record<string, { label: string; icon: typeof Sparkles }> = {
   gemini: { label: 'Gemini AI', icon: Sparkles },
-  kb: { label: 'Yerel Bilgi Bankası', icon: BookOpen },
   online: { label: 'Wikipedia', icon: Globe },
   none: { label: 'Yanıt Bulunamadı', icon: HelpCircle }
 };
@@ -44,18 +43,12 @@ export const AIChatAssistant: React.FC = () => {
     addChatMessage(userMessage);
     setInput('');
     setIsTyping(true);
+    setIsSearchingOnline(true);
 
-    await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 300));
-
-    // Selamlama/teşekkür dışındaki HER gerçek soru için (yerel bilgi tabanında eşleşse bile)
-    // önce Gemini AI'ya danışılır; yalnızca hızlı selamlama/teşekkür yolları tamamen yerelde kalır.
-    const quickCheck = getAssistantReply(trimmed);
-    let reply = quickCheck;
-    if (quickCheck.source !== 'greeting' && quickCheck.source !== 'thanks') {
-      setIsSearchingOnline(true);
-      reply = await getAssistantReplyWithFallback(trimmed);
-      setIsSearchingOnline(false);
-    }
+    // Selamlama/teşekkür dışındaki HER soru doğrudan Gemini AI'ya gider — yapay bir
+    // gecikme eklenmez, mümkün olan en hızlı şekilde yanıt döner.
+    const reply = await getAssistantReply(trimmed);
+    setIsSearchingOnline(false);
 
     const assistantMessage: ChatMessage = {
       id: `chat-${Date.now()}-a`,
@@ -90,7 +83,7 @@ export const AIChatAssistant: React.FC = () => {
             </h2>
           </div>
           <p className="text-xs text-neutral-400 mt-1">
-            Egzama, cilt bakımı ve tedaviler hakkında sorularını yanıtlar.
+            Egzama, cilt bakımı ve tedaviler hakkındaki sorularını Gemini AI ile yanıtlar.
           </p>
         </div>
 

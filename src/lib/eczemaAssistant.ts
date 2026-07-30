@@ -1,8 +1,9 @@
-// Yerel Egzama & Dermatoloji Bilgi Motoru
-// Bu modül canlı/internete bağlı bir yapay zeka modeli DEĞİLDİR: tarayıcıda, tamamen
-// yerel olarak çalışan, kürasyonu yapılmış kanıta dayalı bir soru-cevap eşleştirme
-// motorudur. Amaç, kullanıcıya hızlı ve güvenilir eğitici bilgi sunmaktır; hiçbir
-// zaman tanı koymaz ve hekim muayenesinin yerine geçmez.
+// Egzama & Dermatoloji Sohbet Asistanı
+// ESKİDEN burada yerel bir anahtar-kelime eşleştirmeli bilgi bankası önce yanıt arar,
+// Gemini AI yalnızca eşleşme yoksa devreye girerdi. Kullanıcı talebi üzerine bu davranış
+// KALDIRILDI: artık selamlama/teşekkür gibi çok kısa kalıplar dışındaki HER soru doğrudan
+// Gemini AI'ya gönderiliyor. Aşağıdaki `knowledgeBase` dizisi yalnızca referans olarak
+// saklanıyor; canlı sohbet akışında artık hiçbir anahtar kelime eşleştirmesi yapılmıyor.
 
 export interface KnowledgeEntry {
   id: string;
@@ -279,85 +280,32 @@ export interface AssistantReply {
   text: string;
   matchedTopic?: string;
   urgent?: boolean;
-  source?: 'kb' | 'greeting' | 'thanks' | 'gemini' | 'online' | 'none';
+  source?: 'greeting' | 'thanks' | 'gemini' | 'online' | 'none';
 }
 
 const GREETING_KEYWORDS = ['merhaba', 'selam', 'iyi gunler', 'gunaydin', 'iyi aksamlar', 'nasilsin'];
 const THANKS_KEYWORDS = ['tesekkur', 'sagol', 'sagolun', 'elinize saglik'];
 
-// Çok kısa/yaygın Türkçe işlev kelimeleri (soru eki, bağlaç vb.) hemen her cümlede geçebileceğinden
-// kısmi eşleşme puanlamasında hiçbir zaman tek başına anlamlı bir sinyal sayılmaz.
-const STOP_WORDS = new Set(['mi', 'mu', 'mu', 'ne', 'nedir', 'ile', 'de', 'da', 've', 'veya', 'icin', 'gibi', 'var', 'yok', 'ki', 'bu', 'su', 'bir', 'cok', 'nasil', 'olur', 'olan']);
-
-// Türkçe eklerin (kaşıntı/kaşıntım/kaşıntıyı gibi) kök üzerinden yakalanmasına izin verir:
-// soru kelimesi, anahtar kelime kökü ile başlıyorsa eşleşme sayılır. Tersi (kısa bir soru
-// kelimesinin uzun bir anahtar kelimenin öneki olması, örn. "ne" -> "nemlendirici") KASITLI
-// olarak kontrol edilmez; aksi halde "ne" gibi kısa/yaygın kelimeler alakasız konularla eşleşir.
-function wordMatches(questionWords: string[], keywordWord: string): boolean {
-  if (keywordWord.length < 4) return questionWords.includes(keywordWord);
-  return questionWords.some(w => w.startsWith(keywordWord));
-}
-
-function scoreKeyword(question: string, questionWords: string[], keyword: string): number {
-  if (question.includes(keyword)) {
-    return keyword.split(' ').length * 3; // tam ifade eşleşmesi en güçlü sinyaldir
-  }
-  const keywordWords = keyword.split(' ').filter(w => !STOP_WORDS.has(w));
-  if (keywordWords.length === 0) return 0;
-  const matchedCount = keywordWords.filter(kw => wordMatches(questionWords, kw)).length;
-  if (matchedCount === 0) return 0;
-  if (matchedCount === keywordWords.length) return keywordWords.length * 2; // anlamlı kelimelerin tümü farklı sırayla mevcut
-  return matchedCount; // kısmi eşleşme
-}
-
-const MIN_MATCH_SCORE = 2;
-
-export function getAssistantReply(rawQuestion: string): AssistantReply {
+// Selamlama/teşekkür gibi çok kısa, konu dışı mesajlar için ağ isteği olmadan anında yanıt.
+// Tam bir niyet analizi değildir; yalnızca çok kısa (≤4 kelime) ve bu kalıplarla başlayan
+// mesajları yakalar — aksi halde null döner ve mesaj doğrudan Gemini AI'ya gönderilir.
+function detectQuickIntent(rawQuestion: string): AssistantReply | null {
   const question = normalize(rawQuestion);
-
-  if (!question.trim()) {
-    return { text: 'Egzama, cilt bakımı veya kullandığınız tedaviler hakkında bir soru yazabilirsiniz.' };
-  }
-
   const questionWords = question.split(/\s+/).filter(Boolean);
+  if (questionWords.length === 0 || questionWords.length > 4) return null;
 
-  let bestEntry: KnowledgeEntry | null = null;
-  let bestScore = 0;
-
-  for (const entry of knowledgeBase) {
-    let score = 0;
-    for (const keyword of entry.keywords) {
-      score += scoreKeyword(question, questionWords, keyword);
-    }
-    if (score > bestScore) {
-      bestScore = score;
-      bestEntry = entry;
-    }
-  }
-
-  // Bilgi tabanında gerçek bir konu eşleşmesi bulunduysa, mesajın başında bir
-  // selamlama olsa bile (Örn: "Merhaba, kaşıntım çok fazla ne yapmalıyım?")
-  // asıl soru yanıtlanır; selamlama asla asıl soruyu görmezden gelmez.
-  if (bestEntry && bestScore >= MIN_MATCH_SCORE) {
-    return { text: bestEntry.answer, matchedTopic: bestEntry.topic, urgent: bestEntry.urgent, source: 'kb' };
-  }
-
-  // Konuyla ilgili bir eşleşme bulunamadıysa ve mesaj kısa/yalnızca selamlama niteliğindeyse
-  if (questionWords.length <= 4 && GREETING_KEYWORDS.some(k => question.includes(k))) {
+  if (GREETING_KEYWORDS.some(k => question.includes(k))) {
     return {
-      text: 'Merhaba! Egzama, cilt bariyeri, tedaviler (Dupixent, Cibinqo, Siklosporin, Prednizon vb.) veya günlük bakım hakkında istediğiniz soruyu sorabilirsiniz.',
+      text: 'Merhaba! Egzama, cilt bariyeri, tedaviler (Dupixent, Cibinqo, Siklosporin, Prednizon vb.) veya günlük bakım hakkında istediğin soruyu sorabilirsin.',
       source: 'greeting'
     };
   }
 
   if (THANKS_KEYWORDS.some(k => question.includes(k))) {
-    return { text: 'Rica ederim! Başka bir sorunuz olursa buradayım. Ciddi veya beklenmedik belirtilerde her zaman hekiminize danışmayı unutmayın.', source: 'thanks' };
+    return { text: 'Rica ederim! Başka bir sorun olursa buradayım. Ciddi veya beklenmedik belirtilerde her zaman hekimine danışmayı unutma.', source: 'thanks' };
   }
 
-  return {
-    text: 'Bu konuda hazır bir yanıtım yok. Sorunuzu farklı veya daha basit kelimelerle tekrar dener misin? Ciddi veya hızla kötüleşen belirtiler için lütfen bir dermatoloğa başvurun.',
-    source: 'none'
-  };
+  return null;
 }
 
 const WIKIPEDIA_LANG = 'tr';
@@ -397,11 +345,11 @@ async function fetchWikipediaSummary(title: string): Promise<string | null> {
   return data?.extract || null;
 }
 
-// Yerel bilgi tabanında gerçek bir eşleşme bulunamadığında son çare olarak Wikipedia'da
-// arama yapar (ücretsiz, anahtarsız, herkese açık API). Bu bir Google araması DEĞİLDİR
-// (Google Arama API'si ücretli bir anahtar ve sunucu taraflı bir proxy gerektirir, bu
-// istemci-taraflı uygulamada bulunmuyor); ancak yerel kürasyonlu bilgi tabanının kapsamını
-// gerçek, canlı bir internet kaynağıyla genişletilmiş bir soru-cevap kapasitesine ulaştırır.
+// Gemini yanıt veremediğinde (ağ hatası, kota, hız sınırı) son çare olarak Wikipedia'da arama
+// yapar (ücretsiz, anahtarsız, herkese açık API). Bu bir Google araması DEĞİLDİR (Google Arama
+// API'si ücretli bir anahtar ve sunucu taraflı bir proxy gerektirir, bu istemci-taraflı
+// uygulamada bulunmuyor); yalnızca Gemini gerçekten ulaşılamaz olduğunda devreye giren bir
+// yedek kaynaktır.
 export async function searchOnlineFallback(rawQuestion: string): Promise<AssistantReply | null> {
   try {
     const title = await searchWikipediaTitle(rawQuestion);
@@ -409,7 +357,7 @@ export async function searchOnlineFallback(rawQuestion: string): Promise<Assista
     const summary = await fetchWikipediaSummary(title);
     if (!summary) return null;
     return {
-      text: `${summary}\n\n(Bu yanıt Wikipedia'dan otomatik olarak bulundu; bu uygulamanın kürasyonlu bilgi tabanının parçası değildir. Sağlıkla ilgili kararlar için mutlaka bir hekime danışın.)`,
+      text: `${summary}\n\n(Bu yanıt Wikipedia'dan otomatik olarak bulundu. Sağlıkla ilgili kararlar için mutlaka bir hekime danışın.)`,
       matchedTopic: title,
       source: 'online'
     };
@@ -420,9 +368,9 @@ export async function searchOnlineFallback(rawQuestion: string): Promise<Assista
 
 // Gemini API'yi DOĞRUDAN tarayıcıdan değil, bir Netlify Function üzerinden çağırır;
 // böylece API anahtarı sunucu tarafında (ortam değişkeni) kalır ve istemci koduna hiç sızmaz.
-// Fonksiyon dağıtılmamışsa (örn. yerel `vite dev` ile, Netlify olmadan) bu istek 404 döner
-// ve searchOnlineFallback'e (Wikipedia) sorunsuzca geçilir.
-async function callGeminiFallback(rawQuestion: string): Promise<AssistantReply | null> {
+// Fonksiyon dağıtılmamışsa (örn. yerel `vite dev` ile, Netlify olmadan), anahtar tanımlı
+// değilse veya hız sınırına takılırsa bu istek başarısızlıkla döner ve Wikipedia'ya geçilir.
+async function callGemini(rawQuestion: string): Promise<AssistantReply | null> {
   try {
     const res = await fetchWithTimeout('/.netlify/functions/gemini-chat', {
       method: 'POST',
@@ -432,34 +380,34 @@ async function callGeminiFallback(rawQuestion: string): Promise<AssistantReply |
     if (!res.ok) return null;
     const data = await res.json();
     if (!data?.text) return null;
-    return {
-      text: `${data.text}\n\n(Bu yanıt Gemini AI tarafından oluşturuldu; bu uygulamanın kürasyonlu bilgi tabanının parçası değildir.)`,
-      matchedTopic: 'Gemini AI',
-      source: 'gemini'
-    };
+    return { text: data.text, matchedTopic: 'Gemini AI', source: 'gemini' };
   } catch {
     return null;
   }
 }
 
-// Selamlama ve teşekkür gibi hızlı yollar hâlâ tamamen yerelde (ağ isteği olmadan) yanıtlanır.
-// Gerçek bir soru için önce Gemini AI'ya danışılır (kullanıcının açıkça talep ettiği davranış);
-// Gemini kullanılamıyorsa (API anahtarı tanımlı değil, ağ hatası veya Netlify Functions'sız bir
-// ortamda çalışılıyorsa, örn. yerel `vite dev`) kürasyonlu yerel bilgi tabanına, o da eşleşmezse
-// son çare olarak Wikipedia'ya düşülür.
-export async function getAssistantReplyWithFallback(rawQuestion: string): Promise<AssistantReply> {
-  const localReply = getAssistantReply(rawQuestion);
-  if (localReply.source === 'greeting' || localReply.source === 'thanks') {
-    return localReply;
+// Selamlama/teşekkür dışındaki HER mesaj doğrudan Gemini AI'ya gönderilir — yerel anahtar
+// kelime bilgi bankası artık canlı akışta hiç kullanılmıyor. Gemini bir nedenle (ağ hatası,
+// kota, anahtar eksik, hız sınırı) yanıt veremezse Wikipedia'dan gerçek bir özetle son bir
+// deneme yapılır; o da başarısız olursa dürüst bir "şu an yanıt oluşturulamadı" mesajı
+// döndürülür — "bu konuda bilgim yok" gibi konu bilgisizliği ima eden bir ifade KULLANILMAZ.
+export async function getAssistantReply(rawQuestion: string): Promise<AssistantReply> {
+  const trimmed = rawQuestion.trim();
+  if (!trimmed) {
+    return { text: 'Egzama, cilt bakımı veya kullandığın tedaviler hakkında bir soru yazabilirsin.', source: 'none' };
   }
 
-  const geminiReply = await callGeminiFallback(rawQuestion);
+  const quickIntent = detectQuickIntent(trimmed);
+  if (quickIntent) return quickIntent;
+
+  const geminiReply = await callGemini(trimmed);
   if (geminiReply) return geminiReply;
 
-  if (localReply.source === 'kb') {
-    return localReply;
-  }
+  const onlineReply = await searchOnlineFallback(trimmed);
+  if (onlineReply) return onlineReply;
 
-  const onlineReply = await searchOnlineFallback(rawQuestion);
-  return onlineReply || localReply;
+  return {
+    text: 'Şu anda yanıt oluşturulamadı; geçici bir bağlantı sorunu olabilir. Lütfen birkaç saniye sonra tekrar dener misin? Ciddi veya hızla kötüleşen belirtiler için lütfen bir hekime başvur.',
+    source: 'none'
+  };
 }
