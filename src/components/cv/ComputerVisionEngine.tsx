@@ -56,8 +56,8 @@ const METRIC_DEFS: Array<{ key: keyof Pick<CVAnalysis, 'redness' | 'scaling' | '
 ];
 
 export const ComputerVisionEngine: React.FC = () => {
-  const { cvHistory, addCVAnalysis, t } = useApp();
-  const [selectedLocation, setSelectedLocation] = useState<BodyLocation>('Sol Kol');
+  const { cvHistory, addCVAnalysis, activeProfile, t } = useApp();
+  const [selectedLocation, setSelectedLocation] = useState<BodyLocation>(activeProfile.primaryLocations[0] || 'Sol Kol');
   const [activeAnalysis, setActiveAnalysis] = useState<CVAnalysis>(cvHistory[0]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showReasoning, setShowReasoning] = useState(false);

@@ -1,6 +1,9 @@
 import React, { useRef, useState } from 'react';
 import { X, Camera, Trash2, Save, User } from 'lucide-react';
 import { useApp } from '../../context/useApp';
+import type { BodyLocation } from '../../types';
+
+const BODY_AREAS: BodyLocation[] = ['Sol Kol', 'Sağ Kol', 'Yüz & Boyun', 'Eller & Bilekler', 'Göğüs & Sırt', 'Bacaklar'];
 
 const MAX_SOURCE_FILE_BYTES = 8 * 1024 * 1024; // 8MB - kaynak dosya boyutu sınırı
 const TARGET_DIMENSION = 512; // Depolamadan önce fotoğraf bu boyuta küçültülür
@@ -41,8 +44,13 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ onClose }) =
   const [age, setAge] = useState(String(activeProfile.age));
   const [eczemaType, setEczemaType] = useState(activeProfile.eczemaType);
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(activeProfile.avatarUrl);
+  const [primaryLocations, setPrimaryLocations] = useState<BodyLocation[]>(activeProfile.primaryLocations);
   const [photoError, setPhotoError] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const toggleLocation = (loc: BodyLocation) => {
+    setPrimaryLocations(prev => prev.includes(loc) ? prev.filter(l => l !== loc) : [...prev, loc]);
+  };
 
   const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -72,7 +80,8 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ onClose }) =
       name: name.trim() || activeProfile.name,
       age: Number.isFinite(parsedAge) && parsedAge > 0 ? parsedAge : activeProfile.age,
       eczemaType: eczemaType.trim() || activeProfile.eczemaType,
-      avatarUrl
+      avatarUrl,
+      primaryLocations
     });
     onClose();
   };
@@ -168,6 +177,27 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({ onClose }) =
                 onChange={e => setEczemaType(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-sm text-white focus:outline-none"
               />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[10px] font-bold uppercase text-neutral-400 block mb-1">Genelde Etkilenen Bölgeler</label>
+            <div className="flex flex-wrap gap-1.5">
+              {BODY_AREAS.map(loc => {
+                const selected = primaryLocations.includes(loc);
+                return (
+                  <button
+                    key={loc}
+                    type="button"
+                    onClick={() => toggleLocation(loc)}
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-all ${
+                      selected ? 'bg-white text-neutral-950 border-white' : 'bg-neutral-950 text-neutral-400 border-neutral-700 hover:text-neutral-200'
+                    }`}
+                  >
+                    {loc}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

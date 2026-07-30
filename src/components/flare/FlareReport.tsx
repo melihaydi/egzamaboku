@@ -122,6 +122,11 @@ export const FlareReport: React.FC = () => {
         <p className="text-sm text-neutral-400 mt-1">
           {activeProfile.name} için — belirtilerini SEN puanlarsın, yapay zeka yalnızca yüklediğin fotoğrafta görüneni ölçer. Hiçbir belirti skoru otomatik tahmin edilmez.
         </p>
+        {activeProfile.primaryLocations.length > 0 && (
+          <p className="text-[11px] text-neutral-500 mt-2">
+            Genelde etkilenen bölgeler: {activeProfile.primaryLocations.join(', ')}
+          </p>
+        )}
       </div>
 
       {/* Birleşik Skor */}
