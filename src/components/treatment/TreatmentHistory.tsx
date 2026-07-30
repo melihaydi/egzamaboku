@@ -19,6 +19,16 @@ import { BodyMap } from '../shared/BodyMap';
 
 const BODY_AREAS: BodyLocation[] = ['Sol Kol', 'Sağ Kol', 'Yüz & Boyun', 'Eller & Bilekler', 'Göğüs & Sırt', 'Bacaklar'];
 
+// "YYYY-MM" biçimindeki tarihleri okunabilir Türkçe ay/yıl olarak gösterir. Eski (göç
+// edilmemiş) serbest metin tarihleri bu biçimle eşleşmezse olduğu gibi gösterilir — veri
+// kaybı veya çökme olmaz.
+function formatTreatmentDate(value: string): string {
+  const match = /^(\d{4})-(\d{2})$/.exec(value);
+  if (!match) return value;
+  const [, year, month] = match;
+  return new Date(Number(year), Number(month) - 1, 1).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
+}
+
 export const TreatmentHistory: React.FC = () => {
   const { treatmentHistory, addTreatmentEntry, updateTreatmentEntry, removeTreatmentEntry, cvHistory, t } = useApp();
   const [showForm, setShowForm] = useState<boolean>(false);
@@ -90,11 +100,13 @@ export const TreatmentHistory: React.FC = () => {
     setShowForm(true);
   };
 
-  const filteredHistory = treatmentHistory.filter(entry => {
-    const matchesMed = !filterMedication || entry.medicationName.toLowerCase().includes(filterMedication.toLowerCase());
-    const matchesArea = filterBodyArea === 'Tümü' || entry.bodyArea === filterBodyArea;
-    return matchesMed && matchesArea;
-  });
+  const filteredHistory = treatmentHistory
+    .filter(entry => {
+      const matchesMed = !filterMedication || entry.medicationName.toLowerCase().includes(filterMedication.toLowerCase());
+      const matchesArea = filterBodyArea === 'Tümü' || entry.bodyArea === filterBodyArea;
+      return matchesMed && matchesArea;
+    })
+    .sort((a, b) => b.startDate.localeCompare(a.startDate));
 
   // Gerçek fotoğraf analizi geçmişinden ilerleme grafiği: etkilenen alan (cm²) zaman içinde
   const progressPoints = useMemo(() => {
@@ -232,8 +244,7 @@ export const TreatmentHistory: React.FC = () => {
             <div>
               <label className="text-[10px] font-bold uppercase text-neutral-400 block mb-1">Başlangıç Tarihi</label>
               <input
-                type="text"
-                placeholder="Örn: Şubat 2026"
+                type="month"
                 value={startDate}
                 onChange={e => setStartDate(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white placeholder-neutral-500 focus:outline-none"
@@ -255,8 +266,7 @@ export const TreatmentHistory: React.FC = () => {
               <div>
                 <label className="text-[10px] font-bold uppercase text-neutral-400 block mb-1">Bitiş Tarihi</label>
                 <input
-                  type="text"
-                  placeholder="Örn: Şubat 2026"
+                  type="month"
                   value={endDate}
                   onChange={e => setEndDate(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white placeholder-neutral-500 focus:outline-none"
@@ -338,9 +348,9 @@ export const TreatmentHistory: React.FC = () => {
 
                   <div className="flex items-center gap-2 text-[11px] font-semibold text-neutral-300">
                     <Clock className="w-3.5 h-3.5" />
-                    <span>{entry.startDate}</span>
+                    <span>{formatTreatmentDate(entry.startDate)}</span>
                     <ArrowRight className="w-3 h-3 text-neutral-500" />
-                    <span>{entry.endDate || 'Günümüz'}</span>
+                    <span>{entry.endDate ? formatTreatmentDate(entry.endDate) : 'Günümüz'}</span>
                     <span className="text-neutral-500">•</span>
                     <span className="text-neutral-300">{entry.durationLabel}</span>
                   </div>
