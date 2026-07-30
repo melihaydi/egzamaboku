@@ -8,7 +8,7 @@ import {
   Info
 } from 'lucide-react';
 import { useApp } from '../../context/useApp';
-import type { FoodRating } from '../../types';
+import type { FoodRating, FoodItem, Recipe } from '../../types';
 
 const RATING_STYLE: Record<FoodRating, string> = {
   'Güvenli': 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
@@ -34,6 +34,19 @@ export const FoodIntelligence: React.FC = () => {
   const [recipeNotes, setRecipeNotes] = useState('');
 
   const triggeringFoods = foodItems.filter(f => f.rating === 'Her Zaman Tetikliyor');
+
+  // Tarifin malzemelerini kullanıcının kendi besin derecelendirmeleriyle karşılaştırır — hiçbir
+  // yapay zeka tahmini yapılmaz, yalnızca kullanıcının zaten girdiği verilerin çapraz kontrolüdür.
+  const getMatchingRatedFoods = (recipe: Recipe): FoodItem[] => {
+    return foodItems.filter(food => {
+      if (food.rating === 'Güvenli') return false;
+      const foodNameLower = food.name.toLowerCase();
+      return recipe.ingredients.some(ing => {
+        const ingLower = ing.toLowerCase();
+        return ingLower.includes(foodNameLower) || foodNameLower.includes(ingLower);
+      });
+    });
+  };
 
   const handleAddFood = () => {
     if (!newFoodName.trim()) return;
@@ -259,18 +272,29 @@ export const FoodIntelligence: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {recipes.map(recipe => (
-              <div key={recipe.id} className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-semibold text-white">{recipe.name}</h4>
-                  <button onClick={() => removeRecipe(recipe.id)} className="p-1 rounded-lg text-neutral-600 hover:text-rose-400 hover:bg-rose-500/10">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+            {recipes.map(recipe => {
+              const matchingFoods = getMatchingRatedFoods(recipe);
+              return (
+                <div key={recipe.id} className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-semibold text-white">{recipe.name}</h4>
+                    <button onClick={() => removeRecipe(recipe.id)} className="p-1 rounded-lg text-neutral-600 hover:text-rose-400 hover:bg-rose-500/10">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-neutral-400">{recipe.ingredients.join(', ')}</p>
+                  {recipe.notes && <p className="text-[11px] text-neutral-500 italic">"{recipe.notes}"</p>}
+                  {matchingFoods.length > 0 && (
+                    <div className="p-2 rounded-lg bg-rose-500/10 border border-rose-500/25 text-[10px] text-rose-300 flex items-start gap-1.5">
+                      <Info className="w-3 h-3 shrink-0 mt-0.5" />
+                      <span>
+                        Kendi kayıtlarında {matchingFoods.map(f => `"${f.name}" (${f.rating})`).join(', ')} olarak işaretli bir malzeme içeriyor.
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <p className="text-[11px] text-neutral-400">{recipe.ingredients.join(', ')}</p>
-                {recipe.notes && <p className="text-[11px] text-neutral-500 italic">"{recipe.notes}"</p>}
-              </div>
-            ))}
+              );
+            })}
             {recipes.length === 0 && <p className="text-xs text-neutral-500 text-center py-6 md:col-span-2">Henüz kayıtlı tarif yok.</p>}
           </div>
         </div>
