@@ -7,6 +7,7 @@ import type { ActiveTab } from './components/layout/Sidebar';
 import { VoiceAssistantModal } from './components/voice/VoiceAssistantModal';
 import { ReminderScheduler } from './components/notifications/ReminderScheduler';
 import { AppLockGate } from './components/security/AppLockGate';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const FlareReport = lazy(() => import('./components/flare/FlareReport').then(m => ({ default: m.FlareReport })));
 const InsightsPanel = lazy(() => import('./components/insights/InsightsPanel').then(m => ({ default: m.InsightsPanel })));
@@ -54,21 +55,23 @@ const MainLayout: React.FC = () => {
         />
 
         <main className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full space-y-6 [padding-bottom:calc(env(safe-area-inset-bottom)+1rem)]">
-          <Suspense fallback={<TabFallback />}>
-            {activeTab === 'overview' && <FlareReport />}
-            {activeTab === 'insights' && <InsightsPanel />}
-            {activeTab === 'cv' && <ComputerVisionEngine />}
-            {activeTab === 'calendar' && <CalendarTimeline />}
-            {activeTab === 'treatment' && <TreatmentHistory />}
-            {activeTab === 'chat' && <AIChatAssistant />}
-            {activeTab === 'environmental' && <WeatherIntelligence />}
-            {activeTab === 'scanner' && <IngredientScanner />}
-            {activeTab === 'triggers' && <TriggerJournal />}
-            {activeTab === 'food' && <FoodIntelligence />}
-            {activeTab === 'routine' && <RoutineBuilder />}
-            {activeTab === 'journal' && <HealthJournal />}
-            {activeTab === 'security' && <PrivacySettings />}
-          </Suspense>
+          <ErrorBoundary key={activeTab} compact>
+            <Suspense fallback={<TabFallback />}>
+              {activeTab === 'overview' && <FlareReport />}
+              {activeTab === 'insights' && <InsightsPanel />}
+              {activeTab === 'cv' && <ComputerVisionEngine />}
+              {activeTab === 'calendar' && <CalendarTimeline />}
+              {activeTab === 'treatment' && <TreatmentHistory />}
+              {activeTab === 'chat' && <AIChatAssistant />}
+              {activeTab === 'environmental' && <WeatherIntelligence />}
+              {activeTab === 'scanner' && <IngredientScanner />}
+              {activeTab === 'triggers' && <TriggerJournal />}
+              {activeTab === 'food' && <FoodIntelligence />}
+              {activeTab === 'routine' && <RoutineBuilder />}
+              {activeTab === 'journal' && <HealthJournal />}
+              {activeTab === 'security' && <PrivacySettings />}
+            </Suspense>
+          </ErrorBoundary>
         </main>
       </div>
 
@@ -80,10 +83,12 @@ const MainLayout: React.FC = () => {
 
 export default function App() {
   return (
-    <AppProvider>
-      <AppLockGate>
-        <MainLayout />
-      </AppLockGate>
-    </AppProvider>
+    <ErrorBoundary>
+      <AppProvider>
+        <AppLockGate>
+          <MainLayout />
+        </AppLockGate>
+      </AppProvider>
+    </ErrorBoundary>
   );
 }
