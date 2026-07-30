@@ -112,6 +112,9 @@ export interface AppContextType {
   setPinCode: (pin: string) => Promise<void>;
   clearPinCode: () => void;
   verifyPinCode: (pin: string) => Promise<boolean>;
+  pinLockedUntil: number | null;
+  recordFailedPinAttempt: () => void;
+  resetPinAttempts: () => void;
 
   // Loglar
   auditLogs: AuditLogEntry[];

@@ -149,6 +149,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [voiceAssistantOpen, setVoiceAssistantOpen] = useState<boolean>(false);
   const [pinLock, setPinLock] = usePersistedState<{ hash: string; salt: string } | null>('pinLock', null);
+  const [pinFailedAttempts, setPinFailedAttempts] = usePersistedState<number>('pinFailedAttempts', 0);
+  const [pinLockedUntil, setPinLockedUntil] = usePersistedState<number | null>('pinLockedUntil', null);
 
   const addAuditLog = useCallback((action: string, details: string) => {
     const newEntry: AuditLogEntry = {
@@ -389,11 +391,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const salt = generateSalt();
     const hash = await hashPin(pin, salt);
     setPinLock({ hash, salt });
+    setPinFailedAttempts(0);
+    setPinLockedUntil(null);
     addAuditLog('Uygulama Kilidi', 'PIN kodu oluşturuldu/güncellendi.');
   };
 
   const clearPinCode = () => {
     setPinLock(null);
+    setPinFailedAttempts(0);
+    setPinLockedUntil(null);
     addAuditLog('Uygulama Kilidi', 'PIN kodu kaldırıldı.');
   };
 
@@ -401,6 +407,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!pinLock) return true;
     const attemptHash = await hashPin(pin, pinLock.salt);
     return attemptHash === pinLock.hash;
+  };
+
+  // Art arda yanlış PIN denemelerinde artan süreli bir bekleme uygular (basit kaba kuvvet
+  // koruması). Sayaç ve kilit süresi localStorage'da tutulur; sayfa yenilense bile sıfırlanmaz.
+  const recordFailedPinAttempt = () => {
+    const nextAttempts = pinFailedAttempts + 1;
+    setPinFailedAttempts(nextAttempts);
+    let lockoutMs = 0;
+    if (nextAttempts >= 15) lockoutMs = 10 * 60_000;
+    else if (nextAttempts >= 10) lockoutMs = 2 * 60_000;
+    else if (nextAttempts >= 5) lockoutMs = 30_000;
+    if (lockoutMs > 0) {
+      setPinLockedUntil(Date.now() + lockoutMs);
+    }
+  };
+
+  const resetPinAttempts = () => {
+    setPinFailedAttempts(0);
+    setPinLockedUntil(null);
   };
 
   // Yalnızca AKTİF profilin sağlık verilerini sıfırlar; diğer aile profilleri etkilenmez.
@@ -500,6 +525,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setPinCode,
       clearPinCode,
       verifyPinCode,
+      pinLockedUntil,
+      recordFailedPinAttempt,
+      resetPinAttempts,
       auditLogs,
       addAuditLog,
       chatMessages,
