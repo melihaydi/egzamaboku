@@ -8,6 +8,7 @@ import { VoiceAssistantModal } from './components/voice/VoiceAssistantModal';
 import { ReminderScheduler } from './components/notifications/ReminderScheduler';
 import { AppLockGate } from './components/security/AppLockGate';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { InstallPrompt } from './components/pwa/InstallPrompt';
 
 const FlareReport = lazy(() => import('./components/flare/FlareReport').then(m => ({ default: m.FlareReport })));
 const InsightsPanel = lazy(() => import('./components/insights/InsightsPanel').then(m => ({ default: m.InsightsPanel })));
@@ -77,6 +78,7 @@ const MainLayout: React.FC = () => {
 
       <VoiceAssistantModal />
       <ReminderScheduler />
+      <InstallPrompt />
     </div>
   );
 };
