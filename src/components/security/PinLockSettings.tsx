@@ -89,7 +89,7 @@ export const PinLockSettings: React.FC = () => {
             <button onClick={handleCreate} className="flex-1 py-2 rounded-xl bg-white hover:bg-neutral-200 text-neutral-950 font-semibold text-xs flex items-center justify-center gap-1.5">
               <Check className="w-3.5 h-3.5" /> Kaydet
             </button>
-            <button onClick={resetForm} className="p-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700">
+            <button onClick={resetForm} aria-label="Vazgeç" className="p-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700">
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -111,7 +111,7 @@ export const PinLockSettings: React.FC = () => {
             <button onClick={handleRemove} className="flex-1 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-semibold text-xs border border-rose-500/40 flex items-center justify-center gap-1.5">
               <Check className="w-3.5 h-3.5" /> PIN'i Kaldır
             </button>
-            <button onClick={resetForm} className="p-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700">
+            <button onClick={resetForm} aria-label="Vazgeç" className="p-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700">
               <X className="w-3.5 h-3.5" />
             </button>
           </div>

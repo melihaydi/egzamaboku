@@ -142,11 +142,11 @@ export const CalendarTimeline: React.FC = () => {
         {/* Takvim Izgarası */}
         <div className="lg:col-span-7 bg-neutral-900/60 p-6 rounded-3xl border border-neutral-800 space-y-4">
           <div className="flex items-center justify-between">
-            <button onClick={() => setViewDate(new Date(year, month - 1, 1))} className="p-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-300">
+            <button onClick={() => setViewDate(new Date(year, month - 1, 1))} aria-label="Önceki Ay" className="p-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-300">
               <ChevronLeft className="w-4 h-4" />
             </button>
             <span className="text-sm font-semibold text-white capitalize">{monthLabel}</span>
-            <button onClick={() => setViewDate(new Date(year, month + 1, 1))} className="p-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-300">
+            <button onClick={() => setViewDate(new Date(year, month + 1, 1))} aria-label="Sonraki Ay" className="p-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-300">
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -209,7 +209,7 @@ export const CalendarTimeline: React.FC = () => {
             <div className="p-3 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-semibold text-neutral-400">{editingId ? 'Etkinliği Düzenle' : 'Yeni Etkinlik'}</span>
-                <button onClick={resetForm} className="p-1 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800"><X className="w-3.5 h-3.5" /></button>
+                <button onClick={resetForm} aria-label="Formu Kapat" className="p-1 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800"><X className="w-3.5 h-3.5" /></button>
               </div>
               <input
                 type="text"
@@ -275,7 +275,7 @@ export const CalendarTimeline: React.FC = () => {
                   className="px-3 py-1.5 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-white focus:outline-none"
                 />
                 <button onClick={handleDuplicate} disabled={!duplicateDate} className="px-3 py-1.5 rounded-xl bg-white text-neutral-950 font-semibold text-xs disabled:opacity-40">Kopyala</button>
-                <button onClick={() => setDuplicatingId(null)} className="p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800"><X className="w-3.5 h-3.5" /></button>
+                <button onClick={() => setDuplicatingId(null)} aria-label="Kopyalamayı İptal Et" className="p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800"><X className="w-3.5 h-3.5" /></button>
               </div>
             </div>
           )}
@@ -301,16 +301,16 @@ export const CalendarTimeline: React.FC = () => {
                     <span className="text-[10px] text-neutral-500 uppercase font-semibold">{meta.label}</span>
                   </div>
                   <div className="flex items-center gap-0.5 shrink-0">
-                    <button onClick={() => downloadICS([ev], `${ev.title.replace(/[^\p{L}\p{N}\- ]/gu, '').trim() || 'etkinlik'}.ics`)} title="Takvime Ekle (.ics)" className="p-1.5 rounded-lg text-neutral-600 hover:text-white hover:bg-neutral-800">
+                    <button onClick={() => downloadICS([ev], `${ev.title.replace(/[^\p{L}\p{N}\- ]/gu, '').trim() || 'etkinlik'}.ics`)} title="Takvime Ekle (.ics)" aria-label="Takvime Ekle (.ics)" className="p-1.5 rounded-lg text-neutral-600 hover:text-white hover:bg-neutral-800">
                       <Download className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={() => startEdit(ev)} className="p-1.5 rounded-lg text-neutral-600 hover:text-white hover:bg-neutral-800">
+                    <button onClick={() => startEdit(ev)} aria-label="Etkinliği Düzenle" className="p-1.5 rounded-lg text-neutral-600 hover:text-white hover:bg-neutral-800">
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={() => { setDuplicatingId(ev.id); setDuplicateDate(ev.dateISO); }} className="p-1.5 rounded-lg text-neutral-600 hover:text-white hover:bg-neutral-800">
+                    <button onClick={() => { setDuplicatingId(ev.id); setDuplicateDate(ev.dateISO); }} aria-label="Etkinliği Kopyala" className="p-1.5 rounded-lg text-neutral-600 hover:text-white hover:bg-neutral-800">
                       <Copy className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={() => removeCalendarEvent(ev.id)} className="p-1.5 rounded-lg text-neutral-600 hover:text-rose-400 hover:bg-rose-500/10">
+                    <button onClick={() => removeCalendarEvent(ev.id)} aria-label="Etkinliği Sil" className="p-1.5 rounded-lg text-neutral-600 hover:text-rose-400 hover:bg-rose-500/10">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>

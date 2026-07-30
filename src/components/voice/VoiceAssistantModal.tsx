@@ -92,6 +92,7 @@ export const VoiceAssistantModal: React.FC = () => {
       <div className="bg-neutral-900 border border-neutral-700 rounded-3xl max-w-lg w-full p-6 text-neutral-100 shadow-2xl space-y-6 relative">
         <button
           onClick={() => setVoiceAssistantOpen(false)}
+          aria-label="Kapat"
           className="absolute top-4 right-4 p-2 text-neutral-400 hover:text-neutral-200 rounded-xl hover:bg-neutral-800"
         >
           <X className="w-5 h-5" />

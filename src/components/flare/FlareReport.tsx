@@ -250,7 +250,7 @@ export const FlareReport: React.FC = () => {
                   {entry.timestamp}
                   {entry.dateISO === todayISO && <span className="ml-2 text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 uppercase font-semibold">Bugün</span>}
                 </span>
-                <button onClick={() => removeSymptomEntry(entry.id)} className="p-1 rounded-lg text-neutral-600 hover:text-rose-400 hover:bg-rose-500/10">
+                <button onClick={() => removeSymptomEntry(entry.id)} aria-label="Kaydı Sil" className="p-1 rounded-lg text-neutral-600 hover:text-rose-400 hover:bg-rose-500/10">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>

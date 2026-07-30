@@ -335,10 +335,10 @@ export const TreatmentHistory: React.FC = () => {
                       }`}>
                         {isOngoingEntry ? 'Devam Ediyor' : 'Sonlandırıldı'}
                       </span>
-                      <button onClick={() => startEdit(entry)} className="p-1 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800">
+                      <button onClick={() => startEdit(entry)} aria-label="Kaydı Düzenle" className="p-1 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800">
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
-                      <button onClick={() => removeTreatmentEntry(entry.id)} className="p-1 rounded-lg text-neutral-500 hover:text-rose-400 hover:bg-rose-500/10">
+                      <button onClick={() => removeTreatmentEntry(entry.id)} aria-label="Kaydı Sil" className="p-1 rounded-lg text-neutral-500 hover:text-rose-400 hover:bg-rose-500/10">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>

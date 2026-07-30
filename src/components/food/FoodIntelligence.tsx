@@ -164,7 +164,7 @@ export const FoodIntelligence: React.FC = () => {
               <div key={food.id} className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <h4 className="text-sm font-semibold text-white">{food.name}</h4>
-                  <button onClick={() => removeFoodItem(food.id)} className="p-1 rounded-lg text-neutral-600 hover:text-rose-400 hover:bg-rose-500/10">
+                  <button onClick={() => removeFoodItem(food.id)} aria-label="Besini Sil" className="p-1 rounded-lg text-neutral-600 hover:text-rose-400 hover:bg-rose-500/10">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -232,7 +232,7 @@ export const FoodIntelligence: React.FC = () => {
                     <p className="text-[11px] text-rose-300 mt-1">Reaksiyon: {meal.reactionSeverity}/10{meal.reactionNote ? ` — ${meal.reactionNote}` : ''}</p>
                   ) : null}
                 </div>
-                <button onClick={() => removeMeal(meal.id)} className="p-1.5 rounded-lg text-neutral-600 hover:text-rose-400 hover:bg-rose-500/10 shrink-0">
+                <button onClick={() => removeMeal(meal.id)} aria-label="Öğünü Sil" className="p-1.5 rounded-lg text-neutral-600 hover:text-rose-400 hover:bg-rose-500/10 shrink-0">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -278,7 +278,7 @@ export const FoodIntelligence: React.FC = () => {
                 <div key={recipe.id} className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-1.5">
                   <div className="flex items-center justify-between">
                     <h4 className="text-sm font-semibold text-white">{recipe.name}</h4>
-                    <button onClick={() => removeRecipe(recipe.id)} className="p-1 rounded-lg text-neutral-600 hover:text-rose-400 hover:bg-rose-500/10">
+                    <button onClick={() => removeRecipe(recipe.id)} aria-label="Tarifi Sil" className="p-1 rounded-lg text-neutral-600 hover:text-rose-400 hover:bg-rose-500/10">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>

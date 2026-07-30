@@ -81,6 +81,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileNav }) => {
           <button
             onClick={() => setHighContrast(!highContrast)}
             title="Yüksek Kontrast Modu"
+            aria-label="Yüksek Kontrast Modu"
             aria-pressed={highContrast}
             className={`hidden sm:flex p-2 rounded-xl border text-xs transition-all ${
               highContrast
@@ -95,6 +96,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileNav }) => {
           <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             title="Tema Değiştir"
+            aria-label="Tema Değiştir"
             className="p-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 transition-all"
           >
             {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-neutral-300" />}

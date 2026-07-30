@@ -123,7 +123,7 @@ export const TriggerJournal: React.FC = () => {
                 <p className="text-xs text-neutral-400 mt-1">{entry.reasonNote}</p>
                 <span className="text-[10px] text-neutral-600">{entry.dateISO}</span>
               </div>
-              <button onClick={() => removeTriggerEntry(entry.id)} className="p-1.5 rounded-lg text-neutral-600 hover:text-rose-400 hover:bg-rose-500/10 shrink-0">
+              <button onClick={() => removeTriggerEntry(entry.id)} aria-label="Tetikleyiciyi Sil" className="p-1.5 rounded-lg text-neutral-600 hover:text-rose-400 hover:bg-rose-500/10 shrink-0">
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
             </div>

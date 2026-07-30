@@ -297,6 +297,7 @@ export const IngredientScanner: React.FC = () => {
               <button
                 onClick={handleManualBarcodeSubmit}
                 disabled={!manualBarcode.trim() || isLookingUpBarcode}
+                aria-label="Barkod Ara"
                 className="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-200 text-xs font-semibold disabled:opacity-40 shrink-0"
               >
                 {isLookingUpBarcode ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Ara'}

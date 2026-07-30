@@ -124,7 +124,7 @@ export const HealthJournal: React.FC = () => {
           <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-neutral-300">{editingId ? 'Kaydı Düzenle' : 'Yeni Kayıt'} — {activeCategory}</span>
-              <button onClick={resetForm} className="p-1 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800">
+              <button onClick={resetForm} aria-label="Formu Kapat" className="p-1 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -181,10 +181,10 @@ export const HealthJournal: React.FC = () => {
                 <span className="text-[10px] text-neutral-600 font-medium mt-1 block">{entry.date}</span>
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                <button onClick={() => startEdit(entry)} className="p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800">
+                <button onClick={() => startEdit(entry)} aria-label="Kaydı Düzenle" className="p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800">
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
-                <button onClick={() => removeJournalEntry(entry.id)} className="p-1.5 rounded-lg text-neutral-500 hover:text-rose-400 hover:bg-rose-500/10">
+                <button onClick={() => removeJournalEntry(entry.id)} aria-label="Kaydı Sil" className="p-1.5 rounded-lg text-neutral-500 hover:text-rose-400 hover:bg-rose-500/10">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>

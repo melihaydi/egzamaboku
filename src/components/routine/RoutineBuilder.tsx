@@ -214,6 +214,7 @@ export const RoutineBuilder: React.FC = () => {
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <button
                       onClick={() => handleTaskClick(task.id)}
+                      aria-label={`${task.title} - ${task.completed ? 'tamamlandı, kaldırmak için tıkla' : 'tamamlamak için tıkla'}`}
                       className={`w-5 h-5 shrink-0 rounded-lg border flex items-center justify-center transition-colors ${
                         task.completed ? 'bg-emerald-500 border-emerald-400 text-white' : 'border-neutral-700 bg-neutral-900'
                       }`}
@@ -241,16 +242,16 @@ export const RoutineBuilder: React.FC = () => {
                   </div>
 
                   <div className="flex items-center gap-1 shrink-0">
-                    <button onClick={() => moveTask(task.id, -1)} disabled={idx === 0} className="p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800 disabled:opacity-30">
+                    <button onClick={() => moveTask(task.id, -1)} disabled={idx === 0} aria-label="Yukarı taşı" className="p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800 disabled:opacity-30">
                       <ArrowUp className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={() => moveTask(task.id, 1)} disabled={idx === filteredTasks.length - 1} className="p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800 disabled:opacity-30">
+                    <button onClick={() => moveTask(task.id, 1)} disabled={idx === filteredTasks.length - 1} aria-label="Aşağı taşı" className="p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800 disabled:opacity-30">
                       <ArrowDown className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={() => startEdit(task)} className="p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800">
+                    <button onClick={() => startEdit(task)} aria-label="Adımı Düzenle" className="p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800">
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={() => removeRoutineTask(task.id)} className="p-1.5 rounded-lg text-neutral-500 hover:text-rose-400 hover:bg-rose-500/10">
+                    <button onClick={() => removeRoutineTask(task.id)} aria-label="Adımı Sil" className="p-1.5 rounded-lg text-neutral-500 hover:text-rose-400 hover:bg-rose-500/10">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -286,6 +287,7 @@ export const RoutineBuilder: React.FC = () => {
               <div className="pt-2 flex items-center justify-center gap-2">
                 <button
                   onClick={() => setIsBathTimerRunning(!isBathTimerRunning)}
+                  aria-label={isBathTimerRunning ? 'Zamanlayıcıyı duraklat' : 'Zamanlayıcıyı başlat'}
                   className="px-4 py-2 rounded-xl bg-white hover:bg-neutral-200 text-neutral-950 font-semibold text-xs flex items-center gap-1.5"
                 >
                   {isBathTimerRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
@@ -293,6 +295,7 @@ export const RoutineBuilder: React.FC = () => {
                 </button>
                 <button
                   onClick={() => { setIsBathTimerRunning(false); setBathTimeLeft(600); }}
+                  aria-label="Zamanlayıcıyı sıfırla"
                   className="p-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 text-xs"
                 >
                   <RotateCcw className="w-4 h-4" />

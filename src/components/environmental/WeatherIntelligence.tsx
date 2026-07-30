@@ -147,6 +147,7 @@ export const WeatherIntelligence: React.FC = () => {
               onClick={refreshEnvironmental}
               disabled={environmentalLoading}
               title="Verileri Yenile"
+              aria-label="Verileri Yenile"
               className="p-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-300"
             >
               <RefreshCw className={`w-4 h-4 ${environmentalLoading ? 'animate-spin' : ''}`} />

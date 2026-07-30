@@ -33,6 +33,7 @@ export const ProfileSwitcher: React.FC = () => {
       <button
         onClick={() => setIsOpen(v => !v)}
         aria-expanded={isOpen}
+        aria-label="Profil Seç / Değiştir"
         className="flex items-center gap-2 pl-1.5 pr-2 sm:pr-3 py-1 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 transition-all"
         title="Profil Seç / Değiştir"
       >
