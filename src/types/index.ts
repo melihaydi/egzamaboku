@@ -233,5 +233,4 @@ export interface AuditLogEntry {
   timestamp: string;
   action: string;
   details: string;
-  ipAddress: string;
 }

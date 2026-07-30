@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   ShieldCheck,
   Lock,
@@ -31,9 +31,6 @@ export const PrivacySettings: React.FC = () => {
     clearAllData,
     t
   } = useApp();
-
-  const [e2eEncrypted, setE2eEncrypted] = useState<boolean>(true);
-  const [analyticsConsent, setAnalyticsConsent] = useState<boolean>(true);
 
   const handleExportJSON = () => {
     const fullExport = {
@@ -80,7 +77,7 @@ export const PrivacySettings: React.FC = () => {
             </h2>
           </div>
           <p className="text-xs text-neutral-400 mt-1">
-            AES-256 lokal şifreleme, yetki kontrolü, KVKK/GDPR veri aktarımı ve erişilebilirlik seçenekleri.
+            Uygulama kilidi, veri dışa aktarma/silme hakları ve erişilebilirlik seçenekleri.
           </p>
         </div>
       </div>
@@ -90,37 +87,11 @@ export const PrivacySettings: React.FC = () => {
         <div className="lg:col-span-6 bg-neutral-900 p-6 rounded-3xl border border-neutral-800 space-y-6">
           <h3 className="text-sm font-bold text-white flex items-center gap-2">
             <Lock className="w-4 h-4 text-emerald-400" />
-            Veri Koruması & Şifreleme Ayarları
+            Uygulama Kilidi & Veri Kontrolü
           </h3>
 
           <div className="space-y-3 text-xs">
-            <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 flex items-center justify-between">
-              <div>
-                <span className="font-bold text-white block">AES-256 Uçtan Uca Şifreleme</span>
-                <span className="text-[10px] text-neutral-400">Fotoğraf taramaları ve klinik kayıtları şifrelenerek saklanır.</span>
-              </div>
-              <input
-                type="checkbox"
-                checked={e2eEncrypted}
-                onChange={e => setE2eEncrypted(e.target.checked)}
-                className="w-4 h-4 accent-emerald-500 rounded"
-              />
-            </div>
-
             <PinLockSettings />
-
-            <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 flex items-center justify-between">
-              <div>
-                <span className="font-bold text-white block">KVKK / GDPR Araştırma Rızası</span>
-                <span className="text-[10px] text-neutral-400">Anonimleştirilmiş klinik telemetri verilerinin egzamaya katkısı.</span>
-              </div>
-              <input
-                type="checkbox"
-                checked={analyticsConsent}
-                onChange={e => setAnalyticsConsent(e.target.checked)}
-                className="w-4 h-4 accent-emerald-500 rounded"
-              />
-            </div>
           </div>
 
           <div className="pt-4 border-t border-neutral-800 space-y-3">
@@ -205,8 +176,8 @@ export const PrivacySettings: React.FC = () => {
               <Database className="w-4 h-4 text-neutral-300" />
               Sistem Denetim Logları ({auditLogs.length} Olay)
             </h3>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-              Değiştirilemez Log
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-neutral-800 text-neutral-400 border border-neutral-700">
+              Yerel Log
             </span>
           </div>
 
@@ -218,7 +189,6 @@ export const PrivacySettings: React.FC = () => {
                   <span className="text-[10px] text-neutral-500 font-mono">{log.timestamp}</span>
                 </div>
                 <p className="text-neutral-300 text-[11px]">{log.details}</p>
-                <span className="text-[9px] text-neutral-500 block font-mono">{log.ipAddress}</span>
               </div>
             ))}
           </div>

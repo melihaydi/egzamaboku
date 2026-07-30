@@ -292,7 +292,6 @@ export const initialJournalEntries: JournalEntry[] = [
 ];
 
 export const initialAuditLogs: AuditLogEntry[] = [
-  { id: 'log-1', timestamp: '27 Temmuz 2026, 17:15', action: 'Sağlık Verisi Eşleşmesi', details: 'Apple Health / Google HealthKit senkronizasyonu tamamlandı: 8.420 adım, 7.8 saat uyku', ipAddress: '127.0.0.1 (Şifreli Oturum)' },
-  { id: 'log-2', timestamp: '27 Temmuz 2026, 14:30', action: 'Görsel Analiz', details: 'Sol Kol fotoğraf analizi tamamlandı. Etkilenen Alan: 14.2 cm²', ipAddress: '127.0.0.1 (Şifreli Oturum)' },
-  { id: 'log-3', timestamp: '27 Temmuz 2026, 11:20', action: 'İçerik OCR Taraması', details: 'Bioderma Atoderm ürünü için OCR analizi tamamlandı. Uyum Skoru: %96', ipAddress: '127.0.0.1 (Şifreli Oturum)' }
+  { id: 'log-2', timestamp: '27 Temmuz 2026, 14:30', action: 'Görsel Analiz', details: 'Sol Kol fotoğraf analizi tamamlandı. Etkilenen Alan: 14.2 cm²' },
+  { id: 'log-3', timestamp: '27 Temmuz 2026, 11:20', action: 'İçerik OCR Taraması', details: 'Bioderma Atoderm ürünü için OCR analizi tamamlandı. Uyum Skoru: %96' }
 ];

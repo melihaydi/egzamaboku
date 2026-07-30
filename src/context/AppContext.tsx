@@ -42,7 +42,7 @@ import {
 
 // Yerel Depolama (localStorage) Kalıcılık Katmanı
 const STORAGE_PREFIX = 'dermiq:';
-const PROFILE_DATA_KEYS = ['cvHistory', 'symptomEntries', 'treatmentHistory', 'scannedProducts', 'triggerEntries', 'foodItems', 'meals', 'recipes', 'routines', 'calendarEvents', 'journalEntries', 'chatMessages'];
+const PROFILE_DATA_KEYS = ['cvHistory', 'symptomEntries', 'treatmentHistory', 'scannedProducts', 'triggerEntries', 'foodItems', 'meals', 'recipes', 'routines', 'calendarEvents', 'journalEntries', 'chatMessages', 'auditLogs'];
 
 function loadPersisted<T>(storageKey: string, fallback: T): T {
   try {
@@ -144,7 +144,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [routines, setRoutines] = usePersistedState<RoutineTask[]>('routines', isDefaultProfile ? initialRoutines : [], activeProfileId);
   const [calendarEvents, setCalendarEvents] = usePersistedState<CalendarEvent[]>('calendarEvents', isDefaultProfile ? initialCalendarEvents : [], activeProfileId);
   const [journalEntries, setJournalEntries] = usePersistedState<JournalEntry[]>('journalEntries', isDefaultProfile ? initialJournalEntries : [], activeProfileId);
-  const [auditLogs, setAuditLogs] = usePersistedState<AuditLogEntry[]>('auditLogs', initialAuditLogs);
+  const [auditLogs, setAuditLogs] = usePersistedState<AuditLogEntry[]>('auditLogs', isDefaultProfile ? initialAuditLogs : [], activeProfileId);
   const [chatMessages, setChatMessages] = usePersistedState<ChatMessage[]>('chatMessages', isDefaultProfile ? initialChatMessages : [], activeProfileId);
 
   const [voiceAssistantOpen, setVoiceAssistantOpen] = useState<boolean>(false);
@@ -155,8 +155,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: `log-${Date.now()}`,
       timestamp: new Date().toLocaleString('tr-TR'),
       action,
-      details,
-      ipAddress: '127.0.0.1 (Şifreli Oturum)'
+      details
     };
     setAuditLogs(prev => [newEntry, ...prev]);
   }, [setAuditLogs]);
@@ -426,6 +425,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCalendarEvents(isDefaultProfile ? initialCalendarEvents : []);
     setJournalEntries(isDefaultProfile ? initialJournalEntries : []);
     setChatMessages(isDefaultProfile ? initialChatMessages : []);
+    setAuditLogs(isDefaultProfile ? initialAuditLogs : []);
     addAuditLog('Yerel Veri Sıfırlama', `${activeProfile.name} profiline ait yerel veriler fabrika ayarlarına sıfırlandı.`);
   };
 
