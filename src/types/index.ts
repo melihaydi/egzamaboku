@@ -167,10 +167,17 @@ export interface RoutineTask {
   title: string;
   timeOfDay: 'Sabah' | 'Öğle' | 'Akşam' | 'Gece';
   completed: boolean;
+  lastCompletedDateISO?: string; // "completed" yalnızca bu tarih bugünse geçerli sayılır; her yeni günde otomatik sıfırlanır
   category: 'Nemlendirici' | 'İlaç / Krem' | 'Su Tüketimi' | 'Stres Yönetimi' | 'Banyo' | 'Uyku Hazırlığı';
   durationMinutes?: number;
   reminderTime?: string; // "HH:mm"
   order: number;
+}
+
+// Kullanıcının kendi günlük su tüketim kaydı — her yeni günde sıfırlanır.
+export interface WaterIntakeLog {
+  dateISO: string;
+  glasses: number;
 }
 
 export type CalendarEventType = 'flare' | 'photo' | 'medication' | 'injection' | 'doctorVisit' | 'missedMoisturizer' | 'note';

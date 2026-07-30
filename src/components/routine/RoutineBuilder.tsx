@@ -12,6 +12,7 @@ import {
   RotateCcw,
   Award,
   Plus,
+  Minus,
   Trash2,
   Pencil,
   ArrowUp,
@@ -30,9 +31,12 @@ const TIME_TABS: Array<{ id: RoutineTask['timeOfDay']; icon: typeof Sun }> = [
 ];
 
 const CATEGORIES: RoutineTask['category'][] = ['Nemlendirici', 'İlaç / Krem', 'Su Tüketimi', 'Stres Yönetimi', 'Banyo', 'Uyku Hazırlığı'];
+const WATER_TARGET_GLASSES = 8;
+const todayISO = () => new Date().toISOString().slice(0, 10);
 
 export const RoutineBuilder: React.FC = () => {
-  const { routines, toggleRoutineTask, addRoutineTask, removeRoutineTask, updateRoutineTask, reorderRoutineTasks, t } = useApp();
+  const { routines, toggleRoutineTask, addRoutineTask, removeRoutineTask, updateRoutineTask, reorderRoutineTasks, waterIntake, addWaterGlass, removeWaterGlass, t } = useApp();
+  const todayGlasses = waterIntake.dateISO === todayISO() ? waterIntake.glasses : 0;
   const [selectedTimeOfDay, setSelectedTimeOfDay] = useState<RoutineTask['timeOfDay']>('Sabah');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -300,16 +304,37 @@ export const RoutineBuilder: React.FC = () => {
           <div className="bg-neutral-900/60 p-6 rounded-3xl border border-neutral-800 space-y-3 text-xs">
             <h3 className="font-semibold text-white flex items-center gap-2">
               <Droplets className="w-4 h-4 text-neutral-500" />
-              Günlük Hidrasyon Hedefi
+              Günlük Su Takibi
             </h3>
 
-            <div className="p-3 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-2">
+            <div className="p-3 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-3">
               <div className="flex justify-between font-semibold">
-                <span className="text-neutral-300">Su Tüketimi</span>
-                <span className="text-neutral-200">2.2L / 2.5L</span>
+                <span className="text-neutral-300">Bugün İçilen</span>
+                <span className="text-neutral-200">{todayGlasses}/{WATER_TARGET_GLASSES} bardak</span>
               </div>
               <div className="h-1.5 w-full bg-neutral-800 rounded-full overflow-hidden">
-                <div className="h-full bg-neutral-400 w-[88%]" />
+                <div
+                  className="h-full bg-sky-400 transition-all"
+                  style={{ width: `${Math.min(100, (todayGlasses / WATER_TARGET_GLASSES) * 100)}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-center gap-4 pt-1">
+                <button
+                  onClick={removeWaterGlass}
+                  disabled={todayGlasses === 0}
+                  aria-label="Bir bardak çıkar"
+                  className="p-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+                <span className="text-lg font-semibold text-white w-8 text-center">{todayGlasses}</span>
+                <button
+                  onClick={addWaterGlass}
+                  aria-label="Bir bardak ekle"
+                  className="p-2 rounded-xl bg-white hover:bg-neutral-200 text-neutral-950 border border-white"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
               </div>
             </div>
           </div>

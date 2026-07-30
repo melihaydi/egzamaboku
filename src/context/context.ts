@@ -12,6 +12,7 @@ import type {
   TriggerEntry,
   ProductScanResult,
   RoutineTask,
+  WaterIntakeLog,
   AuditLogEntry,
   TreatmentEntry,
   ChatMessage,
@@ -89,6 +90,9 @@ export interface AppContextType {
   removeRoutineTask: (id: string) => void;
   updateRoutineTask: (id: string, updates: Partial<RoutineTask>) => void;
   reorderRoutineTasks: (timeOfDay: RoutineTask['timeOfDay'], orderedIds: string[]) => void;
+  waterIntake: WaterIntakeLog;
+  addWaterGlass: () => void;
+  removeWaterGlass: () => void;
 
   // Takvim & Zaman Çizelgesi
   calendarEvents: CalendarEvent[];

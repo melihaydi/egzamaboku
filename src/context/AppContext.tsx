@@ -15,7 +15,8 @@ import type {
   EnvironmentalData,
   EnvironmentalSnapshot,
   CalendarEvent,
-  JournalEntry
+  JournalEntry,
+  WaterIntakeLog
 } from '../types';
 import { AppContext } from './context';
 import { fetchEnvironmentalData } from '../lib/weatherService';
@@ -42,7 +43,11 @@ import {
 
 // Yerel Depolama (localStorage) Kalıcılık Katmanı
 const STORAGE_PREFIX = 'dermiq:';
-const PROFILE_DATA_KEYS = ['cvHistory', 'symptomEntries', 'treatmentHistory', 'scannedProducts', 'triggerEntries', 'foodItems', 'meals', 'recipes', 'routines', 'calendarEvents', 'journalEntries', 'chatMessages', 'auditLogs'];
+const PROFILE_DATA_KEYS = ['cvHistory', 'symptomEntries', 'treatmentHistory', 'scannedProducts', 'triggerEntries', 'foodItems', 'meals', 'recipes', 'routines', 'calendarEvents', 'journalEntries', 'chatMessages', 'auditLogs', 'waterIntake'];
+
+function todayISO(): string {
+  return new Date().toISOString().slice(0, 10);
+}
 
 function loadPersisted<T>(storageKey: string, fallback: T): T {
   try {
@@ -146,6 +151,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [journalEntries, setJournalEntries] = usePersistedState<JournalEntry[]>('journalEntries', isDefaultProfile ? initialJournalEntries : [], activeProfileId);
   const [auditLogs, setAuditLogs] = usePersistedState<AuditLogEntry[]>('auditLogs', isDefaultProfile ? initialAuditLogs : [], activeProfileId);
   const [chatMessages, setChatMessages] = usePersistedState<ChatMessage[]>('chatMessages', isDefaultProfile ? initialChatMessages : [], activeProfileId);
+  const [waterIntake, setWaterIntake] = usePersistedState<WaterIntakeLog>('waterIntake', { dateISO: todayISO(), glasses: 0 }, activeProfileId);
 
   const [voiceAssistantOpen, setVoiceAssistantOpen] = useState<boolean>(false);
   const [pinLock, setPinLock] = usePersistedState<{ hash: string; salt: string } | null>('pinLock', null);
@@ -198,6 +204,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     refreshEnvironmental();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Günlük Bakım Listesi bir "her gün sıfırlanan" liste olmalı: dünün (veya daha eskinin)
+  // işaretlemesi bugüne taşınmaz. Bu, prev ile birebir aynı referansı döndürdüğünde React'in
+  // state güncellemesini atlaması sayesinde güvenlidir — gereksiz bir sonsuz döngü oluşturmaz.
+  useEffect(() => {
+    const today = todayISO();
+    setRoutines(prev => {
+      let changed = false;
+      const next = prev.map(task => {
+        if (task.completed && task.lastCompletedDateISO !== today) {
+          changed = true;
+          return { ...task, completed: false };
+        }
+        return task;
+      });
+      return changed ? next : prev;
+    });
+  }, [routines, setRoutines]);
 
   const addCVAnalysis = (analysis: CVAnalysis) => {
     setCvHistory(prev => [analysis, ...prev]);
@@ -320,7 +344,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const toggleRoutineTask = (id: string) => {
-    setRoutines(prev => prev.map(task => (task.id === id ? { ...task, completed: !task.completed } : task)));
+    setRoutines(prev => prev.map(task => {
+      if (task.id !== id) return task;
+      const completed = !task.completed;
+      return { ...task, completed, lastCompletedDateISO: completed ? todayISO() : task.lastCompletedDateISO };
+    }));
+  };
+
+  const addWaterGlass = () => {
+    setWaterIntake(prev => {
+      const today = todayISO();
+      return prev.dateISO === today ? { ...prev, glasses: prev.glasses + 1 } : { dateISO: today, glasses: 1 };
+    });
+  };
+
+  const removeWaterGlass = () => {
+    setWaterIntake(prev => {
+      const today = todayISO();
+      return prev.dateISO === today ? { ...prev, glasses: Math.max(0, prev.glasses - 1) } : { dateISO: today, glasses: 0 };
+    });
   };
 
   const addRoutineTask = (task: Omit<RoutineTask, 'id' | 'order' | 'completed'>) => {
@@ -451,6 +493,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setJournalEntries(isDefaultProfile ? initialJournalEntries : []);
     setChatMessages(isDefaultProfile ? initialChatMessages : []);
     setAuditLogs(isDefaultProfile ? initialAuditLogs : []);
+    setWaterIntake({ dateISO: todayISO(), glasses: 0 });
     addAuditLog('Yerel Veri Sıfırlama', `${activeProfile.name} profiline ait yerel veriler fabrika ayarlarına sıfırlandı.`);
   };
 
@@ -510,6 +553,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       removeRoutineTask,
       updateRoutineTask,
       reorderRoutineTasks,
+      waterIntake,
+      addWaterGlass,
+      removeWaterGlass,
       calendarEvents,
       addCalendarEvent,
       updateCalendarEvent,
